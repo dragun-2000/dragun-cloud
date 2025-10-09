@@ -1,0 +1,348 @@
+<!doctype html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="header :: common-header"></head>
+<body>
+<div class="wrapper">
+  <div th:replace="header :: header"></div>
+  <div class="main main--pageDelivery-information">
+    <form id="create-order" name="f" th:object="${orderDetail}" class="needs-validation ml-3" novalidate>
+      <div hidden ><input id="totalPriceBill" th:value="${totalPrice}"></div>
+      <div class="wrap wrap--mw900">
+        <h2 class="delivery-title">Thông tin giao hàng</h2>
+        <div class="delivery-form">
+          <div class="delivery-group">
+            <label class="delivery-label">Phương thức thanh toán</label>
+          </div>
+          <div class="choosePayment">
+            <ul>
+              <li>
+                <label class="custom-control custom-radio">
+                  <input class="custom-control-input" type="radio" name="radio" checked="" id="payment-momo" value="MOMO" disabled>
+                  <span class="custom-control-indicator"></span>
+                  <span class="custom-control-description">
+                    <span class="custom-icon">
+                      <img src="/images/data/momo.png" alt="">
+                    </span>
+                    <div class="custom-content">
+                      <span class="name">Ví MoMo (Tạm dừng)</span>
+                    </div>
+                  </span>
+                </label>
+              </li>
+              <li>
+                <label class="custom-control custom-radio">
+                  <input class="custom-control-input" type="radio" name="radio" checked="checked" id="payment-cod" value="COD">
+                  <span class="custom-control-indicator"></span>
+                  <span class="custom-control-description">
+                    <span class="custom-icon">
+                      <img src="/images/data/cod.png" alt="">
+                    </span>
+                    <div class="custom-content">
+                      <span class="name">Thanh toán khi giao hàng (COD)</span>
+                    </div>
+                  </span>
+                </label>
+              </li>
+              <li>
+                <label class="custom-control custom-radio">
+                  <input class="custom-control-input" type="radio" name="radio" checked="checked" id="payment-transfer" value="TRANSFER">
+                  <span class="custom-control-indicator"></span>
+                  <span class="custom-control-description">
+                    <span class="custom-icon">
+                      <img src="/images/data/cod.png" alt="">
+                    </span>
+                    <div class="custom-content">
+                      <span class="name">Thanh toán qua chuyển khoản ngân hàng</span>
+                    </div>
+                  </span>
+                </label>
+                <div class="boxInformation">
+                  <ul class="priceInformation">
+                    <li>
+                      <div class="text-left">1. Sau khi đặt hàng, bạn vui lòng chuyển khoản qua tài khoản ngân hàng trong 24h theo tổng giá trị hóa đơn: </div>
+                      <div class="text-center">VIETCOMBANK - 0451000476999 - NGUYỄN TRUNG HIẾU</div>
+                      <div class="text-left">2, Sau khi chuyển khoản bạn vui lòng gửi thông tin gồm: </div>
+                      <div class="text-center">Hoá đơn chuyển khoản + Mã đơn hàng hoặc sđt qua Facebook, Insragram để được xác nhận. Đơn hàng sẽ được giao cho đơn vị vận chuyển trong 24
+H sau khi Online Sale xác nhận thanh toán.</div>
+                      <!-- Thêm hình ảnh ở đây -->
+                      <div class="text-center" style="margin-top: 15px;">
+                        <img id="thumbnail" src="/images/QR_2.jpg" alt="Hướng dẫn chuyển khoản" style="max-width: 200px; cursor: pointer;">
+                      </div>
+                    </li>
+                  </ul>
+                </div>
+              </li>
+            </ul>
+          </div>
+          <div class="delivery-group">
+            <label class="delivery-label">Họ và tên</label>
+            <div class="delivery-control">
+              <input id="fullName" name="fullName" th:field="${orderDetail.fullName}" class="form-control" type="text" placeholder="Họ và tên">
+            </div>
+          </div>
+          <div class="info-col">
+            <ul>
+              <li>
+                <div class="delivery-group">
+                  <label class="delivery-label">Email</label>
+                  <div class="delivery-control">
+                    <input id="email" name="email" th:field="${orderDetail.email}" class="form-control" type="text" placeholder="Email">
+                  </div>
+                </div>
+              </li>
+              <li>
+                <div class="delivery-group">
+                  <label class="delivery-label">Số điện thoại</label>
+                  <div class="delivery-control">
+                    <input id="phone" name="phone" th:field="${orderDetail.phone}" class="form-control" type="text" placeholder="Số điện thoại">
+                  </div>
+                </div>
+              </li>
+            </ul>
+          </div>
+          <div class="delivery-group">
+            <label class="delivery-label">Địa chỉ</label>
+            <div class="delivery-control">
+              <input id="address" name="address" th:field="${orderDetail.address}" class="form-control" type="text" placeholder="Địa chỉ">
+              <div class="delivery-choose">
+                <ul>
+                  <li>
+                    <select class="form-control" id="provinceSelect" name="province" required>
+                      <option value="" selected="selected">Chọn Tỉnh/Thành Phố</option>
+                      <option th:each="province : ${provinces}" th:value="${province.code}" th:text="${province.name}"></option>
+                    </select>
+                  </li>
+                  <li>
+                    <select class="form-control" id="districtSelect" name="district" required>
+                      <option value="" selected="selected">Chọn Quận/Huyện</option>
+                    </select>
+                  </li>
+                  <li>
+                    <select class="form-control" id="wardSelect" name="ward" required>
+                      <option value="" selected="selected">Chọn Phường/Xã</option>
+                    </select>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+          <div class="delivery-group">
+            <div class="delivery-control">
+              <textarea id="note" name="note" th:field="${orderDetail.note}" class="form-control form-control--content" placeholder="Ghi chú"></textarea>
+            </div>
+          </div>
+        </div>
+        <div class="delivery-total">
+          <div class="delivery-wrap">
+            <ul>
+              <li>
+                <span class="delivery-span">Tạm tính</span>
+                <span class="delivery-span temp-price" name="amountDiscount" th:text="${totalPriceDisplay + ' VND'}"></span>
+              </li>
+              <li>
+                <span class="delivery-span">Phí vận chuyển</span>
+                <span class="delivery-span shipping-price" th:text="${shippingFee + ' VND'}">35.000 VND</span>
+              </li>
+              <li>
+                <span class="delivery-span">Mã giảm giá (nếu có)</span>
+                <span id="discount-price" class="delivery-span discount-price">-</span>
+              </li>
+              <li>
+                <span class="delivery-span">Tổng cộng</span>
+                <span id="final-price" class="delivery-span delivery-spanTotal" name="amount" th:text="${totalPriceDisplayFinal + ' VND'}"></span>
+              </li>
+            </ul>
+            <div class="discount">
+              <div class="discount-code">
+                <input id="voucher" name="voucher" class="form-control" type="text" placeholder="Nhập mã giảm giá">
+              </div>
+              <div class="discount-btn">
+                <button id="apply-btn" type="button" class="btn btn-dark">Sử Dụng</button>
+              </div>
+            </div>
+            <div class="delivery-order">
+              <button id="order-btn" type="submit" class="btn btn-dark">Đặt Hàng</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </form>
+  </div><!--/main -->
+
+  <!-- Popup ảnh to -->
+  <div id="imageModal" class="modal" onclick="closeModal()">
+    <span class="close">&times;</span>
+    <img class="modal-content" id="fullImage">
+  </div>
+
+  <div class="popup" id="orderSuccessPopup">
+      <div class="popup-content">
+          <h2>Đơn Hàng Thành Công!</h2>
+          <p>Cảm ơn bạn đã đặt hàng. Đơn hàng của bạn đã được xác nhận và đang được xử lý.</p>
+          <button class="close-btn" onclick="closePopup('orderSuccessPopup')">Đóng</button>
+      </div>
+  </div>
+  
+  <div class="popup" id="orderFailedPopup">
+      <div class="popup-content">
+          <h2>Đơn Hàng Thất Bại!</h2>
+<!--          <p>Rất tiếc, đơn hàng của bạn không thể hoàn tất. Vui lòng thử lại sau.</p>-->
+          <p class="error-message"></p>
+          <button class="close-btn fail" onclick="closePopup('orderFailedPopup')">Đóng</button>
+      </div>
+  </div>
+
+  <div id="notification" class="notification">
+    <span id="notification-message"></span>
+  </div>
+  
+  <div th:replace="header :: footer"></div>
+</div><!--/wrapper -->
+
+  <script th:src="@{/js/payment-detail/payment-detail.js}"></script>
+  
+  <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+        
+        /* Pop-up sẽ được đặt cố định, không ảnh hưởng đến layout của các phần tử khác */
+        .popup {
+            display: none; /* Ẩn popup mặc định */
+            position: fixed; /* Đặt pop-up cố định */
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5); /* Nền mờ cho pop-up */
+            justify-content: center;
+            align-items: center;
+            z-index: 9999; /* Đảm bảo pop-up nằm trên các phần tử khác */
+        }
+
+        .popup-content {
+            background-color: #fff;
+            border-radius: 10px;
+            padding: 30px;
+            text-align: center;
+            width: 300px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .popup-content h2 {
+            font-size: 24px;
+        }
+
+        .popup-content p {
+            font-size: 16px;
+            color: #333;
+        }
+
+        .close-btn {
+            background-color: #28a745; /* Màu xanh cho thành công */
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 5px;
+            margin-top: 20px;
+        }
+
+        .close-btn.fail {
+            background-color: #dc3545; /* Màu đỏ cho thất bại */
+        }
+
+        .close-btn:hover {
+            background-color: #218838;
+        }
+
+        .close-btn.fail:hover {
+            background-color: #c82333;
+        }
+
+        .notification {
+          position: fixed;
+          bottom: 20px; /* Cách mép dưới 20px */
+          right: 20px; /* Cách mép phải 20px */
+          color: #fff;
+          padding: 15px 20px;
+          border-radius: 8px;
+          box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+          opacity: 0;
+          transform: translateY(50px);
+          transition: opacity 0.4s ease, transform 0.4s ease;
+          z-index: 9999;
+          font-size: 16px;
+        }
+
+        /* Hiển thị thông báo */
+        .notification.show {
+          opacity: 1;
+          transform: translateY(0);
+        }
+
+        /* Thông báo thành công */
+        .notification.success {
+          background-color: #28a745; /* Màu xanh */
+        }
+
+        /* Thông báo lỗi */
+        .notification.error {
+          background-color: #dc3545; /* Màu đỏ */
+        }
+
+        /* Nút đóng */
+        .notification .close-btn {
+          background: none;
+          border: none;
+          color: white;
+          font-size: 16px;
+          cursor: pointer;
+          position: absolute;
+          top: 8px;
+          right: 10px;
+        }
+
+        .modal {
+          display: none;
+          position: fixed;
+          z-index: 9999;
+          top: 0;
+          left: 0;
+          width: 100vw;
+          height: 100vh;
+          overflow: auto;
+          background-color: rgba(0, 0, 0, 0.7);
+          justify-content: center;
+          align-items: center;
+        }
+
+        .modal.show {
+          display: flex;
+        }
+
+        .modal-content {
+          max-width: 600px; /* Giới hạn chiều rộng tối đa trên PC */
+          width: 90%;
+          max-height: 90vh;
+          border-radius: 8px;
+          box-shadow: 0 0 15px rgba(255,255,255,0.2);
+          transition: all 0.3s ease;
+        }
+
+        .close {
+          position: absolute;
+          top: 20px;
+          right: 30px;
+          color: #fff;
+          font-size: 36px;
+          font-weight: bold;
+          cursor: pointer;
+        }
+    </style>
+</body>
+</html>

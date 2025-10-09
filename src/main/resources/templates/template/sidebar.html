@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.w3.org/1999/xhtml" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+    <!-- Main Sidebar -->
+    <aside class="main-sidebar col-12 col-md-3 col-lg-2 px-0 menu-left" th:fragment="sidebar">
+        <div class="main-navbar">
+            <nav class="navbar align-items-stretch navbar-light bg-white flex-md-nowrap border-bottom p-0">
+                <a class="navbar-brand w-100 mr-0" href="" style="line-height: 25px;">
+                    <div class="d-table m-auto site-name">
+                        <i class="fas fa-bars"></i>&nbsp;&nbsp;&nbsp;&nbsp;<span  class="font-weight-bold">Quản Lý</span>
+                    </div>
+                </a>
+                <a class="toggle-sidebar d-sm-inline d-md-none d-lg-none">
+                    <i class="material-icons">&#xE5C4;</i>
+                </a>
+            </nav>
+        </div>
+        <div class="nav-wrapper">
+            <div>
+                <ul class="nav flex-column">
+                    <li class="nav-item">
+                        <a sec:authorize="isAuthenticated() && hasAnyRole('ROLE_ADMIN', 'ROLE_STAFF')" class="nav-link" th:href="@{/AM/AM002?homePage=1}" th:classappend="${sideMenu} == '/AM/AM002' ? 'active' : ''">
+                            <i class="far fa-clock"></i></i><span th:onclick="resetLocalStoreAM()">Đơn Hàng</span>
+                        </a>
+                    </li>
+                    
+                    <li class="nav-item" sec:authorize="isAuthenticated() && hasAnyRole('ROLE_ADMIN')">
+                        <a class="nav-link" th:href="@{/AM/AM003}" th:classappend="${sideMenu} == '/AM/AM003' ? 'active' : ''">
+                            <i class="fas fa-users-cog"></i><span>Sản Phẩm</span>
+                        </a>
+                    </li>
+
+                    <li class="nav-item" sec:authorize="isAuthenticated() && hasAnyRole('ROLE_ADMIN')">
+                        <a class="nav-link" th:href="@{/AM/AM004}" th:classappend="${sideMenu} == '/AM/AM004' ? 'active' : ''">
+                            <i class="fas fa-users-cog"></i><span>Khách Hàng</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="contact" sec:authorize="isAuthenticated() && hasAnyRole('ROLE_ADMIN', 'ROLE_STAFF')">
+            <div >© V.N. Debase, Inc. 2025</div>
+        </div>
+    </aside>
+</html>

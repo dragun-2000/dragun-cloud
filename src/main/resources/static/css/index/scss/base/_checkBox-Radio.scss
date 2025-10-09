@@ -1,0 +1,137 @@
+/**** radio checkbox ****/
+.custom-control {
+  display: inline-flex;
+  align-items: flex-start;
+  min-height: 24px;
+  position: relative;
+  &.custom-checkbox--gray {
+    .custom-control-description {
+      font-size: 14px;
+      font-weight: 400;
+      color: rgba(255,255,255,.6);
+      // line-height: 22px;
+    }
+  }
+  .custom-control-input {
+    opacity: 0;
+    position: absolute;
+    z-index: -1;
+    &:disabled ~ .custom-control-indicator {
+      cursor: not-allowed;
+    }
+    &:disabled ~ .custom-control-description {
+      cursor: not-allowed;
+    }
+  }
+  .custom-control-description {
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: 500;
+    line-height: 120%;
+    color: #fff;
+    padding-left: 16px;
+    line-height: 22px;
+  }
+  .custom-control-indicator {
+    display: block;
+    left: 0;
+    position: absolute;
+    cursor: pointer;
+  }
+  &.custom-checkbox {
+    .custom-control-indicator {
+      width: 24px;
+      height: 24px;
+      background: url(../../../../images/common/icon-checkBox.svg) no-repeat;
+      transition: all ease 0.3s;
+    }
+    .custom-control-input {
+      &:checked ~ .custom-control-indicator {
+        background: url(../../../../images/common/icon-checkBox-checked.svg) no-repeat;
+      }
+      /*
+      &:checked:disabled ~ .custom-control-indicator {
+        background: url(../images/common/icon-checkBox-checked-disabled.svg) no-repeat;
+      }
+      &:disabled ~ .custom-control-indicator {
+        background: url(../images/common/icon-checkBox-disabled.svg) no-repeat;
+      }
+      &:focus ~ .custom-control-indicator {
+        box-shadow: 0 0 0 .2rem rgba(0,123,255,.25);
+        border-radius: 4px;
+      }
+      */
+    }
+  }
+  /*&.custom-radio {
+    .custom-control-indicator {
+      background: url(../images/common/icon-radio.svg) no-repeat 50%;
+      width: 20px;
+      height: 20px;
+      top: calc(50% - 10px);
+    }
+    .custom-control-input {
+      &:checked ~ .custom-control-indicator {
+        background: url(../images/common/icon-radio-checked.svg) no-repeat 50%;
+        top: calc(50% - 10px);
+      }
+      &:checked:disabled ~ .custom-control-indicator {
+        background: url(../images/common/icon-radio-checked-disabled.svg) no-repeat;
+      }
+      &:disabled ~ .custom-control-indicator {
+        background: url(../images/common/icon-radio-disabled.svg) no-repeat 50%;
+      }
+      &:focus ~ .custom-control-indicator {
+        box-shadow: 0 0 0 .2rem rgba(0,123,255,.25);
+        border-radius: 50%;
+      }
+    }
+  }*/
+}
+/*****/
+.switch {
+  display: inline-flex;
+  position: relative;
+  .switch-label {
+    cursor: pointer;
+    margin: 0;
+  }
+  .switch-checkbox {
+    opacity: 0;
+    position: absolute;
+  }
+  .switch-checkbox:checked + .switch-toggle:before {
+    left: calc(100% - 16px);
+    background: #fff;
+  }
+  .switch-checkbox:checked + .switch-toggle {
+    background: #2D6FD2;
+    border: 2px solid #2D6FD2;
+  }
+  .switch-toggle {
+    border-radius: 100px;
+    display: inline-block;
+    background: #fff;
+    border: 2px solid #E3E5E8;
+    width: 44px;
+    height: 24px;
+    position: relative;
+    &:before {
+      background: #E3E5E8;
+      border-radius: 50%;
+      content: "";
+      display: block;
+      left: 2px;
+      width: 14px;
+      height: 14px;
+      position: absolute;
+      top: 50%;
+      -webkit-transform: translateY(-50%);
+      -ms-transform: translateY(-50%);
+      transform: translateY(-50%);
+      -webkit-transition: all 0.3s cubic-bezier(0.17, 0.67, 0.53, 1) 0s;
+      -o-transition: all 0.3s cubic-bezier(0.17, 0.67, 0.53, 1) 0s;
+      transition: all 0.3s cubic-bezier(0.17, 0.67, 0.53, 1) 0s;
+    }
+  }
+}

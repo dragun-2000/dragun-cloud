@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.w3.org/1999/xhtml" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{template/baseManage.html}">
+<div class="container-fluid login" layout:fragment="main-content">
+    <div class="form-login">
+        <div class="page-header text-center no-gutters py-4 mb-4">
+            <h3 class="font-weight-bold page-title font-weight-bold">Đăng Nhập Màn Hình Quản Trị</h3>
+        </div>
+
+        <form name="login" class="needs-validation" th:action="@{/AM/AM001/login}" method="POST" novalidate>
+            <div class="form-group row mt-4" th:if="${param.error}">
+                <div class="col-sm-3">&#8203;</div>
+                <div class="col-sm-9">
+                    <div class="alert alert-danger">
+                        Thông Tin Đăng Nhập Không Đúng!
+                    </div>
+                </div>
+            </div>
+            <div class="form-group row mt-4">
+                <label for="username" class="col-sm-3 col-form-label font-weight-bold">email<span class="red">※</span></label>
+                <div class="col-sm-9">
+                    <input type="text" class="form-control form-ctrl" id="username" required name="username" value="" autofocus/>
+                    <div class="invalid-feedback username-error">
+                        Yêu cầu nhập địa chỉ email đăng kí
+                    </div>
+                </div>
+            </div>
+            <div class="form-group row mt-5">
+                <label for="password" class="col-sm-3 col-form-label font-weight-bold">Mật Khẩu <span class="red">※</span></label>
+                <div class="col-sm-9">
+                    <div class="input-group" id="show_hide_password">
+                        <input class="form-control form-ctrl input" type="password" id="password" required name="password"
+                               placeholder="Nhập Mật khẩu từ 8~10 kí tự">
+                        <div class="input-group-append">
+                            <span class="input-group-text"><i class="fa fa-eye-slash" aria-hidden="true"></i></span>
+                        </div>
+                        <div class="invalid-feedback pass-error">
+                            Yêu cầu Nhập Mật Khẩu
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="text-center mt-4">
+                <button type="submit" class="btn custom-btn-info btn-150 fz-16" role="button" aria-pressed="true">Đăng Nhập</button>
+            </div>
+        </form>
+
+        <div class="text-center mt-5">
+            <a class="lineUnder" th:href="@{/AM/AM001/forget-password}">Lấy Lại Mật Khẩu </a>
+        </div>
+    </div>
+
+    <script th:src="@{/js/validation.common.js}"></script>
+    <script th:src="@{/js/validation.js}"></script>
+    <script>
+        var input = $("#show_hide_password input");
+        var icon = $("#show_hide_password i");
+
+        icon.on('click', function (event) {
+            event.preventDefault();
+            if (input.attr("type") === "text") {
+                input.attr('type', 'password');
+                icon.addClass("fa-eye-slash");
+                icon.removeClass("fa-eye");
+
+            } else if (input.attr("type") === "password") {
+                input.attr('type', 'text');
+                icon.removeClass("fa-eye-slash");
+                icon.addClass("fa-eye");
+            }
+        });
+    </script>
+</div>
+</html>

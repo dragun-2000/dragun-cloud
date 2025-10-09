@@ -1,0 +1,30 @@
+package vn.co.cake.security.admin;
+
+import vn.co.cake.common.RequestPathConst;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.web.authentication.AuthenticationFailureHandler;
+import org.springframework.stereotype.Component;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+
+/**
+ * FailureHandler
+ */
+@Component
+public class AdminFailureHandler implements AuthenticationFailureHandler {
+
+    @Value("${cake.base.url}")
+    protected String baseUrl;
+
+    @Override
+    public void onAuthenticationFailure(HttpServletRequest request, HttpServletResponse response, AuthenticationException exception) throws IOException {
+        String url = String.format("%s%s?error", baseUrl, RequestPathConst.AM001);
+
+        response.setStatus(HttpStatus.UNAUTHORIZED.value());
+        response.sendRedirect(url);
+    }
+}

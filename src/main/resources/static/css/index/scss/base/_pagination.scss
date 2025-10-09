@@ -1,0 +1,85 @@
+.pagination {
+	display: block;
+	padding-top: 48px;
+	@media (max-width: $viewport-sm) {
+		padding-top: 32px;
+	}
+	ul {
+		display: flex;
+		flex-wrap: wrap;
+		justify-content: center;
+		list-style: none;
+		li {
+			padding: 0 2px;
+			&.prev,
+			&.next {
+				a {
+					border: 1px solid #D1D1D1;
+					background: #fff;
+					&:hover {
+						border: 1px solid #ebebeb;
+					}
+				}
+				.svg {
+					path {
+						fill: #121212;
+					}
+				}
+			}
+			&.prev {
+				padding-left: 0;
+				padding-right: 16px;
+				@media (max-width: $viewport-sm) {
+					padding-right: 12px;
+				}
+				.svg {
+					transform: rotate(180deg);
+				}
+			}
+			&.next {
+				padding-right: 0;
+				padding-left: 16px;
+				@media (max-width: $viewport-sm) {
+					padding-left: 12px;
+				}
+			}
+			&.disabled {
+				a {
+					background: none;
+					pointer-events: none;
+				}
+				.svg {
+					path {
+						fill: #D1D1D1;
+					}
+				}
+			}
+			&.active {
+				a {
+					background: rgba(0,0,0,.11);
+				}
+			}
+			a,
+			span {
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				width: 40px;
+				height: 40px;
+				border-radius: 50%;
+				padding: 4px;
+				color: #121212;
+				font-weight: 500;
+				@media (max-width: $viewport-sm) {
+					width: 32px;
+					height: 32px;
+				}
+			}
+			a {
+				&:hover {
+					background: #ebebeb;
+				}
+			}
+		}
+	}
+}

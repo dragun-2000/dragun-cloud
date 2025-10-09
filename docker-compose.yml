@@ -1,0 +1,55 @@
+services:
+  debase-app:
+    build: .
+    container_name: debase-app
+    environment:
+      SPRING_REDIS_HOST: debase-redis
+      SPRING_REDIS_PORT: 6379
+      SPRING_DATASOURCE_URL: jdbc:postgresql://debase-db:5432/debase
+      SPRING_DATASOURCE_USERNAME: dragun
+      SPRING_DATASOURCE_PASSWORD: Picachu@123
+      SPRING_JPA_HIBERNATE_DDL_AUTO: none
+      JAVA_TOOL_OPTIONS: "-XX:-UseContainerSupport"
+    ports:
+      - "8085:8085"
+    depends_on:
+      - debase-db
+      - debase-redis
+    volumes:
+      - ./config:/app/config
+      - ./log:/app/log
+
+  debase-db:
+    image: postgres:15
+    container_name: debase-db
+    environment:
+      POSTGRES_USER: dragun
+      POSTGRES_PASSWORD: Picachu@123
+      POSTGRES_DB: debase
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  debase-redis:
+    image: redis:7
+    container_name: debase-redis
+    ports:
+      - "6379:6379"
+
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: debase-pgadmin
+    restart: always
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@local.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - "5050:80"
+    depends_on:
+      - debase-db
+
+volumes:
+  postgres_data:
