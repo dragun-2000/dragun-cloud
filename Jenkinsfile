@@ -4,7 +4,7 @@ pipeline {
     environment {
         DEPLOY_DIR = '/home/dragun/project/dragun-app'
         GIT_REPO = 'https://github.com/dragun-2000/dragun-cloud.git'
-        GIT_BRANCH = 'main'
+        GIT_BRANCH = 'develop'
     }
 
     stages {
