@@ -2,52 +2,78 @@ pipeline {
     agent any
 
     environment {
-        DOCKER_COMPOSE_PATH = '/home/dragun/project/dragun-app/docker-compose.yml'
+        DEPLOY_DIR = '/home/dragun/project/dragun-app'
+        GIT_REPO = 'https://github.com/dragun-2000/dragun-cloud.git'
+        GIT_BRANCH = 'main'
     }
 
     stages {
-        stage('Checkout') {
+        stage('Prepare Environment') {
             steps {
-                echo "📥 Pulling latest code from GitHub..."
-                git branch: 'develop', url: 'https://github.com/dragun-2000/dragun-cloud.git'
-            }
-        }
-
-        stage('Build Docker Images') {
-            steps {
-                echo "⚙️ Building Docker images..."
+                echo '🧹 Preparing workspace...'
                 sh '''
-                    set -e
-                    docker compose -f $DOCKER_COMPOSE_PATH build
+                    if [ ! -d "${DEPLOY_DIR}" ]; then
+                        mkdir -p "${DEPLOY_DIR}"
+                    fi
                 '''
             }
         }
 
-        stage('Deploy Containers') {
+        stage('Checkout Source') {
             steps {
-                echo "🚀 Restarting containers..."
-                sh '''
-                    set -e
-                    docker compose -f $DOCKER_COMPOSE_PATH down
-                    docker compose -f $DOCKER_COMPOSE_PATH up -d
-                '''
+                echo "📦 Pulling latest source code..."
+                dir("${DEPLOY_DIR}") {
+                    // Force checkout cleanly
+                    deleteDir()
+                    git branch: "${GIT_BRANCH}", url: "${GIT_REPO}"
+                }
             }
         }
 
-        stage('Verify Deployment') {
+        stage('Build & Test') {
             steps {
-                echo "🔍 Checking running containers..."
-                sh 'docker ps'
+                echo '🧱 Running Maven build and tests...'
+                dir("${DEPLOY_DIR}") {
+                    sh '''
+                        ./mvnw -B clean test || mvn -B clean test
+                    '''
+                }
+            }
+        }
+
+        stage('Build Docker Image') {
+            steps {
+                echo '🐳 Building Docker image...'
+                dir("${DEPLOY_DIR}") {
+                    sh '''
+                        docker compose build --no-cache
+                    '''
+                }
+            }
+        }
+
+        stage('Deploy Application') {
+            steps {
+                echo '🚀 Deploying updated containers...'
+                dir("${DEPLOY_DIR}") {
+                    sh '''
+                        docker compose down || true
+                        docker compose up -d
+                    '''
+                }
             }
         }
     }
 
     post {
         success {
-            echo "✅ Deployment successful!"
+            echo '✅ CI/CD pipeline completed successfully!'
+            // Uncomment and configure Telegram if needed
+            // sh 'curl -X POST https://api.telegram.org/bot<YOUR_BOT_TOKEN>/sendMessage -d "chat_id=<YOUR_CHAT_ID>&text=✅ dragun-cloud deployed successfully!" || true'
         }
         failure {
-            echo "❌ Deployment failed. Check logs for details."
+            echo '❌ Build or deployment failed!'
+            // sh 'curl -X POST https://api.telegram.org/bot<YOUR_BOT_TOKEN>/sendMessage -d "chat_id=<YOUR_CHAT_ID>&text=❌ dragun-cloud build failed!" || true'
         }
     }
 }
