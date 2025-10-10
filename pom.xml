@@ -83,7 +83,7 @@
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
-            <version>1.18.12</version>
+            <version>1.18.32</version> <!-- ✅ bản mới nhất, hỗ trợ JDK 21 -->
             <scope>provided</scope>
         </dependency>
         <!-- jackson -->

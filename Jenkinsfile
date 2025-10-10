@@ -30,12 +30,19 @@ pipeline {
             }
         }
 
+        stage('Check JDK') {
+            steps {
+                sh 'java -version'
+                sh 'echo $JAVA_HOME'
+            }
+        }
+
         stage('Build & Test') {
             steps {
                 echo '🧱 Running Maven build and tests...'
                 dir("${DEPLOY_DIR}") {
                     sh '''
-                        ./mvnw -B clean test || mvn -B clean test
+                        ./mvnw -B clean test -U || mvn -B clean test -U
                     '''
                 }
             }
