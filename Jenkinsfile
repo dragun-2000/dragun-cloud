@@ -2,58 +2,52 @@ pipeline {
     agent any
 
     environment {
-        DEPLOY_DIR = '/home/dragun/project/dragun-app'
-        GIT_REPO = 'https://github.com/dragun-2000/dragun-cloud.git'
-        GIT_BRANCH = 'develop'
+        DOCKER_COMPOSE_PATH = '/home/dragun/project/dragun-app/docker-compose.yml'
     }
 
     stages {
         stage('Checkout') {
             steps {
-                echo "📦 Pulling latest source code..."
-                dir("${DEPLOY_DIR}") {
-                    git branch: "${GIT_BRANCH}", url: "${GIT_REPO}"
-                }
+                echo "📥 Pulling latest code from GitHub..."
+                git branch: 'develop', url: 'https://github.com/dragun-2000/dragun-cloud.git'
             }
         }
 
-        stage('Build & Test') {
+        stage('Build Docker Images') {
             steps {
-                echo '🧱 Running Maven build and unit tests...'
-                dir("${DEPLOY_DIR}") {
-                    sh 'mvn -B clean test'
-                }
+                echo "⚙️ Building Docker images..."
+                sh '''
+                    set -e
+                    docker compose -f $DOCKER_COMPOSE_PATH build
+                '''
             }
         }
 
-        stage('Build Docker Image') {
+        stage('Deploy Containers') {
             steps {
-                echo '🐳 Building Docker image...'
-                dir("${DEPLOY_DIR}") {
-                    sh 'docker compose build --no-cache'
-                }
+                echo "🚀 Restarting containers..."
+                sh '''
+                    set -e
+                    docker compose -f $DOCKER_COMPOSE_PATH down
+                    docker compose -f $DOCKER_COMPOSE_PATH up -d
+                '''
             }
         }
 
-        stage('Deploy Application') {
+        stage('Verify Deployment') {
             steps {
-                echo '🚀 Deploying updated containers...'
-                dir("${DEPLOY_DIR}") {
-                    sh 'docker compose down'
-                    sh 'docker compose up -d'
-                }
+                echo "🔍 Checking running containers..."
+                sh 'docker ps'
             }
         }
     }
 
     post {
         success {
-            echo '✅ CI/CD pipeline completed successfully!'
-            sh 'curl -X POST https://api.telegram.org/bot<YOUR_BOT_TOKEN>/sendMessage -d "chat_id=<YOUR_CHAT_ID>&text=✅ dragun-cloud deployed successfully!" || true'
+            echo "✅ Deployment successful!"
         }
         failure {
-            echo '❌ Build or deployment failed!'
-            sh 'curl -X POST https://api.telegram.org/bot<YOUR_BOT_TOKEN>/sendMessage -d "chat_id=<YOUR_CHAT_ID>&text=❌ dragun-cloud build failed!" || true'
+            echo "❌ Deployment failed. Check logs for details."
         }
     }
 }
