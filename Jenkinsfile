@@ -3,10 +3,8 @@ pipeline {
 
     environment {
         // Lấy AWS credentials từ Jenkins Credentials Manager
-        environment {
-            AWS_ACCESS_KEY_ID = 'AKIA3TD2SE6JKYAZHT7X'
-            AWS_SECRET_ACCESS_KEY = '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'
-        }
+        AWS_ACCESS_KEY_ID = 'AKIA3TD2SE6JKYAZHT7X'
+        AWS_SECRET_ACCESS_KEY = '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'
 
         // Tag Docker image theo branch
         IMAGE_NAME = "dragun-cloud"
