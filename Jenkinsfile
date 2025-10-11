@@ -64,9 +64,9 @@ pipeline {
                 sh """
                     echo "===> Docker Compose version:"
                     docker compose version
-                    echo "===> Bringing containers up..."
+                    echo "===> Bringing containers up..."                    
                     docker compose down
-                    docker compose up -d
+                    docker compose up -d --build
                     docker ps -a
                     docker logs --tail 50 debase-app
                     echo "===> Deployment completed."
