@@ -73,6 +73,8 @@ pipeline {
                     docker compose up -d
                     docker ps -a
                     hostname -I
+                    docker logs -f debase-app
+                    docker exec -it debase-app ls -l /app
                     curl http://localhost:8085
                 """
             }

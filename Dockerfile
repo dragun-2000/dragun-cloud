@@ -28,7 +28,7 @@ RUN chmod -R 777 $APP_HOME
 EXPOSE 8085
 
 # Copy fat jar from builder
-COPY --from=builder /build/target/*.jar app.jar
+COPY --from=builder /target/*.jar app.jar
 
 # Copy wait-for-it.sh
 COPY wait-for-it.sh /wait-for-it.sh
