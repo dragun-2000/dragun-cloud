@@ -41,7 +41,8 @@ pipeline {
             steps {
                 echo "🐳 Building Docker image..."
                 sh """
-                    docker compose build --no-cache
+                    # Build image với tag chính xác
+                    docker build -t ${IMAGE_NAME}:latest .
                     docker tag ${IMAGE_NAME}:latest ${IMAGE_NAME}:${IMAGE_TAG}
                 """
             }
