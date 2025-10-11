@@ -66,9 +66,10 @@ pipeline {
                     docker compose version
                     echo "===> Bringing containers up..."
                     docker compose down
-                    docker compose up -d --build
+                    docker compose up -d
                     docker ps -a
-                    docker logs -f debase-app
+                    docker logs --tail 50 debase-app
+                    echo "===> Deployment completed."
                 """
             }
         }
