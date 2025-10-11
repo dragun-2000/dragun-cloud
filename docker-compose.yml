@@ -39,17 +39,17 @@ services:
     ports:
       - "6379:6379"
 
-  pgadmin:
-    image: dpage/pgadmin4:latest
-    container_name: debase-pgadmin
-    restart: always
-    environment:
-      PGADMIN_DEFAULT_EMAIL: admin@local.com
-      PGADMIN_DEFAULT_PASSWORD: admin
-    ports:
-      - "5050:80"
-    depends_on:
-      - debase-db
+  # pgadmin:
+  #   image: dpage/pgadmin4:latest
+  #   container_name: debase-pgadmin
+  #   restart: always
+  #   environment:
+  #     PGADMIN_DEFAULT_EMAIL: admin@local.com
+  #     PGADMIN_DEFAULT_PASSWORD: admin
+  #   ports:
+  #     - "5050:80"
+  #   depends_on:
+  #     - debase-db
 
 volumes:
   postgres_data:
