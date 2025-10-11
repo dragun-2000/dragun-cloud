@@ -33,7 +33,7 @@ pipeline {
         stage('Build') {
             steps {
                 echo "🔹 Building Spring Boot application..."
-                sh './mvnw clean package -DskipTests'
+                sh 'mvn clean package -DskipTests'
             }
         }
 
