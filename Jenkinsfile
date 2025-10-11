@@ -72,6 +72,7 @@ pipeline {
                     docker compose down
                     docker compose up -d
                     docker ps -a
+                    curl http://localhost:8085
                 """
             }
         }
