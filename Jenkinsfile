@@ -70,11 +70,12 @@ pipeline {
                     docker compose version
                     echo "===> Bringing containers up..."
                     docker compose down
-                    docker compose up -d
+                    docker compose up -d --build
                     docker ps -a
                     hostname -I
                     docker logs -f debase-app
                     docker exec -it debase-app ls -l /app
+                    docker volume ls
                     curl http://localhost:8085
                 """
             }
