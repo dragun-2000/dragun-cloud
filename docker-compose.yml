@@ -4,16 +4,9 @@ services:
     container_name: debase-app
     env_file:
       - .env
-    # environment:
-    #   SPRING_REDIS_HOST: debase-redis
-    #   SPRING_REDIS_PORT: 6379
-    #   SPRING_DATASOURCE_URL: jdbc:postgresql://debase-db:5432/debase
-    #   SPRING_DATASOURCE_USERNAME: dragun
-    #   SPRING_DATASOURCE_PASSWORD: Picachu@123
-    #   SPRING_JPA_HIBERNATE_DDL_AUTO: none
-    #   JAVA_TOOL_OPTIONS: "-XX:-UseContainerSupport"
-    #   AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
-    #   AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+    environment:
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
     ports:
       - "8085:8085"
     depends_on:

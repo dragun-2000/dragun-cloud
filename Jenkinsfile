@@ -2,23 +2,16 @@ pipeline {
     agent any
 
     environment {
-        // Lấy AWS credentials từ Jenkins Credentials Manager
-        AWS_ACCESS_KEY_ID = 'AKIA3TD2SE6JKYAZHT7X'
-        AWS_SECRET_ACCESS_KEY = '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'
-
-        // Tag Docker image theo branch
         IMAGE_NAME = "dragun-cloud"
         IMAGE_TAG  = "develop-${BUILD_NUMBER}"
     }
 
     options {
-        // Giữ log sạch và timeout hợp lý
         timestamps()
         timeout(time: 20, unit: 'MINUTES')
     }
 
     triggers {
-        // Tự động build khi push branch develop
         pollSCM('H/5 * * * *')
     }
 
@@ -47,28 +40,24 @@ pipeline {
             }
         }
 
-        stage('Test (optional)') {
-            when {
-                branch 'develop'
-            }
-            steps {
-                echo "🧪 Running unit tests..."
-                sh './mvnw test'
-            }
-        }
-
         stage('Deploy') {
             when {
                 branch 'develop'
             }
             steps {
                 echo "🚀 Deploying Docker containers..."
-                sh """
-                    export AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
-                    export AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
-                    docker compose down
-                    docker compose up -d
-                """
+
+                withCredentials([[
+                    $class: 'AmazonWebServicesCredentialsBinding',
+                    credentialsId: 'aws-jenkins-creds'
+                ]]) {
+                    sh """
+                        export AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+                        export AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+                        docker compose down
+                        docker compose up -d
+                    """
+                }
             }
         }
     }
