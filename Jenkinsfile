@@ -2,88 +2,83 @@ pipeline {
     agent any
 
     environment {
-        DEPLOY_DIR = '/home/dragun/project/dragun-app'
-        GIT_REPO = 'https://github.com/dragun-2000/dragun-cloud.git'
-        GIT_BRANCH = 'develop'
+        // Lấy AWS credentials từ Jenkins Credentials Manager
+        AWS_ACCESS_KEY_ID     = credentials('AWS_ACCESS_KEY_ID')
+        AWS_SECRET_ACCESS_KEY = credentials('AWS_SECRET_ACCESS_KEY')
+
+        // Tag Docker image theo branch
+        IMAGE_NAME = "dragun-cloud"
+        IMAGE_TAG  = "develop-${BUILD_NUMBER}"
+    }
+
+    options {
+        // Giữ log sạch và timeout hợp lý
+        timestamps()
+        timeout(time: 20, unit: 'MINUTES')
+    }
+
+    triggers {
+        // Tự động build khi push branch develop
+        pollSCM('H/5 * * * *')
     }
 
     stages {
-        stage('Prepare Environment') {
+        stage('Checkout') {
             steps {
-                echo '🧹 Preparing workspace...'
-                sh '''
-                    if [ ! -d "${DEPLOY_DIR}" ]; then
-                        mkdir -p "${DEPLOY_DIR}"
-                    fi
-                '''
+                echo "🔹 Checking out branch: ${env.BRANCH_NAME}"
+                checkout scm
             }
         }
 
-        stage('Checkout Source') {
+        stage('Build') {
             steps {
-                echo "📦 Pulling latest source code..."
-                dir("${DEPLOY_DIR}") {
-                    // Force checkout cleanly
-                    deleteDir()
-                    git branch: "${GIT_BRANCH}", url: "${GIT_REPO}"
-                }
+                echo "🔹 Building Spring Boot application..."
+                sh './mvnw clean package -DskipTests'
             }
         }
 
-        stage('Check JDK') {
+        stage('Docker Build') {
             steps {
-                sh 'java -version'
-                sh 'echo $JAVA_HOME'
+                echo "🐳 Building Docker image..."
+                sh """
+                    docker compose build --no-cache
+                    docker tag ${IMAGE_NAME}:latest ${IMAGE_NAME}:${IMAGE_TAG}
+                """
             }
         }
 
-        stage('Build & Test') {
+        stage('Test (optional)') {
+            when {
+                branch 'develop'
+            }
             steps {
-                echo '🧱 Running Maven build and tests...'
-                dir("${DEPLOY_DIR}") {
-                    sh '''
-                        ./mvnw -B clean test -U || mvn -B clean test -U
-                    '''
-                }
+                echo "🧪 Running unit tests..."
+                sh './mvnw test'
             }
         }
 
-        stage('Build Docker Image') {
+        stage('Deploy') {
+            when {
+                branch 'develop'
+            }
             steps {
-                echo '🐳 Building Docker image...'
-                dir("${DEPLOY_DIR}") {
-                    sh '''
-                        docker compose build --no-cache
-                    '''
-                }
+                echo "🚀 Deploying Docker containers..."
+                sh """
+                    export AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+                    export AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+                    docker compose down
+                    docker compose up -d
+                """
             }
         }
-
-        stage('Deploy Application') { 
-            steps { 
-                echo '🚀 Deploying updated containers...' 
-                dir("${DEPLOY_DIR}") { 
-                    sh ''' 
-                        docker rm -f debase-db || true 
-                        docker rm -f debase-redis || true 
-                        docker rm -f debase-app || true 
-                        docker compose down || true 
-                        docker compose up -d 
-                    ''' 
-                    } 
-                } 
-            }
-        }   
+    }
 
     post {
         success {
-            echo '✅ CI/CD pipeline completed successfully!'
-            // Uncomment and configure Telegram if needed
-            // sh 'curl -X POST https://api.telegram.org/bot<YOUR_BOT_TOKEN>/sendMessage -d "chat_id=<YOUR_CHAT_ID>&text=✅ dragun-cloud deployed successfully!" || true'
+            echo "✅ Build & Deploy successful! - ${IMAGE_TAG}"
         }
         failure {
-            echo '❌ Build or deployment failed!'
-            // sh 'curl -X POST https://api.telegram.org/bot<YOUR_BOT_TOKEN>/sendMessage -d "chat_id=<YOUR_CHAT_ID>&text=❌ dragun-cloud build failed!" || true'
+            echo "❌ Build or deploy failed!"
         }
     }
 }
