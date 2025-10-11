@@ -59,9 +59,6 @@ pipeline {
         // }
 
         stage('Deploy') {
-            when {
-                branch 'develop'
-            }
             steps {
                 echo "🚀 Deploying Docker containers..."
                 sh """
