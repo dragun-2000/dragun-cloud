@@ -65,13 +65,14 @@ pipeline {
             steps {
                 echo "🚀 Deploying Docker containers..."
                 sh """
-                    export AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
-                    export AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+                    export AWS_ACCESS_KEY_ID=${env.AWS_ACCESS_KEY_ID}
+                    export AWS_SECRET_ACCESS_KEY=${env.AWS_SECRET_ACCESS_KEY}
                     echo "===> Current directory: $(pwd)"
                     echo "===> Files:"
                     ls -al
                     echo "===> Docker Compose version:"
                     docker compose version
+                    echo "===> Bringing containers up..."
                     docker compose down
                     docker compose up -d
                     docker ps -a
