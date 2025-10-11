@@ -8,8 +8,7 @@ services:
       SPRING_DATASOURCE_URL: jdbc:postgresql://debase-db:5432/debase
       SPRING_DATASOURCE_USERNAME: dragun
       SPRING_DATASOURCE_PASSWORD: Picachu@123
-      SPRING_JPA_HIBERNATE_DDL_AUTO: update
-      SPRING_JPA_SHOW_SQL: "true"
+      SPRING_JPA_HIBERNATE_DDL_AUTO: none
       JAVA_TOOL_OPTIONS: "-XX:-UseContainerSupport"
       AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
       AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
@@ -19,6 +18,8 @@ services:
       - debase-db
       - debase-redis
     volumes:
+      - ./init:/docker-entrypoint-initdb.d
+      - db_data:/var/lib/postgresql/data
       - ./config:/app/config
       - ./log:/app/log
 
