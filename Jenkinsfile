@@ -18,8 +18,8 @@ pipeline {
     }
 
     triggers {
-        // Tự động build khi push branch develop
-        pollSCM('H/5 * * * *')
+        // Tự động chạy mỗi khi có push lên branch develop
+        githubPush()
     }
 
     stages {
@@ -74,9 +74,6 @@ pipeline {
                     docker ps -a
                     hostname -I
                     docker logs -f debase-app
-                    docker exec -it debase-app ls -l /app
-                    docker volume ls
-                    curl http://localhost:8085
                 """
             }
         }
