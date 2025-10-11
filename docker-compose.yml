@@ -18,8 +18,6 @@ services:
       - debase-db
       - debase-redis
     volumes:
-      - ./init:/docker-entrypoint-initdb.d
-      - db_data:/var/lib/postgresql/data
       - ./config:/app/config
       - ./log:/app/log
 
@@ -33,6 +31,7 @@ services:
     ports:
       - "5432:5432"
     volumes:
+      - ./init:/docker-entrypoint-initdb.d
       - postgres_data:/var/lib/postgresql/data
 
   debase-redis:
