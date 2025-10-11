@@ -67,7 +67,6 @@ pipeline {
                 sh """
                     export AWS_ACCESS_KEY_ID=AKIA3TD2SE6JKYAZHT7X
                     export AWS_SECRET_ACCESS_KEY=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
-                    echo "===> Current directory: $(pwd)"
                     echo "===> Files:"
                     ls -al
                     echo "===> Docker Compose version:"
