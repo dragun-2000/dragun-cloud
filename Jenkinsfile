@@ -65,8 +65,8 @@ pipeline {
             steps {
                 echo "🚀 Deploying Docker containers..."
                 sh """
-                    export AWS_ACCESS_KEY_ID=${env.AWS_ACCESS_KEY_ID}
-                    export AWS_SECRET_ACCESS_KEY=${env.AWS_SECRET_ACCESS_KEY}
+                    export AWS_ACCESS_KEY_ID=AKIA3TD2SE6JKYAZHT7X
+                    export AWS_SECRET_ACCESS_KEY=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
                     echo "===> Current directory: $(pwd)"
                     echo "===> Files:"
                     ls -al
