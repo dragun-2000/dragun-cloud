@@ -59,18 +59,21 @@ pipeline {
             }
         }
 
-        stage('Deploy Application') {
-            steps {
-                echo '🚀 Deploying updated containers...'
-                dir("${DEPLOY_DIR}") {
-                    sh '''
-                        docker compose down || true
-                        docker compose up -d
-                    '''
-                }
+        stage('Deploy Application') { 
+            steps { 
+                echo '🚀 Deploying updated containers...' 
+                dir("${DEPLOY_DIR}") { 
+                    sh ''' 
+                        docker rm -f debase-db || true 
+                        docker rm -f debase-redis || true 
+                        docker rm -f debase-app || true 
+                        docker compose down || true 
+                        docker compose up -d 
+                    ''' 
+                    } 
+                } 
             }
-        }
-    }
+        }   
 
     post {
         success {
