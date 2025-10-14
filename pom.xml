@@ -257,6 +257,25 @@
             <version>17.0.0</version> <!-- Kiểm tra phiên bản mới nhất trên GitHub -->
         </dependency>
 
+        <dependency>
+            <groupId>io.minio</groupId>
+            <artifactId>minio</artifactId>
+            <version>8.5.10</version>
+            <exclusions>
+                <exclusion>
+                <groupId>com.squareup.okhttp3</groupId>
+                <artifactId>okhttp</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+
+            <!-- Thêm version okhttp mới -->
+        <dependency>
+            <groupId>com.squareup.okhttp3</groupId>
+            <artifactId>okhttp</artifactId>
+            <version>4.12.0</version>
+        </dependency>
+
     </dependencies>
 
     <build>

@@ -1,0 +1,305 @@
+<!doctype html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="header :: common-header"></head>
+<body>
+    <div class="wrapper">
+    <div th:replace="header :: header"></div>
+    <header>
+        <nav>
+            <ul>
+                <li><a href="/privacy-policy">Chính sách của chúng tôi</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <div class="container">
+        <!-- Tab Navigation -->
+        <div class="tabs">
+            <button class="tab-button" data-tab="privacy-policy" onclick="showTab('privacy-policy')">Chính sách bảo mật</button>
+            <button class="tab-button" data-tab="delivery-policy" onclick="showTab('delivery-policy')">Chính sách giao hàng</button>
+            <button class="tab-button" data-tab="return-policy" onclick="showTab('return-policy')">Chính sách đổi trả</button>
+            <button class="tab-button" data-tab="check-policy" onclick="showTab('check-policy')">Chính sách kiểm hàng</button>
+            <button class="tab-button" data-tab="warranty-policy" onclick="showTab('warranty-policy')">Chính sách bảo hành</button>
+            <button class="tab-button" data-tab="service-provider" onclick="showTab('service-provider')">Phân định trách nhiệm của đơn vị vận chuyển</button>
+        </div>
+
+        <!-- Nội dung các tab -->
+        <div class="tab-content" id="privacy-policy">
+            <h2>Chính sách bảo mật</h2>
+            <p>
+                Chính sách bảo mật này mô tả cách thức de basé thu thập, sử dụng và bảo vệ thông tin cá nhân của bạn khi sử dụng dịch vụ của chúng tôi.
+            </p>
+            <p>
+                de basé cam kết bảo vệ sự riêng tư của bạn và chỉ thu thập thông tin cần thiết cho các giao dịch của bạn.
+            </p>
+            <h3>Mục đích thu thập thông tin cá nhân</h3>
+            <p>
+                de basé thu thập thông tin cá nhân của bạn để phục vụ mục đích cung cấp dịch vụ tốt nhất, bao gồm việc xử lý đơn hàng, giao hàng, cung cấp thông tin sản phẩm và dịch vụ mới.
+            </p>
+            <h3>Loại thông tin thu thập</h3>
+            <ul>
+                <li>Tên, địa chỉ, số điện thoại, email</li>
+                <li>Thông tin về đơn hàng, phương thức thanh toán</li>
+                <li>Các thông tin khác mà bạn cung cấp khi sử dụng dịch vụ</li>
+            </ul>
+            <h3>Chính sách bảo mật thông tin</h3>
+            <p>
+                de basé cam kết bảo vệ thông tin cá nhân của bạn bằng các biện pháp kỹ thuật và tổ chức. Mọi thông tin cá nhân của bạn sẽ được lưu trữ và bảo mật trên hệ thống máy chủ an toàn.
+            </p>
+            <p>
+                tuyệt đối không mua bán, trao đổi thông tin khách hàng với bên thứ 3 vì mục đích thương mại.
+            </p>
+            <p>
+                Trong trường hợp máy chủ lưu trữ thông tin bị hacker tấn công dẫn đến mất mát dữ liệu cá nhân khách hàng, de basé sẽ có trách nhiệm thông báo vụ việc cho cơ quan chức năng điều tra xử lý kịp thời và thông báo cho khách hàng được biết.
+            </p>
+            <p>
+                Khi phát hiện thông tin cá nhân của mình bị sử dụng sai mục đích hoặc phạm vi, khách hàng gửi email khiếu nại đến email debase.1995@gmail.com hoặc gọi điện thoại tới số 0877.037.817 để khiếu nại và cung cấp chứng cứ liên quan tới vụ việc.
+            </p>
+            <p>&nbsp;&nbsp;&nbsp;</p>
+        </div>
+
+        <div class="tab-content" id="delivery-policy" style="display: none;">
+            <h2>Chính sách giao hàng</h2>
+            <p>
+                Chính sách giao hàng của de basé đảm bảo rằng bạn sẽ nhận được sản phẩm trong thời gian nhanh nhất có thể, tùy thuộc vào địa chỉ giao hàng.
+            </p>
+            <h3>Phạm vi giao hàng</h3>
+            <p>de basé cung cấp dịch vụ giao hàng trên toàn quốc. Phí giao hàng sẽ được tính dựa trên địa điểm giao hàng và phương thức giao hàng bạn chọn.</p>
+            <h3>Thời gian giao hàng</h3>
+            <ul>
+                <li>Đơn hàng trong khu vực thành phố Hà Nội sẽ được giao trong ngày ( Hỏa Tốc) hoặc từ 1-2 ngày làm việc với các đơn giao thường.</li>
+                <li>Đơn hàng ở các tỉnh thành khác sẽ được giao trong vòng 3-5 ngày làm việc.</li>
+            </ul>
+            <h3>Phí giao hàng</h3>
+            <ul>
+                <li>Phí giao hàng sẽ được tính dựa trên địa điểm và phương thức vận chuyển.</li>
+            </ul>
+            <p>&nbsp;&nbsp;&nbsp;</p>
+        </div>
+        <div class="tab-content" id="check-policy" style="display: none;">
+            <h2>CHÍNH SÁCH KIỂM HÀNG</h2>
+            <p>
+                Để đảm bảo quyền lợi của khách hàng, yên tâm hơn khi mua sắm de basé áp dụng chính sách kiểm hàng như sau: 
+            </p>
+            <h3>1. Quyền kiểm tra hàng hóa</h3>
+            <p>Khách hàng có quyền kiểm tra sản phẩm trước khi nhận hàng từ đơn vị vận chuyển. Việc kiểm tra bao gồm: </p>
+            <h3>Thời gian giao hàng</h3>
+            <ul>
+                <li>Kiểm tra sản phẩm có đũng mẫu mã, số lượng theo đơn đặt hàng</li>
+                <li>Kiểm tra tình trạng sản phẩm ( không lỗi, sai màu sắc hoặc có dấu hiệu hư hỏng)</li>
+            </ul>
+            <h3>2. Quy trình kiểm hàng</h3>
+            <ul>
+                <li>Khi nhận hàng từ nhân viên giao hàng, khách hàng có thể yêu cầu mở gói hàng để kiểm tra trước khi ký nhận, thanh toán đơn hàng</li>
+                <li>Nếu sản phẩm đúng với đơn hàng và không có dấu hiệu hư hỏng, khách hàng vui long ký nhận và thanh toán( Nếu đơn hàng chưa thanh toán trước đó)</li>
+                <li>Nếu phát hiện sản phẩm có lỗi, không đúng mẫu mã, số lượng hoặc hư hỏng, khách hàng có quyền từ chối nhận hàng và liên hệ ngay với de basé qua Hotline: 0877.037.817 để được hỗ trợ.</li>
+            </ul>
+            <h3>3.Lưu ý</h3>
+            <ul>
+                <li>
+                    de basé không hỗ trợ TRẢ HÀNG với  những lý do chủ quan của khách hàng ( Không hợp, không vừa, không ưng ý…) Toàn bộ thông tin, số đo sản phẩm đều được de basé cung cấp đầy đủ ở mô tả, khách hàng vui lòng tham khảo thật kỹ trước khi mua hàng
+                </li>
+            </ul>
+            <p>&nbsp;&nbsp;&nbsp;</p>
+        </div>
+
+        <div class="tab-content" id="return-policy" style="display: none;">
+            <h2>CHÍNH SÁCH ĐỔI HÀNG</h2>
+            <p>
+                1. Khi nhận được hàng bạn vui lòng kiểm tra kĩ lại sản phẩm, De Basé sẽ tiếp nhận hỗ trợ đổi size, đổi hàng trong vòng 3 ngày( tính từ ngày bạn nhận được đơn hàng)
+            </p>
+            <p>
+                2. Đối với các sản phẩm đổi, bạn vui lòng không tháo tag, sản phẩm còn ở trạng thái mới, chưa qua sử dụng, chưa giặt ủi, không có mùi lạ.
+            </p>
+            <p>
+                3. De Basé chỉ nhận đổi hàng, KHÔNG NHẬN TRẢ HÀNG ( trừ trường hợp lỗi do nhà sản xuất).
+            </p>
+            <p>
+                4. Khi bạn có nhu cầu đổi vui lòng chọn sản phẩm có giá trị ngang hoặc cao hơn giá trị sản phẩm cũ. ( De Basé không hoàn tiền chênh giữa 2 sản phẩm).
+            </p>
+
+            <h3>QUY TRÌNH ĐỔI HÀNG</h3>
+            <p>1. Trường hợp bạn muốn đổi mẫu, đổi size vui lòng gửi lại sản phẩm để chúng mình kiểm tra tình trạng hàng, (thời điểm gửi lại sản phẩm không được quá 2 ngày kể từ khi De Basé tiếp nhận nhu cầu đổi từ bạn) sau đó De Basé sẽ tiến hành gửi sản phẩm mới trong thời gian sớm nhất. Khách hàng sẽ chịu toàn bộ phí ship 2 chiều.</p>
+            <p>2. Trường hợp sản phẩm bị lỗi do nhà sản xuất, hoặc do De Basé gửi nhầm mẫu, nhầm size, chúng mình sẵn sàng hỗ trợ đổi 2 chiều và chịu toàn bộ phí ship đổi cho khách hàng.</p>
+            <p>3. Thời gian đổi hàng sẽ dao động từ 1-2 ngày ( Nội thành Hà Nội) và từ 2-4 ngày (ngoại thành và các tỉnh khác)</p>
+            <p>&nbsp;&nbsp;&nbsp;</p>
+        </div>
+
+        <div class="tab-content" id="warranty-policy" style="display: none;">
+            <h2>Chính sách bảo hành</h2>
+            <p>
+                Sản phẩm được bảo hành theo chính sách bảo hành chi tiết của từng sản phẩm.
+            </p>
+            <h3>Điều kiện bảo hành</h3>
+            <ul>
+                <li>Sản phẩm phải còn nguyên vẹn và không có dấu hiệu bị hư hỏng do sử dụng sai cách.</li>
+                <li>Hóa đơn mua hàng hoặc mã đơn hàng phải được cung cấp khi yêu cầu bảo hành.</li>
+            </ul>
+            <h3>Cách thức yêu cầu bảo hành</h3>
+            <p>Liên hệ với qua hotline hoặc fanpage để được hỗ trợ nhanh nhất.</p>
+            <p>&nbsp;&nbsp;&nbsp;</p>
+        </div>
+        <div class="tab-content" id="service-provider" style="display: none;">
+            <h2>Phân định trách nhiệm của đơn vị vận chuyển.</h2>
+            <p>
+                de basé chịu trách nhiệm cung cấp đầy đủ chứng từ liên quan đến hàng hóa theo quy định của pháp luật.  
+            </p>
+            <p>
+                Trong trường hợp phát sinh tranh chấp hoặc thất lạc hàng hóa, đơn vị vận chuyển có trách nhiệm phối hợp với de base để giải quyết và bồi thường theo quy định của pháp luật và điều khoản hợp đồng đã ký kết.
+            </p>
+            <p>
+                Khách hàng có quyền yêu cầu cung cấp thông tin về quá trình vận chuyển và trạng thái đơn hàng từ đơn vị vận chuyển khi cần thiếu
+            </p>
+            <h3>5. Liên hệ hỗ trợ</h3>
+            <ul>
+                <li>Tầng 20 ,Tòa nhà văn phòng 789B Mỹ Đình, đường Nhân Mỹ, Phường Mỹ Đình 1, Quận Nam Từ Liêm, Thành phố Hà Nội, Việt Nam</li>
+                <li>MST: 0110043207</li>
+                <li>Email: debase.1995@gmail.com</li>
+                <li>Hotline: 0877.037.817</li>
+            </ul>
+            <p>&nbsp;&nbsp;&nbsp;</p>
+        </div>
+    </div>
+
+    <div th:replace="header :: footer"></div>
+    </div>
+</body>
+
+<script th:src="@{/js/policy/policy-common.js}"></script>
+
+<style>
+   /* Cơ bản reset một số kiểu mặc định */
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+    
+    /* Toàn bộ trang */
+    body {
+        font-family: Arial, sans-serif;
+        background-color: #f4f4f4;
+        color: #333;
+        line-height: 1.6;
+    }
+    
+    /* Header */
+    header {
+        background-color: #333;
+        color: #fff;
+        padding: 15px 0;
+        text-align: center;
+    }
+    
+    header nav ul {
+        list-style: none;
+        padding: 0;
+    }
+    
+    header nav ul li {
+        display: inline;
+        margin: 0 15px;
+    }
+    
+    header nav ul li a {
+        color: #fff;
+        text-decoration: none;
+        font-size: 18px;
+    }
+    
+    /* Nội dung chính */
+    .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        background-color: #fff;
+        padding: 30px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+    
+    h1 {
+        text-align: center;
+        margin-bottom: 30px;
+        color: #333;
+    }
+    
+    /* Tabs */
+    .tabs {
+        display: flex;
+        justify-content: center;
+        margin-bottom: 20px;
+    }
+    
+    .tab-button {
+        background-color: #6b736c;
+        color: white;
+        padding: 10px 20px;
+        margin: 0 10px;
+        border: none;
+        cursor: pointer;
+        font-size: 16px;
+        border-radius: 5px;
+        transition: background-color 0.3s ease;
+    }
+    
+    /* Highlight active tab */
+    .tab-button.active {
+        background-color: #45a049; /* Màu khi tab được chọn */
+    }
+    
+    /* Khi hover vào nút */
+    .tab-button:hover {
+        background-color: #45a049;
+    }
+    
+    .tab-button:focus {
+        outline: none;
+    }
+    
+    /* Nội dung tab */
+    .tab-content {
+        display: none;
+        padding: 20px;
+        background-color: #f9f9f9;
+        border-radius: 5px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
+        margin-bottom: 30px;
+    }
+    
+    .tab-content h2 {
+        color: #333;
+        margin-bottom: 20px;
+    }
+    
+    .tab-content h3 {
+        color: #555;
+        margin-top: 20px;
+    }
+    
+    .tab-content p {
+        margin: 10px 0;
+        font-size: 16px;
+    }
+    
+    .tab-content ul {
+        list-style-type: disc;
+        margin-left: 20px;
+    }
+    
+    .tab-content ul li {
+        margin: 5px 0;
+    }
+    
+    /* Mở rộng khi kích thước màn hình nhỏ */
+    @media (max-width: 768px) {
+        .tabs {
+            flex-direction: column;
+            align-items: center;
+        }
+    
+        .tab-button {
+            width: 100%;
+            margin: 5px 0;
+        }
+    }
+</style>
+</html>

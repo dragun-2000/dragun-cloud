@@ -1,0 +1,135 @@
+
+/* Cơ bản reset một số kiểu mặc định */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* Toàn bộ trang */
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f4;
+    color: #333;
+    line-height: 1.6;
+    padding: 20px;
+}
+
+/* Header */
+header {
+    background-color: #333;
+    color: #fff;
+    padding: 15px 0;
+    text-align: center;
+}
+
+header nav ul {
+    list-style: none;
+    padding: 0;
+}
+
+header nav ul li {
+    display: inline;
+    margin: 0 15px;
+}
+
+header nav ul li a {
+    color: #fff;
+    text-decoration: none;
+    font-size: 18px;
+}
+
+/* Nội dung chính */
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    background-color: #fff;
+    padding: 30px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+h1 {
+    text-align: center;
+    margin-bottom: 30px;
+    color: #333;
+}
+
+/* Tabs */
+.tabs {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 20px;
+}
+
+.tab-button {
+    background-color: #6b736c;
+    color: white;
+    padding: 10px 20px;
+    margin: 0 10px;
+    border: none;
+    cursor: pointer;
+    font-size: 16px;
+    border-radius: 5px;
+    transition: background-color 0.3s ease;
+}
+
+/* Highlight active tab */
+.tab-button.active {
+    background-color: #45a049; /* Màu khi tab được chọn */
+}
+
+/* Khi hover vào nút */
+.tab-button:hover {
+    background-color: #45a049;
+}
+
+.tab-button:focus {
+    outline: none;
+}
+
+/* Nội dung tab */
+.tab-content {
+    display: none;
+    padding: 20px;
+    background-color: #f9f9f9;
+    border-radius: 5px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
+    margin-bottom: 30px;
+}
+
+.tab-content h2 {
+    color: #333;
+    margin-bottom: 20px;
+}
+
+.tab-content h3 {
+    color: #555;
+    margin-top: 20px;
+}
+
+.tab-content p {
+    margin: 10px 0;
+    font-size: 16px;
+}
+
+.tab-content ul {
+    list-style-type: disc;
+    margin-left: 20px;
+}
+
+.tab-content ul li {
+    margin: 5px 0;
+}
+
+/* Mở rộng khi kích thước màn hình nhỏ */
+@media (max-width: 768px) {
+    .tabs {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .tab-button {
+        width: 100%;
+        margin: 5px 0;
+    }
+}

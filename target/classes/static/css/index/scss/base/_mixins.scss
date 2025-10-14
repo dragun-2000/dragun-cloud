@@ -1,0 +1,57 @@
+@mixin box-sizing($type: border-box) {
+    -webkit-box-sizing: $type;
+    -moz-box-sizing: $type;
+    -o-box-sizing: $type;
+    box-sizing: $type;
+}
+
+@mixin transform($property) {
+    -webkit-transform: $property;
+    -ms-transform: $property;
+    -o-transform: $property;
+    transform: $property;
+}
+
+@mixin transition($property) {
+    -webkit-transition: $property;
+    -ms-transition: $property;
+    -o-transition: $property;
+    transition: $property;
+}
+
+@mixin user-select($property) {
+    -webkit-user-select: $property;
+    -moz-user-select: $property;
+    -ms-user-select: $property;
+    user-select: $property;
+}
+
+@mixin border-radius($radius) {
+    border-radius: $radius;
+    -moz-border-radius: $radius;
+    -webkit-border-radius: $radius;
+    -o-border-radius: $radius;
+    -ms-border-radius: $radius;
+}
+
+@mixin appearance($value) {
+    -moz-appearance: $value;
+    -webkit-appearance: $value;
+    -o-appearance: $value;
+    appearance: $value;
+}
+
+@mixin flexbox {
+    display: -moz-flex;
+    display: -webkit-box;
+    display: -ms-flexbox;
+    display: flex;
+    -ms-flex-wrap: wrap;
+    flex-wrap: wrap;
+}
+
+@mixin box-shadow($shadow) {
+    -webkit-box-shadow: $shadow;
+    -moz-box-shadow: $shadow;
+    box-shadow: $shadow;
+}

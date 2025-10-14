@@ -1,0 +1,50 @@
+<!doctype html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="header :: common-header"></head>
+<body>
+  <div class="wrapper">
+    <div th:replace="header :: header"></div>
+    
+    <div class="main main--pageProducts">
+    <div class="wrap">
+      <div class="banner-products" th:if="${category} == THEORE">
+        <img src="/images/data/thumb-banner02.jpg" alt="">
+      </div>
+      <div class="groupProducts">
+        <div class="title">
+          <h2 class="title-tlt text-shadow-bold text-responsive" th:text="${category}"></h2>
+        </div>
+        <div class="products-list">
+          <ul class="list-style-none">
+            <li th:each="product: ${products}">
+              <a class="products-inner" th:href="@{/products(id=${product.id})}">
+                <div class="products-thumb">
+                  <div class="thumbnail">
+                    <img th:src="${product.image}" alt="">
+                  </div>
+                </div>
+                <div class="products-content">
+                  <h3 class="products-title" th:text="${product.name}"></h3>
+                  <h3 th:if="${product.outStock}" style="color: red;">(Hết Hàng)</h3>
+                  <p class="products-price">
+                    <del th:if="${product.hasDiscount}" class="products-price" th:text="${product.priceDisplay} + VND"></del>
+                    <p th:style="${product.hasDiscount} ? 'color: red;' : ''" class="price-standard"><span class="price" th:text="${product.discountPriceDisplay} + VND"></span></p>
+                  </p>
+                  <div class="products-color">
+                    <span th:each="color : ${product.codeColors}" th:style="'background:' + ${color}"></span>
+                  </div>
+                </div>
+              </a>
+            </li>
+          </ul>
+        </div>
+
+        <div th:replace = "~{paging :: bottom-pagination}"></div>
+
+      </div>
+    </div>
+  </div><!--/main -->
+  <div th:replace="header :: footer"></div>
+</div><!--/wrapper -->
+</body>
+</html>

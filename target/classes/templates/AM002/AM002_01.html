@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.w3.org/1999/xhtml" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security" layout:decorate="~{template/baseManage.html}">
+<div class="container-fluid" layout:fragment="main-content">
+  <link rel="stylesheet" th:href="@{/css/tempusdominus-bootstrap-4.min.css}"/>
+  <link rel="stylesheet" th:href="@{/css/bootstrap-select.css}" />
+  <link rel="Stylesheet" type="text/css" th:href="@{/css/jquery-ui.css}" />
+  <link rel="Stylesheet" type="text/css" th:href="@{/css/jquery-ui.min.css}" />
+  <script th:src="@{/js/jquery-3.3.1.min.js}"></script>
+  <script th:src="@{/js/jquery-ui.min.js}"></script>
+
+  <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+
+  <div class="row">
+    <div th:replace = "~{template/sidebar :: sidebar}"></div>
+
+    <main class="main-content col-lg-10 col-md-9 col-sm-12 p-0 offset-lg-2 offset-md-3">
+      <div th:replace = "~{template/navbar :: navbar}"></div>
+
+      <div class="main-content-container container-fluid">
+        <div class="page-header text-center no-gutters py-4">
+          <h3 class="page-title font-weight-bold">Chi Tiết Đơn Hàng</h3>
+        </div>
+
+        <div class="text-left">
+          <a th:href="@{/AM/AM002}" class="ml-2 mt-1 custom-back-button"><i
+                  class="far fa-arrow-alt-circle-left"></i>&nbsp;Quay Lại</a>
+        </div>
+
+        <div class="table-log">
+          <div class="card card-small mb-4">
+            <div class="card-body p-0 text-center">
+              <div class="table-responsive card-border">
+                <table class="table mb-0 table-bordered table-hover">
+                  <thead class="bg-light">
+                  <tr>
+                    <th scope="col" class="border-1 font-weight-bold">Tên Sản Phẩm</th>
+                    <th scope="col" class="border-1 font-weight-bold">Mã Sản Phẩm</th>
+                    <th scope="col" class="border-1 font-weight-bold">Giá Sản Phẩm</th>
+                    <th scope="col" class="border-1 font-weight-bold">Giá bán Sản Phẩm</th>
+                    <th scope="col" class="border-1 font-weight-bold">Số Lượng Sản Phẩm</th>
+                  </tr>
+                  </thead>
+                  <tbody>
+                  <tr th:each="order, item : ${orderItems}" th:if="${orderItems.size() > 0}">
+                    <td class="text-center" th:text="${order.productName}"></td>
+                    <td class="text-center" th:text="${order.displayId}"></td>
+                    <td class="text-center" th:text="${order.price}"></td>
+                    <td class="text-center" th:text="${order.finalPrice}"></td>
+                    <td class="text-center" th:text="${order.quantity}"></td>
+                  </tr>
+                  <tr th:if="${totalRecord == 0}">
+                    <td colspan="14">
+                      <span>Không có đơn hàng Nào</span>
+                    </td>
+                  </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <div th:replace = "~{template/pagination :: bottom-pagination}"></div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script th:src="@{/js/moment.min.js}"></script>
+  <script th:src="@{/js/moment-with-locales.min.js}"></script>
+  <script th:src="@{/js/tempusdominus-bootstrap-4.js}"></script>
+  <script th:src="@{/js/datetimepicker.js}"></script>
+  <script th:src="@{/js/bootstrap-select.min.js}"></script>
+  <script th:src="@{/js/popper.min.js}"></script>
+  <script th:src="@{/js/validation.common.js}"></script>
+  <script th:src="@{/js/validation.js}"></script>
+  <script th:src="@{/js/common.js}"></script>
+
+  <script>
+    $(document).on('mouseup touchend', function (e) {
+      var container = $('.bootstrap-datetimepicker-widget');
+      if (!container.is(e.target) && container.has(e.target).length === 0) {
+        container.parent().datetimepicker('hide');
+      }
+    });
+
+    $(document).ready(function(){
+      $('[data-toggle="tooltip"]').tooltip();
+    });
+  </script>
+</div>
+</html>

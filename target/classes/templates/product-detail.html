@@ -1,0 +1,383 @@
+<!doctype html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="header :: common-header"></head>
+<body>
+  <div class="wrapper">
+    <div th:replace="header :: header"></div>
+
+    <div class="main main--pageProducts">
+        <div class="wrap">
+          <div hidden ><input id="product-accessory" th:value="${accessory}"></div>
+          <div hidden ><input id="out-stock" th:value="${product.outStock}"></div>
+          <div hidden ><input id="product-id" th:value="${product.id}"></div>
+          <div hidden ><input id="product-price" th:value="${product.price}"></div>
+          <div hidden ><input id="final-price" th:value="${product.finalPrice}"></div>
+          <div hidden ><input id="product-image" th:value="${product.image}"></div>
+          <div hidden ><input id="product-name" th:value="${product.name}"></div>
+          <div hidden ><input id="orderItems-default" th:value="${orderItems}"></div>
+          <div hidden ><input id="variations" th:value="${variations}"></div>
+          <div class="pro-row">
+            <div class="pro-inner pc-only">
+              <div class="pro-title">
+                <h2 class="tlt" th:text="${product.name}"></h2>
+                <p class="price-standard"><span class="price" th:text="${product.discountPriceDisplay} + VND"></span></p>
+              </div>
+              
+              <div class="pt-3 pb-2">
+                <div class="xans-product">
+                  <span class="xans-label">COLOR</span>
+                  <ul class="xans-color">
+                    <li th:each="color : ${colors}" class="color-button" th:id="'color-pc-' + ${color}" th:text="${color}" th:classappend="${product.outStock ? 'disabled' : ''}"></li>
+                  </ul>
+                </div>
+                <div class="xans-product">
+                  <span class="xans-label">SIZE</span>
+                  <ul class="xans-size">
+                    <li th:each="size : ${sizes}" class="size-button" th:id="'size-pc-' + ${size}" th:text="${size}" th:classappend="${product.outStock ? 'disabled' : ''}"></li>
+                  </ul>
+                </div>
+              </div>
+
+              <div class="buyButton">
+                <button type="button" class="btn btn-dark" onclick="buyNow()">BUY NOW</button>
+                <button type="button" class="btn btn-outline-dark" data-toggle="modal" onclick="addToCart()">ADD TO BAG</button>
+              </div>
+
+              <div class="pro-accordion" id="accordion">
+                <div class="pro-card">
+                  <div class="pro-header" data-toggle="collapse" data-target="#collapseOne">
+                    <span class="pro-item"><img class="svg" src="/images/common/icon-arrow-nav.svg"></span>Details and compositoin
+                  </div>
+                  <div id="collapseOne" class="collapse" data-parent="#accordion">
+                    <div class="pro-body">
+                      <p class="pro-text" th:utext="${descriptions}"></p>
+                    </div>
+                  </div>
+                </div>
+                <div class="pro-card">
+                  <div class="pro-header" data-toggle="collapse" data-target="#collapseTwo">
+                    <span class="pro-item"><img class="svg" src="/images/common/icon-arrow-nav.svg"></span>Size information
+                  </div>
+                  <div id="collapseTwo" class="collapse" data-parent="#accordion">
+                    <div class="pro-body">
+                      <p class="pro-text" th:utext="${descriptionSizes}"></p>
+                    </div>
+                  </div>
+                </div>
+                <div class="pro-card">
+                  <div class="pro-header" data-toggle="collapse" data-target="#collapseThree">
+                    <span class="pro-item"><img class="svg" src="/images/common/icon-arrow-nav.svg"></span>Shipping and return
+                  </div>
+                  <div id="collapseThree" class="collapse" data-parent="#accordion">
+                    <div class="pro-body">
+                      <p class="pro-text mb-1 text-shadow-bold">CHÍNH SÁCH ĐỔI HÀNG</p>
+                      <p class="pro-text mb-1">1. Khi nhận được hàng bạn vui lòng kiểm tra kĩ lại sản phẩm, De Basé sẽ tiếp nhận hỗ trợ đổi size, đổi hàng trong vòng 3 ngày( tính từ ngày bạn nhận được đơn hàng)</p>
+                      <p class="pro-text mb-1">2. Đối với các sản phẩm đổi, bạn vui lòng không tháo tag, sản phẩm còn ở trạng thái mới, chưa qua sử dụng, chưa giặt ủi, không có mùi lạ.</p>
+                      <p class="pro-text mb-1">3. De Basé chỉ nhận đổi hàng, KHÔNG NHẬN TRẢ HÀNG ( trừ trường hợp lỗi do nhà sản xuất).</p>
+                      <p class="pro-text mb-2">4. Khi bạn có nhu cầu đổi vui lòng chọn sản phẩm có giá trị ngang hoặc cao hơn giá trị sản phẩm cũ. ( De Basé không hoàn tiền chênh giữa 2 sản phẩm).</p>
+                      <p class="pro-text mb-1 text-shadow-bold">QUY TRÌNH ĐỔI HÀNG</p>
+                      <p class="pro-text mb-1">1. Trường hợp bạn muốn đổi mẫu, đổi size vui lòng gửi lại sản phẩm để chúng mình kiểm tra tình trạng hàng, (thời điểm gửi lại sản phẩm không  được quá 2 ngày kể từ khi De Basé tiếp nhận nhu cầu đổi từ bạn) sau đó  De Basé sẽ tiến hành gửi sản phẩm mới trong thời gian sớm nhất. Khách hàng sẽ chịu toàn bộ phí ship 2 chiều.</p>
+                      <p class="pro-text mb-1">2. Trường hợp sản phẩm bị lỗi do nhà sản xuất, hoặc do De Basé gửi nhầm mẫu, nhầm size, chúng mình sẵn sàng hỗ trợ đổi 2 chiều và chịu toàn bộ phí ship đổi cho khách hàng.</p>
+                      <p class="pro-text mb-2">3. Thời gian đổi hàng sẽ dao động từ 1-2 ngày ( Nội thành Hà Nội) và từ 2-4 ngày (ngoại thành và các tỉnh khác)</p>
+                      <p class="pro-text mb-1 text-shadow-bold">LƯU Ý</p>
+                      <p class="pro-text mb-1">De Basé xin phép không chịu trách nhiệm với trường hợp NHÂN VIÊN TƯ VẤN SAI, việc tư vấn chỉ mang tính chất tham khảo không thể chính xác tuyệt đối vì còn phụ thuộc vào sở thích, thói quen của mỗi người. Vậy nên bạn vui lòng tham khảo thêm số đo sản phẩm để chọn được size đúng ý nhất nhé ❤</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div><!--/pro-inner -->
+            
+            <div class="pro-content">
+              <div class="pro-wrap">
+                <div id="product-slider" class="slider slider-thumb">
+                  <div class="info-thumb">
+                    <div class="thumbnail">
+                      <img th:src="${product.image}" alt="">
+                    </div>
+                  </div>
+                  <div class="info-thumb">
+                    <div class="thumbnail">
+                      <img th:src="${product.image1}" alt="">
+                    </div>
+                  </div>
+                  <div class="info-thumb">
+                    <div class="thumbnail">
+                      <img th:src="${product.image2}" alt="">
+                    </div>
+                  </div>
+                  <div class="info-thumb">
+                    <div class="thumbnail">
+                      <img th:src="${product.image3}" alt="">
+                    </div>
+                  </div>
+                  <div class="info-thumb">
+                    <div class="thumbnail">
+                      <img th:src="${product.image4}" alt="">
+                    </div>
+                  </div>
+                  <div class="info-thumb">
+                    <div class="thumbnail">
+                      <img th:src="${product.image5}" alt="">
+                    </div>
+                  </div>
+                  <div class="info-thumb">
+                    <div class="thumbnail">
+                      <img th:src="${product.image6}" alt="">
+                    </div>
+                  </div>
+                  <div class="info-thumb">
+                    <div class="thumbnail">
+                      <img th:src="${product.image7}" alt="">
+                    </div>
+                  </div>
+                  <div class="info-thumb">
+                    <div class="thumbnail">
+                      <img th:src="${product.image8}" alt="">
+                    </div>
+                  </div>
+                  <div class="info-thumb">
+                    <div class="thumbnail">
+                      <img th:src="${product.image9}" alt="">
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Ảnh thay thế khi chọn màu -->
+                <div id="color-image-wrapper" style="display: none;" class="info-thumb">
+                  <div class="thumbnail">
+                    <img id="color-image" src="" alt="Ảnh theo màu" />
+                  </div>
+                </div>
+
+                <div class="sp-only pt-3">
+                  <div class="pro-title">
+                    <h2 class="tlt" th:text="${product.name}"></h2>
+                    <p class="price-standard"><span class="price" th:text="${product.discountPriceDisplay} + VND"></span></p>
+                  </div>
+                  <div class="pt-3 pb-2">
+                    <div class="xans-product">
+                      <span class="xans-label">COLOR</span>
+                      <ul class="xans-color">
+                        <li th:each="color : ${colors}" class="color-button-mobile" th:id="'color-' + ${color}" th:text="${color}" th:classappend="${product.outStock ? 'disabled' : ''}"></li>
+                      </ul>
+                    </div>
+                    <div class="xans-product">
+                      <span class="xans-label">SIZE</span>
+                      <ul class="xans-size">
+                        <li th:each="size : ${sizes}" class="size-button-mobile" th:id="'size-' + ${size}" th:text="${size}" th:classappend="${product.outStock ? 'disabled' : ''}"></li>
+                      </ul>
+                    </div>
+                  </div>
+
+                  <div class="buyButton">
+                    <button type="button" class="btn btn-dark" onclick="buyNowMobile()">BUY NOW</button>
+                    <button type="button" class="btn btn-outline-dark" data-toggle="modal" onclick="addToCartMobile()">ADD TO BAG</button>
+                  </div>
+                  
+                  <div class="pro-accordion" id="accordion-sp">
+                    <div class="pro-card">
+                      <div class="pro-header" data-toggle="collapse" data-target="#collapseOne-sp">
+                        <span class="pro-item"><img class="svg" src="/images/common/icon-arrow-nav.svg"></span>Details and compositoin
+                      </div>
+                      <div id="collapseOne-sp" class="collapse" data-parent="#accordion-sp">
+                        <div class="pro-body">
+                          <p class="pro-text" th:utext="${descriptions}"></p>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="pro-card">
+                      <div class="pro-header" data-toggle="collapse" data-target="#collapseTwo-sp">
+                        <span class="pro-item"><img class="svg" src="/images/common/icon-arrow-nav.svg"></span>Size information
+                      </div>
+                      <div id="collapseTwo-sp" class="collapse" data-parent="#accordion-sp">
+                        <div class="pro-body">
+                          <p class="pro-text" th:utext="${descriptionSizes}"></p>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="pro-card">
+                      <div class="pro-header" data-toggle="collapse" data-target="#collapseThree-sp">
+                        <span class="pro-item"><img class="svg" src="/images/common/icon-arrow-nav.svg"></span>Shipping and return
+                      </div>
+                      <div id="collapseThree-sp" class="collapse" data-parent="#accordion-sp">
+                        <div class="pro-body">
+                          <p class="pro-text mb-1 text-shadow-bold">CHÍNH SÁCH ĐỔI HÀNG</p>
+                          <p class="pro-text mb-1">1. Khi nhận được hàng bạn vui lòng kiểm tra kĩ lại sản phẩm, De Basé sẽ tiếp nhận hỗ trợ đổi size, đổi hàng trong vòng 3 ngày( tính từ ngày bạn nhận được đơn hàng)</p>
+                          <p class="pro-text mb-1">2. Đối với các sản phẩm đổi, bạn vui lòng không tháo tag, sản phẩm còn ở trạng thái mới, chưa qua sử dụng, chưa giặt ủi, không có mùi lạ.</p>
+                          <p class="pro-text mb-1">3. De Basé chỉ nhận đổi hàng, KHÔNG NHẬN TRẢ HÀNG ( trừ trường hợp lỗi do nhà sản xuất).</p>
+                          <p class="pro-text mb-2">4. Khi bạn có nhu cầu đổi vui lòng chọn sản phẩm có giá trị ngang hoặc cao hơn giá trị sản phẩm cũ. ( De Basé không hoàn tiền chênh giữa 2 sản phẩm).</p>
+                          <p class="pro-text mb-1 text-shadow-bold">QUY TRÌNH ĐỔI HÀNG</p>
+                          <p class="pro-text mb-1">1. Trường hợp bạn muốn đổi mẫu, đổi size vui lòng gửi lại sản phẩm để chúng mình kiểm tra tình trạng hàng, (thời điểm gửi lại sản phẩm không  được quá 2 ngày kể từ khi De Basé tiếp nhận nhu cầu đổi từ bạn) sau đó  De Basé sẽ tiến hành gửi sản phẩm mới trong thời gian sớm nhất. Khách hàng sẽ chịu toàn bộ phí ship 2 chiều.</p>
+                          <p class="pro-text mb-1">2. Trường hợp sản phẩm bị lỗi do nhà sản xuất, hoặc do De Basé gửi nhầm mẫu, nhầm size, chúng mình sẵn sàng hỗ trợ đổi 2 chiều và chịu toàn bộ phí ship đổi cho khách hàng.</p>
+                          <p class="pro-text mb-2">3. Thời gian đổi hàng sẽ dao động từ 1-2 ngày ( Nội thành Hà Nội) và từ 2-4 ngày (ngoại thành và các tỉnh khác)</p>
+                          <p class="pro-text mb-1 text-shadow-bold">LƯU Ý</p>
+                          <p class="pro-text mb-1">De Basé xin phép không chịu trách nhiệm với trường hợp NHÂN VIÊN TƯ VẤN SAI, việc tư vấn chỉ mang tính chất tham khảo không thể chính xác tuyệt đối vì còn phụ thuộc vào sở thích, thói quen của mỗi người. Vậy nên bạn vui lòng tham khảo thêm số đo sản phẩm để chọn được size đúng ý nhất nhé ❤</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <div class="pro-detail pt-5">
+                  <div class="p-1">
+                    <img th:src="${product.getImage()}" alt="">
+                  </div>
+                  <div class="p-1">
+                    <img th:src="${product.getImage1()}" alt="">
+                  </div>
+                  <div class="p-1">
+                    <img th:src="${product.getImage2()}" alt="">
+                  </div>
+                  <div class="p-1">
+                    <img th:src="${product.getImage3()}" alt="">
+                  </div>
+                  <div class="p-1">
+                    <img th:src="${product.getImage4()}" alt="">
+                  </div>
+                  <div class="p-1">
+                    <img th:src="${product.getImage5()}" alt="">
+                  </div>
+                  <div class="p-1">
+                    <img th:src="${product.getImage6()}" alt="">
+                  </div>
+                  <div class="p-1">
+                    <img th:src="${product.getImage7()}" alt="">
+                  </div>
+                </div>
+                
+                <div class="other pt-5">
+                  <h3 class="other-title">RECOMMEND ITEM</h3>
+                  <div class="slider slider-products">
+                    <div class="item-pro" th:each="productLinked : ${productLinkeds}">
+                      <a class="products-inner" th:href="@{/products(id=${productLinked.id})}">
+                        <div class="products-thumb">
+                          <div class="thumbnail">
+                            <img th:src="${productLinked.getImage()}" alt="">
+                          </div>
+                        </div>
+                        <div class="products-content">
+                          <h3 class="products-title" th:text="${productLinked.name}"></h3>
+                          <h3 th:if="${productLinked.isOutStock()}" style="color: red;">(Hết Hàng)</h3>
+                          <p class="products-price">
+                            <del th:if="${productLinked.isHasDiscount()}" class="products-price" th:text="${productLinked.priceDisplay} + VND"></del>
+                            <p th:style="${productLinked.isHasDiscount()} ? 'color: red;' : ''" class="price-standard"><span class="price" th:text="${productLinked.discountPriceDisplay} + VND"></span></p>
+                          </p>
+                          <div class="products-color">
+                            <span th:each="color : ${codeColors}" th:style="'background:' + ${color}"></span>
+                          </div>
+                        </div>
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div><!--/pro-content -->
+          </div>
+        </div>
+      </div><!--/main -->
+
+      <div class="popup" id="addToCardSuccess">
+        <div class="popup-content">
+          <h2>Thêm sản phẩm vào giỏ hàng thành công!</h2>
+          <button class="close-btn" onclick="closePopup('addToCardSuccess')">Đóng</button>
+        </div>
+      </div>
+
+      <div class="popup" id="addToCardFail">
+        <div class="popup-content">
+          <h2>Thêm sản phẩm vào giỏ hàng thất bại!</h2>
+          <button class="close-btn fail" onclick="closePopup('addToCardFail')">Đóng</button>
+        </div>
+      </div>
+
+      <div class="popup" id="showWarningPopup">
+        <div class="popup-content">
+          <h2>Vui lòng chọn mẫu mã sản phẩm!</h2>
+          <button class="close-btn fail" onclick="closePopup('showWarningPopup')">Đóng</button>
+        </div>
+      </div>
+
+      <div class="popup" id="showOutStockPopup">
+        <div class="popup-content">
+          <h2>Sản phẩm đã hết hàng!</h2>
+          <button class="close-btn fail" onclick="closePopup('showOutStockPopup')">Đóng</button>
+        </div>
+      </div>
+      
+      <div th:replace="header :: footer"></div>
+  </div><!--/wrapper -->
+
+  <script src="/js/product/product-detail.js"></script>
+  <script src="/css/product/style.css"></script>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f4f4f4;
+    }
+
+    /* Pop-up sẽ được đặt cố định, không ảnh hưởng đến layout của các phần tử khác */
+    .popup {
+      display: none; /* Ẩn popup mặc định */
+      position: fixed; /* Đặt pop-up cố định */
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5); /* Nền mờ cho pop-up */
+      justify-content: center;
+      align-items: center;
+      z-index: 9999; /* Đảm bảo pop-up nằm trên các phần tử khác */
+    }
+
+    .popup-content {
+      background-color: #fff;
+      border-radius: 10px;
+      padding: 30px;
+      text-align: center;
+      width: 300px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .popup-content h2 {
+      font-size: 24px;
+    }
+
+    .popup-content p {
+      font-size: 16px;
+      color: #333;
+    }
+
+    .close-btn {
+      background-color: #28a745; /* Màu xanh cho thành công */
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      font-size: 16px;
+      cursor: pointer;
+      border-radius: 5px;
+      margin-top: 20px;
+    }
+
+    .close-btn.fail {
+      background-color: #dc3545; /* Màu đỏ cho thất bại */
+    }
+
+    .close-btn:hover {
+      background-color: #218838;
+    }
+
+    .close-btn.fail:hover {
+      background-color: #c82333;
+    }
+
+    .disabled {
+      pointer-events: none; /* Ngăn chặn các sự kiện click */
+      color: gray;         /* Làm mờ nội dung để biểu thị trạng thái bị vô hiệu */
+      cursor: not-allowed; /* Hiển thị con trỏ không được phép */
+    }
+  </style>
+</body>
+</html>
