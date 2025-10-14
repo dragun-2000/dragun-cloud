@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.w3.org/1999/xhtml" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{template/baseManage.html}">
+<div id="wrapper" class="wrapper" layout:fragment="main-content">
+    <a class="navbar-brand w-100 mr-0 p-0" th:href="@{/}">
+    </a>
+
+    <div class="form-login">
+        <div class="page-header text-center no-gutters py-4">
+            <h3 class="font-weight-bold page-title" th:if="${verified}" >Màn Hình Lấy Lại Mật Khẩu</h3>
+        </div>
+        <div class="page-header row no-gutters py-4">
+            <div class="text-center w-100 mb-4">
+                <h3 class="page-title font-weight-bold">Màn Hình Lấy Lại Mật Khẩu</h3>
+            </div>
+        </div>
+
+        <div class="info-form">
+            <form id="forget-password" name="f" class="needs-validation" th:action="@{/AM/AM001/send-mail}" method="POST" novalidate>
+                <div class="form-group row">
+                    <label class="col-sm-3 col-form-label font-weight-bold">Email Quên Mật Khẩu<span class="red">※</span></label>
+                    <div class="col-sm-6">
+                        <input type="email" id="email" class="email form-control form-ctrl" name="email" maxlength="255" required onchange="checkEmailValid()">
+                        <div class="mailAddress-error">
+                        </div>
+                    </div>
+                </div>
+                <div class="text-center mt-4">
+                    <a class="btn btn-light mw-150 mr-3" type="button" role="button" aria-pressed="true" th:href="@{/AM/AM001}">Quay Lại
+                    </a>
+                    <button type="submit" class="btn btn-primary mw-150">Gửi Email</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="modal fade" id="forget-password-success" tabindex="-1" role="dialog" data-backdrop="static"
+         aria-labelledby="modalConfirmLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered w-450" role="document">
+            <div class="modal-content">
+                <div class="modal-body">
+                    <div  class="col-12 modal-title text-center mb-4"><i id="custom-icon" class="fas fa-check-circle"></i></div>
+                    <div class="col-12 modal-title text-center mb-4">
+                        Một email xác nhận đặt lại mật khẩu đã được gửi<br>
+                        Nhấp vào liên kết trong email để hoàn tất việc đặt lại mật khẩu của bạn.
+                    </div>
+
+                    <div class="modal-footer justify-content-center border-top-0">
+                        <a class="btn custom-btn-info btn-120 mr-4" th:href="@{/AM/AM001}"
+                           aria-pressed="true">OK
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="forget-password-error" tabindex="-1" role="dialog" data-backdrop="static"
+         aria-labelledby="modalConfirmLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered w-450" role="document">
+            <div class="modal-content">
+                <div class="modal-body">
+                    <div  class="col-12 modal-title text-center mb-4"><i class="fas fa-exclamation-triangle"></i></div>
+                    <div class="col-12 modal-title text-center mb-4">
+                        <label id="message-error"></label>
+                    </div>
+
+                    <div class="modal-footer justify-content-center border-top-0">
+                        <button class="btn custom-btn-info btn-120 mr-4" type="button" role="button"
+                                aria-pressed="true" data-dismiss="modal">OK
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script th:src="@{/js/validation.common.js}"></script>
+    <script th:src="@{/js/validation.js}"></script>
+    <script th:src="@{/js/AM001/AM001_01.js}"></script>
+</div>
+</html>
