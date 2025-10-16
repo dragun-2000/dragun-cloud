@@ -1,57 +1,95 @@
 package vn.co.cake.service.aws.impl;
 
-import com.amazonaws.AmazonClientException;
-import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.s3.model.CreateBucketRequest;
-import com.amazonaws.services.s3.model.PutObjectRequest;
-import com.amazonaws.services.sns.AmazonSNS;
-import com.amazonaws.services.sns.model.PublishRequest;
-import com.amazonaws.services.sns.model.PublishResult;
+import io.minio.*;
+import io.minio.errors.MinioException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
-import vn.co.cake.common.DateConst;
-//import vn.co.cake.helper.EmailService;
 import vn.co.cake.service.aws.S3Service;
-import vn.co.cake.utils.DateUtil;
 
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 
-/**
- * @author HaiTV
- */
-@Service
 @Slf4j
+@Service
 public class S3ServiceImpl implements S3Service {
-    private final AmazonS3 s3client;
 
-    private final AmazonSNS amazonSNS;
-    
-    @Value("${aws.s3.image}")
+    private final MinioClient minioClient;
+
+    @Value("${minio.bucket}")
     private String imageBucket;
 
-    public S3ServiceImpl(AmazonS3 s3client, AmazonSNS amazonSNS) {
-        this.s3client = s3client;
-        this.amazonSNS = amazonSNS;
+    @Value("${minio.url}")
+    private String minioUrl;
+
+    public S3ServiceImpl(MinioClient minioClient) {
+        this.minioClient = minioClient;
     }
 
-    @Override
-    public String uploadImageToS3(MultipartFile file) throws AmazonClientException, IOException {
-        log.info("** Uploading image **");
-        String fileName = String.format("%s_%s", DateUtil.dateToString(DateUtil.now(), DateConst.YYYYMMDDHHMMSS), file.getOriginalFilename());
+    /**
+     * Upload ảnh (MultipartFile) lên MinIO (thư mục images/)
+     */
+    public String uploadImageToS3(MultipartFile file) throws IOException {
+        log.info("** Uploading image to MinIO **");
+        String fileName = System.currentTimeMillis() + "_" + file.getOriginalFilename();
         File convertedFile = this.convertMultiPartToFile(file);
-        return this.uploadFileToS3(fileName, convertedFile);
+        String url = this.uploadFileToS3("images/" + fileName, convertedFile);
+        convertedFile.delete();
+        return url;
     }
-    
-    public String uploadFileToS3(String fileName, File contentFile) throws AmazonClientException {
-        log.info("** Uploading medis file **");
-        upload(imageBucket, fileName, contentFile);
-        contentFile.delete();
-        
-        return s3client.getUrl(imageBucket, fileName).toString();
+
+    /**
+     * Upload file thật lên MinIO và trả về link public/presigned
+     */
+    public String uploadFileToS3(String objectPath, File contentFile) {
+        try {
+            // Kiểm tra bucket tồn tại
+            boolean found = minioClient.bucketExists(BucketExistsArgs.builder().bucket(imageBucket).build());
+            if (!found) {
+                log.info("== Create MinIO bucket ==");
+                minioClient.makeBucket(MakeBucketArgs.builder().bucket(imageBucket).build());
+            }
+
+            // Upload file
+            try (InputStream inputStream = new java.io.FileInputStream(contentFile)) {
+                minioClient.putObject(
+                        PutObjectArgs.builder()
+                                .bucket(imageBucket)
+                                .object(objectPath)
+                                .stream(inputStream, contentFile.length(), -1)
+                                .contentType("image/jpeg")
+                                .build()
+                );
+            }
+
+            log.info("** Upload {} success! **", objectPath);
+
+            // ✅ Cách 1: Trả link public (nếu bucket cho phép public access)
+            String publicUrl = String.format("%s/%s/%s", minioUrl, imageBucket, objectPath);
+            return publicUrl;
+
+            // ✅ Cách 2 (nếu bucket private, dùng presigned link)
+            /*
+            return minioClient.getPresignedObjectUrl(
+                    GetPresignedObjectUrlArgs.builder()
+                            .method(Method.GET)
+                            .bucket(imageBucket)
+                            .object(objectPath)
+                            .expiry(7, TimeUnit.DAYS)
+                            .build()
+            );
+            */
+
+        } catch (MinioException e) {
+            log.error("** Upload {} failed! error message = {} **", objectPath, e.getMessage());
+            throw new RuntimeException("Upload failed: " + e.getMessage());
+        } catch (Exception e) {
+            log.error("** Upload {} failed! error message = {} **", objectPath, e.getMessage());
+            throw new RuntimeException("Upload failed: " + e.getMessage());
+        }
     }
 
     private File convertMultiPartToFile(MultipartFile file) throws IOException {
@@ -60,28 +98,5 @@ public class S3ServiceImpl implements S3Service {
             fos.write(file.getBytes());
         }
         return convertedFile;
-    }
-    
-    private void upload(String bucket, String fileName, File contentFile) throws AmazonClientException {
-        try {
-            // Put Object
-            if (!s3client.doesBucketExistV2(bucket)) {
-                log.info("== Create s3 bucket ==");
-                s3client.createBucket(new CreateBucketRequest(bucket));
-            }
-
-            s3client.putObject(new PutObjectRequest(imageBucket, fileName, contentFile));
-
-            log.info("** Upload {} success! **", fileName);
-        } catch (Exception e) {
-            log.info("** Upload {} failed! error message = {} **", fileName, e.getMessage());
-        }
-    }
-
-    public void sendSms(String phoneNumber, String message) {
-        PublishRequest request = new PublishRequest()
-                .withMessage(message)
-                .withPhoneNumber(phoneNumber); // Ví dụ: "+84987654321"
-        amazonSNS.publish(request);
     }
 }

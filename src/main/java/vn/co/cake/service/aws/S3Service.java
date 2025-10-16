@@ -1,8 +1,6 @@
 package vn.co.cake.service.aws;
 
-import com.amazonaws.AmazonClientException;
 import org.springframework.web.multipart.MultipartFile;
-import vn.co.cake.controller.external.dto.SendMessageDTO;
 
 import java.io.IOException;
 
@@ -12,7 +10,5 @@ import java.io.IOException;
 
 public interface S3Service {
 
-    String uploadImageToS3(MultipartFile file) throws AmazonClientException, IOException;
-
-    void sendSms(String phoneNumber, String message);
+    String uploadImageToS3(MultipartFile file) throws IOException;
 }

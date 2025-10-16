@@ -1,12 +1,12 @@
 package vn.co.cake.helper;
 
-import com.sendgrid.Email;
-import com.sendgrid.Content;
-import com.sendgrid.Mail;
 import com.sendgrid.Method;
 import com.sendgrid.Request;
 import com.sendgrid.Response;
 import com.sendgrid.SendGrid;
+import com.sendgrid.helpers.mail.Mail;
+import com.sendgrid.helpers.mail.objects.Content;
+import com.sendgrid.helpers.mail.objects.Email;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import vn.co.cake.dto.GenericMailForm;
@@ -23,8 +23,8 @@ public class EmailService {
 
     public EmailService() {
         // Lấy API Key từ biến môi trường
-        String apiKey = System.getenv("SENDGRID_API_KEY");
-        this.sendGridClient = new SendGrid(apiKey);
+//        String apiKey = System.getenv("SENDGRID_API_KEY");
+        this.sendGridClient = new SendGrid("apiKey");
     }
 
     /**
