@@ -18,13 +18,13 @@ import java.io.IOException;
 @Service
 public class EmailService {
 
-    private static final String FROM_EMAIL = "dragun.eran2000@gmail.com"; // phải là email đã xác minh trong SendGrid debase.1995@gmail.com
+    private static final String FROM_EMAIL = "reply.debase@gmail.com"; // phải là email đã xác minh trong SendGrid debase.1995@gmail.com
     private final SendGrid sendGridClient;
 
     public EmailService() {
         // Lấy API Key từ biến môi trường
 //        String apiKey = System.getenv("SENDGRID_API_KEY");
-        this.sendGridClient = new SendGrid("apiKey");
+        this.sendGridClient = new SendGrid("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");
     }
 
     /**
