@@ -34,6 +34,7 @@ import vn.co.cake.utils.FunctionUtil;
 import vn.co.cake.utils.PageUtil;
 import vn.co.cake.response.ProductResponse;
 
+import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import javax.websocket.server.PathParam;
 import java.util.*;
@@ -73,7 +74,8 @@ public class HomeController extends BaseController {
                                             sort = {SORT_DEFAULT},
                                             direction = Sort.Direction.DESC
                                           ) Pageable pageable,
-							   Model model, HttpSession session) throws CommonServletException {
+							   Model model, HttpSession session,
+                               HttpServletResponse response) throws CommonServletException {
 							   
         UserLoginInfo loginInfo = getLoginInfo(session);
         boolean isLogin = false;
@@ -111,6 +113,10 @@ public class HomeController extends BaseController {
         model.addAttribute("isDiscount", isDiscount);
         
         removeSessionAttributes(session, SESSION_FROM_EDIT_PAGE);
+
+        // ✅ Cho phép cache trang HTML trong 1 ngày
+        response.setHeader("Cache-Control", "public, max-age=86400");
+
         return ScreenPathConst.INDEX_SCREEN;
     }
     

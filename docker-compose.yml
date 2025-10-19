@@ -26,6 +26,7 @@ services:
       - debase-redis
       - debase-minio
     volumes:
+      - /var/www/html/images:/var/www/html/images
       - ./config:/app/config
       - ./log:/app/log
 

@@ -24,9 +24,13 @@ public class WebConfig implements WebMvcConfigurer {
 
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
-        registry.addResourceHandler("/**")
-                .addResourceLocations("classpath:/static/")
+        registry.addResourceHandler("/images/**")
+                .addResourceLocations("file:/var/www/html/images/")
                 // Cache static file 30 ngày
                 .setCachePeriod(2592000); // 30 * 24 * 60 * 60
+
+        // Các static khác (JS, CSS, fonts, ...) lấy từ classpath
+        registry.addResourceHandler("/**")
+                .addResourceLocations("classpath:/static/");
     }
 }
