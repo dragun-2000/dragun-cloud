@@ -8,7 +8,7 @@ COPY pom.xml .
 RUN mvn -B dependency:go-offline
 
 # Copy source code
-COPY src ./src
+COPY . .
 
 # Build fat jar
 RUN mvn -B clean package spring-boot:repackage -DskipTests

@@ -15,7 +15,9 @@ public class WebConfig implements WebMvcConfigurer {
                         "http://localhost:5173",
                         "https://www.phodem.click",
                         "https://dragun.cloud",
-                        "https://debase.vn"
+                        "https://debase.vn",
+                        "https://thiyen.vn",
+                        "https://botnguhacmeden.thiyen.vn"
                 )
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                 .allowedHeaders("*")
@@ -24,8 +26,8 @@ public class WebConfig implements WebMvcConfigurer {
 
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
-        registry.addResourceHandler("/images/**")
-                .addResourceLocations("file:/var/www/html/images/")
+        registry.addResourceHandler("/external-images/**")
+                .addResourceLocations("file:/var/www/html/external-images/")
                 // Cache static file 30 ngày
                 .setCachePeriod(2592000); // 30 * 24 * 60 * 60
 
