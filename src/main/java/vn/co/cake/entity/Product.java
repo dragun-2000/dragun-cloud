@@ -47,6 +47,7 @@ public class Product extends BaseEntity {
     private String image9;
     private String colors;
     private String sizes;
+    private String types;
     private BigDecimal price;
     private BigDecimal discountPrice;
     private BigDecimal finalPrice;
@@ -207,7 +208,8 @@ public class Product extends BaseEntity {
         }
     }
     
-    public static void toUpdate(Product product, VariationResponse variationResponse, Set<String> sizes, Set<String> colors, long stockQuantity) {
+    public static void toUpdate(Product product, VariationResponse variationResponse, Set<String> sizes,
+                                Set<String> colors, Set<String> types, long stockQuantity) {
         VariationResponse.Product variationProduct = variationResponse.getProduct();
         product.setCode(variationProduct.getDisplay_id());
         product.setSubCode(variationResponse.getDisplay_id());
@@ -219,6 +221,9 @@ public class Product extends BaseEntity {
         }
         if (!colors.isEmpty()) {
             product.setColors(String.join(",", colors.stream().map(String::valueOf).toArray(String[]::new)));
+        }
+        if (!types.isEmpty()) {
+            product.setTypes(String.join(",", types.stream().map(String::valueOf).toArray(String[]::new)));
         }
     }
 }

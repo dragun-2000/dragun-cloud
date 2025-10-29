@@ -262,10 +262,27 @@ public class HomeController extends BaseController {
         String variationsJson = objectMapper.writeValueAsString(variations);
         model.addAttribute("variations", variationsJson);
 
+        // Provide distinct types (Kiểu) only when present (non-null, non-empty)
+        Set<String> typeSet = new LinkedHashSet<>();
+        for (Variation v : variations) {
+            if (v.getType() != null) {
+                String t = v.getType().trim();
+                if (!t.isEmpty()) {
+                    typeSet.add(t);
+                }
+            }
+        }
+        if (!typeSet.isEmpty()) {
+            model.addAttribute("types", new ArrayList<>(typeSet));
+        } else {
+            model.addAttribute("types", null);
+        }
+
         boolean accessory = false;
         if (variations.size() == 1) {
             Variation variation = variations.get(0);
-            if (StringUtils.isBlank(variation.getColor()) && StringUtils.isBlank(variation.getSize())) {
+            // accessory when no selectable options
+            if (StringUtils.isBlank(variation.getColor()) && StringUtils.isBlank(variation.getSize()) && StringUtils.isBlank(variation.getType())) {
                 accessory = true;
             }
         }

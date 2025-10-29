@@ -37,7 +37,7 @@ public class S3ServiceImpl implements S3Service {
     //     this.minioClient = minioClient;
     // }
 
-    private static final String UPLOAD_DIR = "/var/www/html/images/";
+    private static final String UPLOAD_DIR = "/var/www/html/external-images/";
 
     /**
      * Upload file ảnh vào thư mục local và trả về URL hiển thị.

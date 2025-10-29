@@ -71,8 +71,10 @@ public class ProductServiceImpl implements ProductService {
                     for (VariationResponse.Field field : fields) {
                         if ("Size".equalsIgnoreCase(field.getName())) {
                             variation.setSize(field.getValue());
-                        } else {
+                        } else if ("Màu".equalsIgnoreCase(field.getName())) {
                             variation.setColor(field.getValue());
+                        } else if ("Kiểu".equalsIgnoreCase(field.getName())) {
+                            variation.setType(field.getValue());
                         }
                     }
                     variations.add(variation);
@@ -154,14 +156,17 @@ public class ProductServiceImpl implements ProductService {
             VariationResponse variationResponse = variationPancakes.get(0);
             Set<String> sizes = new HashSet<>();
             Set<String> colors = new HashSet<>();
+            Set<String> types = new HashSet<>();
             long stockQuantity = 0;
             for (VariationResponse variation : variationPancakes) {
                 List<VariationResponse.Field> fields = variation.getFields();
                 for (VariationResponse.Field field : fields) {
-                    if ("Size".equals(field.getName())) {
+                    if ("Size".equalsIgnoreCase(field.getName())) {
                         sizes.add(field.getValue());
-                    } else {
+                    } else if ("Màu".equalsIgnoreCase(field.getName())) {
                         colors.add(field.getValue());
+                    } else if ("Kiểu".equalsIgnoreCase(field.getName())) {
+                        types.add(field.getValue());
                     }
                 }
                 
@@ -170,7 +175,7 @@ public class ProductServiceImpl implements ProductService {
 
             Product productDebaseExist = productMap.get(productPancakeId);
             if (Objects.nonNull(productDebaseExist)) {
-                Product.toUpdate(productDebaseExist, variationResponse, sizes, colors, stockQuantity);
+                Product.toUpdate(productDebaseExist, variationResponse, sizes, colors, types, stockQuantity);
                 countUpdate.getAndIncrement();
             } else {
                 productDebaseExist = new Product(variationResponse, sizes, colors, stockQuantity);
@@ -210,10 +215,12 @@ public class ProductServiceImpl implements ProductService {
                 
                 List<VariationResponse.Field> fields = variationPancake.getFields();
                 for (VariationResponse.Field field : fields) {
-                    if ("Size".equals(field.getName())) {
+                    if ("Size".equalsIgnoreCase(field.getName())) {
                         variationDebase.setSize(field.getValue());
-                    } else {
+                    } else if ("Màu".equalsIgnoreCase(field.getName())) {
                         variationDebase.setColor(field.getValue());
+                    } else if ("Kiểu".equalsIgnoreCase(field.getName())) {
+                        variationDebase.setType(field.getValue());
                     }
                 }
 

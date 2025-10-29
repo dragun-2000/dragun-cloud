@@ -17,6 +17,8 @@ import vn.co.cake.entity.Province;
 import vn.co.cake.entity.Voucher;
 import vn.co.cake.exception.CommonServletException;
 import vn.co.cake.repository.ProvinceRepository;
+import vn.co.cake.repository.VariationRepository;
+import vn.co.cake.entity.Variation;
 import vn.co.cake.repository.VoucherRepository;
 import vn.co.cake.request.OrderDetailRequest;
 import vn.co.cake.security.user.UserLoginInfo;
@@ -43,19 +45,22 @@ public class CartController extends BaseController {
     private final VoucherRepository voucherRepository;
     private final OrderService orderService;
     private final PancakePosService pancakePosService;
+    private final VariationRepository variationRepository;
 
     public CartController(CartService cartService,
                           AccountService accountService,
                           ProvinceRepository provinceRepository,
                           VoucherRepository voucherRepository,
                           OrderService orderService,
-                          PancakePosService pancakePosService) {
+                          PancakePosService pancakePosService,
+                          VariationRepository variationRepository) {
         this.cartService = cartService;
         this.accountService = accountService;
         this.provinceRepository = provinceRepository;
         this.voucherRepository = voucherRepository;
         this.orderService = orderService;
         this.pancakePosService = pancakePosService;
+        this.variationRepository = variationRepository;
     }
 
     @ModelAttribute("cartForm")
@@ -84,6 +89,25 @@ public class CartController extends BaseController {
         List<OrderItem> orderItems = new ArrayList<>();
         if (Objects.nonNull(cartForm) && !CollectionUtils.isEmpty(cartForm.getOrderItems())) {
             orderItems = cartForm.getOrderItems();
+            // Normalize option string to color[/type]/size based on variation data
+            for (OrderItem item : orderItems) {
+                try {
+                    Variation v = variationRepository.findFirstByVariationId(item.getVariationId());
+                    if (v != null) {
+                        String color = v.getColor();
+                        String type = v.getType();
+                        String size = v.getSize();
+                        List<String> parts = new ArrayList<>();
+                        if (color != null && !color.trim().isEmpty()) parts.add(color.trim());
+                        if (type != null && !type.trim().isEmpty()) parts.add(type.trim());
+                        if (size != null && !size.trim().isEmpty()) parts.add(size.trim());
+                        if (!parts.isEmpty()) {
+                            item.setOption(String.join("/", parts));
+                        }
+                    }
+                } catch (Exception ignored) {
+                }
+            }
         }
 
         model.addAttribute("totalPrice", this.getTotalPrice(orderItems, 0));
@@ -148,12 +172,13 @@ public class CartController extends BaseController {
         if (Objects.nonNull(cartForm) && !CollectionUtils.isEmpty(cartForm.getOrderItems())) {
             orderItems = cartForm.getOrderItems();
         }
-        model.addAttribute("totalPrice", this.getTotalPrice(orderItems, 0));
+        String totalPrice = this.getTotalPrice(orderItems, 0);
+        model.addAttribute("totalPrice", totalPrice);
         model.addAttribute("totalPriceDisplay", BigDecimalUtil.formatMoney(this.getTotalPrice(orderItems, 0)));
 
         Voucher shippingFee = voucherRepository.findFirstByCodeAndDeletedIsFalse("SHIPPING_FEE");
         int shippingFeeDefault = 0;
-        if (shippingFee != null) {
+        if (shippingFee != null && Long.parseLong(totalPrice) < 1000000) {
             shippingFeeDefault = shippingFee.getShippingFee();
         }
         model.addAttribute("shippingFee", shippingFeeDefault);

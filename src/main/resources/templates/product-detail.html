@@ -36,6 +36,12 @@
                     <li th:each="size : ${sizes}" class="size-button" th:id="'size-pc-' + ${size}" th:text="${size}" th:classappend="${product.outStock ? 'disabled' : ''}"></li>
                   </ul>
                 </div>
+                <div class="xans-product" th:if="${types != null and !types.isEmpty()}">
+                  <span class="xans-label">KIỂU</span>
+                  <ul class="xans-type">
+                    <li th:each="type : ${types}" class="type-button" th:id="'type-pc-' + ${type}" th:text="${type}" th:classappend="${product.outStock ? 'disabled' : ''}"></li>
+                  </ul>
+                </div>
               </div>
 
               <div class="buyButton">
@@ -165,6 +171,12 @@
                       <span class="xans-label">SIZE</span>
                       <ul class="xans-size">
                         <li th:each="size : ${sizes}" class="size-button-mobile" th:id="'size-' + ${size}" th:text="${size}" th:classappend="${product.outStock ? 'disabled' : ''}"></li>
+                      </ul>
+                    </div>
+                    <div class="xans-product" th:if="${types != null and !types.isEmpty()}">
+                      <span class="xans-label">KIỂU</span>
+                      <ul class="xans-type">
+                        <li th:each="type : ${types}" class="type-button-mobile" th:id="'type-' + ${type}" th:text="${type}" th:classappend="${product.outStock ? 'disabled' : ''}"></li>
                       </ul>
                     </div>
                   </div>

@@ -88,7 +88,8 @@ public class OrderServiceImpl implements OrderService {
         long discountPrice = 0;
         Voucher shippingFee = voucherRepository.findFirstByCodeAndDeletedIsFalse("SHIPPING_FEE");
         int fee = 0;
-        if (shippingFee != null) {
+        BigDecimal totalPriceOrder = this.getTotalPriceOrder(itemOrders, discountPrice);
+        if (shippingFee != null && totalPriceOrder.longValue() < 1000000) {
             fee = shippingFee.getShippingFee();
         }
 

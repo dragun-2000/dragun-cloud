@@ -14,16 +14,23 @@ let variations = JSON.parse(document.getElementById('variations').value);
 // Mobile
 let selectedColorMobile = null;
 let selectedSizeMobile = null;
+let selectedTypeMobile = null;
 
 // PC
 let selectedColor = null;
 let selectedSize = null;
+let selectedType = null;
+
+function hasTypeOptions() {
+    return document.querySelectorAll('.type-button, .type-button-mobile').length > 0;
+}
 
 // ====================================== PC Thread =========================================
 
 document.addEventListener('DOMContentLoaded', () => {
     const colorButtons = document.querySelectorAll('.color-button');
     const sizeButtons = document.querySelectorAll('.size-button');
+    const typeButtons = document.querySelectorAll('.type-button');
     const slider = document.getElementById('product-slider');
     const colorImageWrapper = document.getElementById('color-image-wrapper');
     const colorImage = document.getElementById('color-image');
@@ -36,6 +43,9 @@ document.addEventListener('DOMContentLoaded', () => {
             let matchingVariationPC = variations.filter(v =>  v.color === selectedColor);
             if (selectedSize != null) {
                 matchingVariationPC = variations.filter(v =>  v.color === selectedColor && v.size === selectedSize);
+            }
+            if (hasTypeOptions() && selectedType != null) {
+                matchingVariationPC = matchingVariationPC.filter(v => v.type === selectedType);
             }
 
             if (matchingVariationPC.length > 0) {
@@ -60,7 +70,10 @@ document.addEventListener('DOMContentLoaded', () => {
             setTimeout(() => {
                 onSizeClick(button.innerText);
 
-                const matchingVariations = variations.filter(v => v.size === selectedSize && v.color === selectedColor);
+                let matchingVariations = variations.filter(v => v.size === selectedSize && v.color === selectedColor);
+                if (hasTypeOptions() && selectedType != null) {
+                    matchingVariations = matchingVariations.filter(v => v.type === selectedType);
+                }
                 if (matchingVariations.length > 0) {
                     if (matchingVariations[0].image !== null) {
                         slider.style.display = 'none';
@@ -69,6 +82,27 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 }
             }, 100);
+        });
+    });
+
+    // PC type buttons
+    typeButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            selectedType = button.innerText;
+            typeButtons.forEach(b => b.classList.remove('active'));
+            button.classList.add('active');
+
+            // Update display image based on selected type too
+            let matching = variations.filter(v => (!selectedColor || v.color === selectedColor) && (!selectedSize || v.size === selectedSize));
+            matching = matching.filter(v => v.type === selectedType);
+            if (matching.length > 0 && matching[0].image !== null) {
+                const slider = document.getElementById('product-slider');
+                const colorImageWrapper = document.getElementById('color-image-wrapper');
+                const colorImage = document.getElementById('color-image');
+                slider.style.display = 'none';
+                colorImageWrapper.style.display = 'block';
+                colorImage.src = matching[0].image;
+            }
         });
     });
 
@@ -92,10 +126,11 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function updateVariationDisplay(variations) {
-    // Lưu trữ các màu sắc và kích thước còn hàng
+    // Lưu trữ các màu sắc, kích thước, kiểu còn hàng
     const enabledColors = new Set();
     const enabledSizesByColor = {}; // Lưu trữ kích thước hợp lệ theo màu sắc
     const enabledSizes = new Set(); // Lưu trữ các size có remainQuantity > 0
+    const enabledTypes = new Set();
 
     // Duyệt qua variations để xác định màu và kích thước còn hàng
     variations.forEach(variation => {
@@ -109,6 +144,9 @@ function updateVariationDisplay(variations) {
             enabledSizesByColor[variation.color].add(variation.size);
 
             enabledSizes.add(variation.size); // Thêm kích thước có sẵn vào Set
+            if (variation.type) {
+                enabledTypes.add(variation.type);
+            }
         }
     });
 
@@ -134,6 +172,19 @@ function updateVariationDisplay(variations) {
             sizeElement.classList.add('disabled'); // Thêm disabled cho kích thước
         }
     });
+
+    // Cập nhật trạng thái của tất cả các button kiểu nếu có
+    const allTypeElements = document.querySelectorAll('.type-button');
+    if (allTypeElements && allTypeElements.length > 0) {
+        allTypeElements.forEach(typeElement => {
+            const typeVal = typeElement.innerText;
+            if (enabledTypes.has(typeVal)) {
+                typeElement.classList.remove('disabled');
+            } else {
+                typeElement.classList.add('disabled');
+            }
+        });
+    }
 }
 
 function onSizeClick(size) {
@@ -143,7 +194,10 @@ function onSizeClick(size) {
         const color = colorElement.id.replace('color-pc-', '');
         
         // Lọc các variation có size đã chọn và màu phù hợp
-        const matchingVariations = variations.filter(v => v.size === size && v.color === color);
+        let matchingVariations = variations.filter(v => v.size === size && v.color === color);
+        if (hasTypeOptions() && selectedType != null) {
+            matchingVariations = matchingVariations.filter(v => v.type === selectedType);
+        }
         
         if (matchingVariations.length === 0 || matchingVariations[0].remainQuantity <= 0) {
             colorElement.classList.add('disabled'); // Nếu không có variation hợp lệ thì vô hiệu hóa màu
@@ -151,6 +205,24 @@ function onSizeClick(size) {
             colorElement.classList.remove('disabled'); // Hiển thị màu nếu có variation hợp lệ
         }
     });
+
+    // Cập nhật khả dụng cho type theo size đã chọn và (nếu có) màu đã chọn
+    const allTypeElements = document.querySelectorAll('.type-button');
+    if (allTypeElements && allTypeElements.length > 0) {
+        allTypeElements.forEach(typeElement => {
+            const typeVal = typeElement.innerText;
+            let matching = variations.filter(v => v.size === size);
+            if (selectedColor) matching = matching.filter(v => v.color === selectedColor);
+            const hasStock = matching.some(v => v.type === typeVal && v.remainQuantity > 0);
+            if (hasStock) {
+                typeElement.classList.remove('disabled');
+            } else {
+                typeElement.classList.add('disabled');
+                typeElement.classList.remove('active');
+                if (selectedType === typeVal) selectedType = null;
+            }
+        });
+    }
 }
 
 function onColorClick(color) {
@@ -158,7 +230,10 @@ function onColorClick(color) {
     const allSizeElements = document.querySelectorAll('[id^="size-pc-"]');
     allSizeElements.forEach(sizeElement => {
         const size = sizeElement.id.replace('size-pc-', '');
-        const matchingVariations = variations.filter(v => v.size === size && v.color === color);
+        let matchingVariations = variations.filter(v => v.size === size && v.color === color);
+        if (hasTypeOptions() && selectedType != null) {
+            matchingVariations = matchingVariations.filter(v => v.type === selectedType);
+        }
         
         if (matchingVariations.length === 0 || matchingVariations[0].remainQuantity <= 0) {
             sizeElement.classList.add('disabled'); // Nếu không có variation hợp lệ thì vô hiệu hóa kích thước
@@ -166,6 +241,24 @@ function onColorClick(color) {
             sizeElement.classList.remove('disabled'); // Hiển thị kích thước nếu có variation hợp lệ
         }
     });
+
+    // Cập nhật khả dụng cho type theo màu đã chọn và (nếu có) size đã chọn
+    const allTypeElements = document.querySelectorAll('.type-button');
+    if (allTypeElements && allTypeElements.length > 0) {
+        allTypeElements.forEach(typeElement => {
+            const typeVal = typeElement.innerText;
+            let matching = variations.filter(v => v.color === color);
+            if (selectedSize) matching = matching.filter(v => v.size === selectedSize);
+            const hasStock = matching.some(v => v.type === typeVal && v.remainQuantity > 0);
+            if (hasStock) {
+                typeElement.classList.remove('disabled');
+            } else {
+                typeElement.classList.add('disabled');
+                typeElement.classList.remove('active');
+                if (selectedType === typeVal) selectedType = null;
+            }
+        });
+    }
 }
 
 function updateOrder() {
@@ -177,8 +270,13 @@ function updateOrder() {
     }
     let selectedColorNew = selectedColor.replace(" ", "");
     let selectedSizeNew = selectedSize.replace(" ", "");
-
-    const option = `${selectedColorNew}/${selectedSizeNew}`;
+    let option;
+    if (hasTypeOptions() && selectedType) {
+        let selectedTypeNew = selectedType.replace(" ", "");
+        option = `${selectedColorNew}/${selectedTypeNew}/${selectedSizeNew}`;
+    } else {
+        option = `${selectedColorNew}/${selectedSizeNew}`;
+    }
     const existingItem = orderItemByProducts.find(item => item.option === option);
     if (existingItem) {
         existingItem.quantity++;
@@ -188,11 +286,23 @@ function updateOrder() {
         if (accessory === 'true') {
             variation = variations[0];
         } else if (selectedColor !== 'blank' && selectedSize !== 'blank') {
-            variation = variations.find(variation => variation.size === selectedSize && variation.color === selectedColor);
+            if (hasTypeOptions() && selectedType) {
+                variation = variations.find(variation => variation.size === selectedSize && variation.color === selectedColor && variation.type === selectedType);
+            } else {
+                variation = variations.find(variation => variation.size === selectedSize && variation.color === selectedColor);
+            }
         } else if (selectedColor !== 'blank') {
-            variation = variations.find(variation => variation.color === selectedColor);
+            if (hasTypeOptions() && selectedType) {
+                variation = variations.find(variation => variation.color === selectedColor && variation.type === selectedType);
+            } else {
+                variation = variations.find(variation => variation.color === selectedColor);
+            }
         } else {
-            variation = variations.find(variation => variation.size === selectedSize);
+            if (hasTypeOptions() && selectedType) {
+                variation = variations.find(variation => variation.size === selectedSize && variation.type === selectedType);
+            } else {
+                variation = variations.find(variation => variation.size === selectedSize);
+            }
         }
 
         const newItem = {
@@ -232,6 +342,10 @@ function addToCart() {
             showWarningPopup('fail');
             return;
         }
+        if (hasTypeOptions() && !selectedType) {
+            showWarningPopup('fail');
+            return;
+        }
     }
 
     updateOrder();
@@ -263,6 +377,10 @@ function buyNow() {
 
     if (accessory === 'false') {
         if (!selectedColor && !selectedSize) {
+            showWarningPopup('fail');
+            return;
+        }
+        if (hasTypeOptions() && !selectedType) {
             showWarningPopup('fail');
             return;
         }
@@ -303,6 +421,7 @@ function updateItemQuantity(orderItem) {
 document.addEventListener('DOMContentLoaded', () => {
     const colorButtonMobiles = document.querySelectorAll('.color-button-mobile');
     const sizeButtonMobiles = document.querySelectorAll('.size-button-mobile');
+    const typeButtonMobiles = document.querySelectorAll('.type-button-mobile');
     const slider = document.getElementById('product-slider');
     const colorImageWrapper = document.getElementById('color-image-wrapper');
     const colorImage = document.getElementById('color-image');
@@ -316,6 +435,9 @@ document.addEventListener('DOMContentLoaded', () => {
             let matchingVariations = variations.filter(v =>  v.color === selectedColorMobile);
             if (selectedSizeMobile != null) {
                 matchingVariations = variations.filter(v =>  v.color === selectedColorMobile && v.size === selectedSizeMobile);
+            }
+            if (hasTypeOptions() && selectedTypeMobile != null) {
+                matchingVariations = matchingVariations.filter(v => v.type === selectedTypeMobile);
             }
 
             if (matchingVariations.length > 0) {
@@ -342,7 +464,10 @@ document.addEventListener('DOMContentLoaded', () => {
             setTimeout(() => {
                 onSizeClickMobile(button.innerText);
 
-                const matchingVariations = variations.filter(v => v.size === selectedSizeMobile && v.color === selectedColorMobile);
+                let matchingVariations = variations.filter(v => v.size === selectedSizeMobile && v.color === selectedColorMobile);
+                if (hasTypeOptions() && selectedTypeMobile != null) {
+                    matchingVariations = matchingVariations.filter(v => v.type === selectedTypeMobile);
+                }
                 if (matchingVariations.length > 0) {
                     if (matchingVariations[0].image !== null) {
                         slider.style.display = 'none';
@@ -351,6 +476,26 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 }
             }, 100);
+        });
+    });
+
+    // Mobile type buttons
+    typeButtonMobiles.forEach(button => {
+        button.addEventListener('click', function () {
+            selectedTypeMobile = button.innerText;
+            typeButtonMobiles.forEach(b => b.classList.remove('active'));
+            button.classList.add('active');
+
+            let matching = variations.filter(v => (!selectedColorMobile || v.color === selectedColorMobile) && (!selectedSizeMobile || v.size === selectedSizeMobile));
+            matching = matching.filter(v => v.type === selectedTypeMobile);
+            if (matching.length > 0 && matching[0].image !== null) {
+                const slider = document.getElementById('product-slider');
+                const colorImageWrapper = document.getElementById('color-image-wrapper');
+                const colorImage = document.getElementById('color-image');
+                slider.style.display = 'none';
+                colorImageWrapper.style.display = 'block';
+                colorImage.src = matching[0].image;
+            }
         });
     });
 
@@ -378,10 +523,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Cập nhật hiển thị các variation trên mobile
 function updateVariationMobileDisplay(variations) {
-    // Lưu trữ các màu sắc và kích thước còn hàng
+    // Lưu trữ các màu sắc, kích thước, kiểu còn hàng
     const enabledColors = new Set();
     const enabledSizesByColor = {}; // Lưu trữ kích thước hợp lệ theo màu sắc
     const enabledSizes = new Set(); // Lưu trữ các size có remainQuantity > 0
+    const enabledTypes = new Set();
 
     // Duyệt qua variations để xác định màu và kích thước còn hàng
     variations.forEach(variation => {
@@ -395,6 +541,9 @@ function updateVariationMobileDisplay(variations) {
             enabledSizesByColor[variation.color].add(variation.size);
 
             enabledSizes.add(variation.size); // Thêm kích thước có sẵn vào Set
+            if (variation.type) {
+                enabledTypes.add(variation.type);
+            }
         }
     });
 
@@ -417,6 +566,19 @@ function updateVariationMobileDisplay(variations) {
             if (sizeElement) sizeElement.classList.add('disabled'); // Thêm disabled cho kích thước
         }
     });
+
+    // Cập nhật trạng thái cho type trên mobile nếu có
+    const allTypeElements = document.querySelectorAll('.type-button-mobile');
+    if (allTypeElements && allTypeElements.length > 0) {
+        allTypeElements.forEach(typeElement => {
+            const typeVal = typeElement.innerText;
+            if (enabledTypes.has(typeVal)) {
+                typeElement.classList.remove('disabled');
+            } else {
+                typeElement.classList.add('disabled');
+            }
+        });
+    }
 }
 
 // Xử lý khi click vào kích thước trên mobile
@@ -427,7 +589,10 @@ function onSizeClickMobile(size) {
         const color = colorElement.id.replace('color-', '');
         
         // Lọc các variation có size đã chọn và màu phù hợp
-        const matchingVariations = variations.filter(v => v.size === size && v.color === color);
+        let matchingVariations = variations.filter(v => v.size === size && v.color === color);
+        if (hasTypeOptions() && selectedTypeMobile != null) {
+            matchingVariations = matchingVariations.filter(v => v.type === selectedTypeMobile);
+        }
         
         if (matchingVariations.length === 0 || matchingVariations[0].remainQuantity <= 0) {
             colorElement.classList.add('disabled'); // Nếu không có variation hợp lệ thì vô hiệu hóa màu
@@ -435,6 +600,24 @@ function onSizeClickMobile(size) {
             colorElement.classList.remove('disabled'); // Hiển thị màu nếu có variation hợp lệ
         }
     });
+
+    // Cập nhật khả dụng cho type theo size đã chọn và (nếu có) màu đã chọn trên mobile
+    const allTypeElements = document.querySelectorAll('.type-button-mobile');
+    if (allTypeElements && allTypeElements.length > 0) {
+        allTypeElements.forEach(typeElement => {
+            const typeVal = typeElement.innerText;
+            let matching = variations.filter(v => v.size === size);
+            if (selectedColorMobile) matching = matching.filter(v => v.color === selectedColorMobile);
+            const hasStock = matching.some(v => v.type === typeVal && v.remainQuantity > 0);
+            if (hasStock) {
+                typeElement.classList.remove('disabled');
+            } else {
+                typeElement.classList.add('disabled');
+                typeElement.classList.remove('active');
+                if (selectedTypeMobile === typeVal) selectedTypeMobile = null;
+            }
+        });
+    }
 }
 
 // Xử lý khi click vào màu trên mobile
@@ -443,7 +626,10 @@ function onColorClickMobile(color) {
     const allSizeElements = document.querySelectorAll('[id^="size-"]');
     allSizeElements.forEach(sizeElement => {
         const size = sizeElement.id.replace('size-', '');
-        const matchingVariations = variations.filter(v => v.size === size && v.color === color);
+        let matchingVariations = variations.filter(v => v.size === size && v.color === color);
+        if (hasTypeOptions() && selectedTypeMobile != null) {
+            matchingVariations = matchingVariations.filter(v => v.type === selectedTypeMobile);
+        }
         
         if (matchingVariations.length === 0 || matchingVariations[0].remainQuantity <= 0) {
             sizeElement.classList.add('disabled'); // Nếu không có variation hợp lệ thì vô hiệu hóa kích thước
@@ -451,6 +637,24 @@ function onColorClickMobile(color) {
             sizeElement.classList.remove('disabled'); // Hiển thị kích thước nếu có variation hợp lệ
         }
     });
+
+    // Cập nhật khả dụng cho type theo màu đã chọn và (nếu có) size đã chọn trên mobile
+    const allTypeElements = document.querySelectorAll('.type-button-mobile');
+    if (allTypeElements && allTypeElements.length > 0) {
+        allTypeElements.forEach(typeElement => {
+            const typeVal = typeElement.innerText;
+            let matching = variations.filter(v => v.color === color);
+            if (selectedSizeMobile) matching = matching.filter(v => v.size === selectedSizeMobile);
+            const hasStock = matching.some(v => v.type === typeVal && v.remainQuantity > 0);
+            if (hasStock) {
+                typeElement.classList.remove('disabled');
+            } else {
+                typeElement.classList.add('disabled');
+                typeElement.classList.remove('active');
+                if (selectedTypeMobile === typeVal) selectedTypeMobile = null;
+            }
+        });
+    }
 }
 
 function updateOrderMobile() {
@@ -463,8 +667,13 @@ function updateOrderMobile() {
 
     let selectedColorNew = selectedColorMobile.replace(" ", "");
     let selectedSizeNew = selectedSizeMobile.replace(" ", "");
-
-    const option = `${selectedColorNew}/${selectedSizeNew}`;
+    let option;
+    if (hasTypeOptions() && selectedTypeMobile) {
+        let selectedTypeNew = selectedTypeMobile.replace(" ", "");
+        option = `${selectedColorNew}/${selectedTypeNew}/${selectedSizeNew}`;
+    } else {
+        option = `${selectedColorNew}/${selectedSizeNew}`;
+    }
     const existingItem = orderItemByProducts.find(item => item.option === option);
     if (existingItem) {
         existingItem.quantity++;
@@ -474,11 +683,23 @@ function updateOrderMobile() {
         if (accessory === 'true') {
             variation = variations[0];
         } else if (selectedColorMobile !== 'blank' && selectedSizeMobile !== 'blank') {
-            variation = variations.find(variation => variation.size === selectedSizeMobile && variation.color === selectedColorMobile);
+            if (hasTypeOptions() && selectedTypeMobile) {
+                variation = variations.find(variation => variation.size === selectedSizeMobile && variation.color === selectedColorMobile && variation.type === selectedTypeMobile);
+            } else {
+                variation = variations.find(variation => variation.size === selectedSizeMobile && variation.color === selectedColorMobile);
+            }
         } else if (selectedColorMobile !== 'blank') {
-            variation = variations.find(variation => variation.color === selectedColorMobile);
+            if (hasTypeOptions() && selectedTypeMobile) {
+                variation = variations.find(variation => variation.color === selectedColorMobile && variation.type === selectedTypeMobile);
+            } else {
+                variation = variations.find(variation => variation.color === selectedColorMobile);
+            }
         } else {
-            variation = variations.find(variation => variation.size === selectedSizeMobile);
+            if (hasTypeOptions() && selectedTypeMobile) {
+                variation = variations.find(variation => variation.size === selectedSizeMobile && variation.type === selectedTypeMobile);
+            } else {
+                variation = variations.find(variation => variation.size === selectedSizeMobile);
+            }
         }
 
         const newItem = {
@@ -532,6 +753,10 @@ function addToCartMobile() {
             showWarningPopup('fail');
             return;
         }
+        if (hasTypeOptions() && !selectedTypeMobile) {
+            showWarningPopup('fail');
+            return;
+        }
     }
 
     updateOrderMobile();
@@ -563,6 +788,10 @@ function buyNowMobile() {
 
     if (accessory === 'false') {
         if (!selectedColorMobile && !selectedSizeMobile) {
+            showWarningPopup('fail');
+            return;
+        }
+        if (hasTypeOptions() && !selectedTypeMobile) {
             showWarningPopup('fail');
             return;
         }

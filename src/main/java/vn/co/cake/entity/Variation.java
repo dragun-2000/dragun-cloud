@@ -52,6 +52,8 @@ public class Variation extends BaseEntity {
     
     private String size;
 
+    private String type;
+
     private String image;
 
     private boolean deleted;

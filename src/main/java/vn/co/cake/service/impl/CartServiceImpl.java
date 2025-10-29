@@ -149,8 +149,29 @@ public class CartServiceImpl implements CartService {
         orderItem.setName(cartItem.getVariation().getName());
         orderItem.setQuantity(cartItem.getQuantity());
         orderItem.setPrice(BigDecimal.valueOf(cartItem.getVariation().getRetailPrice()));
-        orderItem.setImage(product.getImage());
-        orderItem.setOption(cartItem.getOption());
+        // Guard against null product (e.g., product deleted or not found)
+        String image = null;
+        if (product != null) {
+            image = product.getImage();
+        }
+        if (image == null || image.isEmpty()) {
+            image = cartItem.getVariation().getImage();
+        }
+        orderItem.setImage(image);
+        // Normalize option from variation fields: color[/type]/size when available
+        Variation v = cartItem.getVariation();
+        String color = v.getColor();
+        String size = v.getSize();
+        String type = v.getType();
+        List<String> parts = new ArrayList<>();
+        if (color != null && !color.trim().isEmpty()) parts.add(color.trim());
+        if (type != null && !type.trim().isEmpty()) parts.add(type.trim());
+        if (size != null && !size.trim().isEmpty()) parts.add(size.trim());
+        if (!parts.isEmpty()) {
+            orderItem.setOption(String.join("/", parts));
+        } else {
+            orderItem.setOption(cartItem.getOption());
+        }
         return orderItem;
     }
 }

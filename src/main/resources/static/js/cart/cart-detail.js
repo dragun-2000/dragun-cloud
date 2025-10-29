@@ -26,12 +26,16 @@ function renderCartItems() {
     itemElement.appendChild(tableItem);
     tableItem.appendChild(bodyItem);
     orderItems.forEach(item => {
+        // Build a safe key for DOM ids/classes (no spaces or special chars)
+        const key = (item.option + '-' + item.id)
+            .replace(/\s+/g, '_')
+            .replace(/[^\w-]/g, '_');
         const trElement = document.createElement('tr');
-        trElement.classList.add(item.option + '-' + item.id);
+        trElement.classList.add(key);
         trElement.innerHTML = `
             <td>
               <label class="custom-control custom-checkbox">
-                <input class="custom-control-input" type="checkbox" checked id="${'checkbox_' + item.option + '-' + item.id}" disabled>
+                <input class="custom-control-input" type="checkbox" checked id="${'checkbox_' + key}" disabled>
                 <span class="custom-control-indicator"></span>
               </label>
             </td>
@@ -49,17 +53,17 @@ function renderCartItems() {
             </td>
             <td>
               <div class="input-group">
-                <button id="${'minus_' + item.option + '-' + item.id}" type="button" class="btn btn-number btn-minus" disabled="disabled">
+                <button id="${'minus_' + key}" type="button" class="btn btn-number btn-minus" disabled="disabled">
                   <img class="svg" src="/images/common/icon-minus.svg" alt="minus">
                 </button>
-                <input id="${item.option + '-' + item.id}" type="text" name="${item.option}" class="form-control input-number" value="${item.quantity}" min="1" max="30">
-                <button id="${'plus_' + item.option + '-' + item.id}" type="button" class="btn btn-number btn-plus">
+                <input id="${key}" type="text" name="${item.option}" class="form-control input-number" value="${item.quantity}" min="1" max="30">
+                <button id="${'plus_' + key}" type="button" class="btn btn-number btn-plus">
                   <img class="svg" src="/images/common/icon-plus.svg" alt="plus">
                 </button>
               </div>
               <ul class="cart-price">
                 <li class="discount"></li>
-                <li id="${'itemPrice_' + item.option + '-' + item.id}" class="salePrice">${item.price * item.quantity}</li>
+                <li id="${'itemPrice_' + key}" class="salePrice">${item.price * item.quantity}</li>
               </ul>
             </td>
             <td>
@@ -70,7 +74,7 @@ function renderCartItems() {
                 <button class="btn btn-outline-secondary delete-btn">Xóa Sản Phẩm</button>
               </div>
             </td>
-            <div hidden ><input id="${'price_' + item.option + '-' + item.id}" value="${item.price}"></div>
+            <div hidden ><input id="${'price_' + key}" value="${item.price}"></div>
         `;
         bodyItem.appendChild(trElement);
 
@@ -83,10 +87,10 @@ function renderCartItems() {
         toggleIncreaseButton(increaseBtn, item.quantity);
 
         checkboxBtn.addEventListener('click', function() {
-            const id = 'checkbox_' + item.option + '-' + item.id;
+            const id = 'checkbox_' + key;
             let checkboxItem = document.getElementById(id);
             if (checkboxItem.checked) {
-                const idQuantity = item.option + '-' + item.id;
+                const idQuantity = key;
                 let quantityItemDefault = document.getElementById(idQuantity);
                 item.quantity = parseInt(quantityItemDefault.value);
             } else {
@@ -97,7 +101,7 @@ function renderCartItems() {
         });
 
         decreaseBtn.addEventListener('click', function() {
-            const id = item.option + '-' + item.id;
+            const id = key;
             let quantityItem = document.getElementById(id);
             const currentValue = parseInt(quantityItem.value);
 
@@ -121,7 +125,7 @@ function renderCartItems() {
         });
 
         increaseBtn.addEventListener('click', function() {
-            const id = item.option + '-' + item.id;
+            const id = key;
             let quantityItem = document.getElementById(id);
             const currentValue = parseInt(quantityItem.value);
 
