@@ -25,6 +25,50 @@ function hasTypeOptions() {
     return document.querySelectorAll('.type-button, .type-button-mobile').length > 0;
 }
 
+function hasColorOptions() {
+    return document.querySelectorAll('.color-button, .color-button-mobile').length > 0;
+}
+
+function hasSizeOptions() {
+    return document.querySelectorAll('.size-button, .size-button-mobile').length > 0;
+}
+
+function requireSelectionsDesktop() {
+    if (accessory === 'false') {
+        if (hasColorOptions() && !selectedColor) {
+            showWarningPopup('fail');
+            return false;
+        }
+        if (hasTypeOptions() && !selectedType) {
+            showWarningPopup('fail');
+            return false;
+        }
+        if (hasSizeOptions() && !selectedSize) {
+            showWarningPopup('fail');
+            return false;
+        }
+    }
+    return true;
+}
+
+function requireSelectionsMobile() {
+    if (accessory === 'false') {
+        if (hasColorOptions() && !selectedColorMobile) {
+            showWarningPopup('fail');
+            return false;
+        }
+        if (hasTypeOptions() && !selectedTypeMobile) {
+            showWarningPopup('fail');
+            return false;
+        }
+        if (hasSizeOptions() && !selectedSizeMobile) {
+            showWarningPopup('fail');
+            return false;
+        }
+    }
+    return true;
+}
+
 // ====================================== PC Thread =========================================
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -337,16 +381,7 @@ function addToCart() {
         return;
     }
 
-    if (accessory === 'false') {
-        if (!selectedColor && !selectedSize) {
-            showWarningPopup('fail');
-            return;
-        }
-        if (hasTypeOptions() && !selectedType) {
-            showWarningPopup('fail');
-            return;
-        }
-    }
+    if (!requireSelectionsDesktop()) return;
 
     updateOrder();
     fetch('/add-to-cart', {
@@ -375,16 +410,7 @@ function buyNow() {
         return;
     }
 
-    if (accessory === 'false') {
-        if (!selectedColor && !selectedSize) {
-            showWarningPopup('fail');
-            return;
-        }
-        if (hasTypeOptions() && !selectedType) {
-            showWarningPopup('fail');
-            return;
-        }
-    }
+    if (!requireSelectionsDesktop()) return;
 
     updateOrder();
     fetch('/add-to-cart', {
@@ -748,16 +774,7 @@ function addToCartMobile() {
         return;
     }
 
-    if (accessory === 'false') {
-        if (!selectedColorMobile && !selectedSizeMobile) {
-            showWarningPopup('fail');
-            return;
-        }
-        if (hasTypeOptions() && !selectedTypeMobile) {
-            showWarningPopup('fail');
-            return;
-        }
-    }
+    if (!requireSelectionsMobile()) return;
 
     updateOrderMobile();
     fetch('/add-to-cart', {
@@ -786,16 +803,7 @@ function buyNowMobile() {
         return;
     }
 
-    if (accessory === 'false') {
-        if (!selectedColorMobile && !selectedSizeMobile) {
-            showWarningPopup('fail');
-            return;
-        }
-        if (hasTypeOptions() && !selectedTypeMobile) {
-            showWarningPopup('fail');
-            return;
-        }
-    }
+    if (!requireSelectionsMobile()) return;
 
     updateOrderMobile();
     fetch('/add-to-cart', {
