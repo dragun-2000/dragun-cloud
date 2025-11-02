@@ -75,7 +75,14 @@ public class CartServiceImpl implements CartService {
 
             for (OrderItem orderItem : orderItems) {
                 Variation variation = variationRepository.findFirstByVariationId(orderItem.getVariationId());
-                Product product = productRepository.findFirstByProductPancakeIdAndDeletedIsFalse(variation.getPancakeProductId());
+                Product product = variation != null
+                        ? productRepository.findFirstByProductPancakeIdAndDeletedIsFalse(variation.getPancakeProductId())
+                        : null;
+
+                if (variation == null || product == null) {
+                    throw new CommonServletException("Không thể thêm sản phẩm vào giỏ hàng do thông tin sản phẩm không hợp lệ");
+                }
+
                 CartItem cartItem = new CartItem(orderItem, cart, variation, product);
                 newCartItems.add(cartItem);
             }
@@ -87,18 +94,39 @@ public class CartServiceImpl implements CartService {
         } else {
             Set<CartItem> cartItemDeletedList = new HashSet<>();
             List<CartItem> cartItemExists = cart.getCartItems();
+            if (cartItemExists == null) {
+                cartItemExists = new ArrayList<>();
+                cart.setCartItems(cartItemExists);
+            }
             Map<String, List<OrderItem>> orderItemMap = orderItems.stream().collect(Collectors.groupingBy(OrderItem::getVariationId));
-            List<OrderItem> orderItemRequests = orderItemMap.get(variationId);
-            for (OrderItem orderItem : orderItemRequests) {
-                for (CartItem cartItem : cartItemExists) {
-                    if (Objects.equals(orderItem.getVariationId(), cartItem.getVariation().getVariationId())) {
-                        cartItemDeletedList.add(cartItem);
-                    }
+            for (Map.Entry<String, List<OrderItem>> entry : orderItemMap.entrySet()) {
+                String variationKey = entry.getKey();
+                if (variationKey == null) {
+                    throw new CommonServletException("Thiếu mã biến thể sản phẩm, không thể cập nhật giỏ hàng");
                 }
-                Variation variation = variationRepository.findFirstByVariationId(orderItem.getVariationId());
-                Product product = productRepository.findFirstByProductPancakeIdAndDeletedIsFalse(variation.getPancakeProductId());
-                CartItem cartItemNew = new CartItem(orderItem, cart, variation, product);
-                newCartItems.add(cartItemNew);
+                List<OrderItem> orderItemRequests = entry.getValue();
+                if (CollectionUtils.isEmpty(orderItemRequests)) {
+                    continue;
+                }
+
+                for (OrderItem orderItem : orderItemRequests) {
+                    for (CartItem cartItem : cartItemExists) {
+                        if (Objects.equals(orderItem.getVariationId(), cartItem.getVariation().getVariationId())) {
+                            cartItemDeletedList.add(cartItem);
+                        }
+                    }
+                    Variation variation = variationRepository.findFirstByVariationId(orderItem.getVariationId());
+                    Product product = variation != null
+                            ? productRepository.findFirstByProductPancakeIdAndDeletedIsFalse(variation.getPancakeProductId())
+                            : null;
+
+                    if (variation == null || product == null) {
+                        throw new CommonServletException("Không thể thêm sản phẩm vào giỏ hàng do thông tin sản phẩm không hợp lệ");
+                    }
+
+                    CartItem cartItemNew = new CartItem(orderItem, cart, variation, product);
+                    newCartItems.add(cartItemNew);
+                }
             }
 
             if (!CollectionUtils.isEmpty(cartItemDeletedList)) {

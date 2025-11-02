@@ -45,7 +45,7 @@ public class CartItem extends BaseEntity {
         this.totalPrice = orderItem.getPrice().multiply(BigDecimal.valueOf(orderItem.getQuantity()));
         this.cart = cart;
         this.option = orderItem.getOption();
-        this.image = product.getImage();
+        this.image = product != null ? product.getImage() : null;
     }
     
     public void update(OrderItem orderItem, Cart cart, Variation variation, Product product) {
@@ -54,6 +54,6 @@ public class CartItem extends BaseEntity {
         this.totalPrice = orderItem.getPrice().multiply(BigDecimal.valueOf(orderItem.getQuantity()));
         this.cart = cart;
         this.option = orderItem.getOption();
-        this.image = product.getImage();
+        this.image = product != null ? product.getImage() : null;
     }
 }
