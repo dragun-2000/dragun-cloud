@@ -304,13 +304,22 @@ public class HomeController extends BaseController {
 
     private CartForm getCartFormDefault(UserLoginInfo userLoginInfo, CartForm cartForm) throws CommonServletException {
         Account account = accountService.getAccount(userLoginInfo.getId());
-        if (Objects.isNull(cartForm) || CollectionUtils.isEmpty(cartForm.getOrderItems())) {
-            cartForm = cartService.findFirstByAccountId(userLoginInfo.getId());
+        CartForm cartFormFromDb = cartService.findFirstByAccountId(userLoginInfo.getId());
+
+        if (Objects.isNull(cartForm)) {
+            cartForm = new CartForm();
+        }
+
+        if (CollectionUtils.isEmpty(cartForm.getOrderItems())) {
+            if (cartFormFromDb != null) {
+                cartForm.setOrderItems(cartFormFromDb.getOrderItems());
+            } else {
+                cartForm.setOrderItems(new ArrayList<>());
+            }
         } else if (account.isFirstLogin()) {
             account.setFirstLogin(false);
             accountService.save(account);
-            CartForm cartFormExists = cartService.findFirstByAccountId(userLoginInfo.getId());
-            List<OrderItem> existsOrderItems = cartFormExists.getOrderItems();
+            List<OrderItem> existsOrderItems = cartFormFromDb != null ? cartFormFromDb.getOrderItems() : new ArrayList<>();
             List<OrderItem> orderItems = cartForm.getOrderItems();
             List<OrderItem> orderItemsDeleted = new ArrayList<>();
             for (OrderItem orderItem : orderItems) {

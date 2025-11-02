@@ -9,11 +9,11 @@ const bagTotalMobile = document.getElementById('bag-total-mobile');
 
 sessionStorage.setItem('orderItems', JSON.stringify(orderItems));
 
-if (orderItems.length === 0) {
-    let paymentMomoItem = document.getElementById('paymentMomo');
-    paymentMomoItem.setAttribute('disabled', 'disabled');
-    paymentMomoItem.setAttribute('background', '#505050');
-}
+// if (orderItems.length === 0) {
+//     let paymentMomoItem = document.getElementById('paymentMomo');
+//     paymentMomoItem.setAttribute('disabled', 'disabled');
+//     paymentMomoItem.setAttribute('background', '#505050');
+// }
 
 function renderCartItems() {
     let item = sessionStorage.getItem('orderItems');

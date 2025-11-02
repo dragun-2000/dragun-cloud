@@ -8,7 +8,12 @@
   <div class="main main--pageStatus">
     <div class="wrap wrap--mw900">
       <div class="wrapInformation">
-        <div class="boxInformation" th:each="order : ${orderPancake}">
+        <div th:if="${orderPancake == null or orderPancake.isEmpty()}" class="boxInformation" style="text-align: center; padding: 40px;">
+          <h3 style="color: #666;">Bạn chưa có đơn hàng nào</h3>
+          <p style="color: #999; margin-top: 10px;">Các đơn hàng của bạn sẽ hiển thị tại đây</p>
+        </div>
+        <div th:if="${orderPancake != null and !orderPancake.isEmpty()}">
+          <div class="boxInformation" th:each="order : ${orderPancake}">
           <div class="titleInformation">
             <div class="title-tlt d-flex justify-content-between w-100">
               <h2 class="tlt">
@@ -54,6 +59,7 @@
               </li>
             </ul>
           </div>
+        </div>
         </div>
       </div>
     </div>

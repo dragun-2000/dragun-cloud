@@ -78,12 +78,15 @@ public class CartController extends BaseController {
         boolean isLogin = loginInfo != null;
         model.addAttribute("isLogin", isLogin);
         
-        if (Objects.isNull(cartForm) || CollectionUtils.isEmpty(cartForm.getOrderItems())) {
-            if (loginInfo != null) {
-                cartForm = cartService.findFirstByAccountId(loginInfo.getId());
-                Account account = accountService.getAccount(loginInfo.getId());
-                model.addAttribute("account", account);
+        if ((Objects.isNull(cartForm) || CollectionUtils.isEmpty(cartForm.getOrderItems())) && loginInfo != null) {
+            CartForm cartFormFromDb = cartService.findFirstByAccountId(loginInfo.getId());
+            if (cartFormFromDb != null) {
+                cartForm.setOrderItems(cartFormFromDb.getOrderItems());
+            } else {
+                cartForm.setOrderItems(new ArrayList<>());
             }
+            Account account = accountService.getAccount(loginInfo.getId());
+            model.addAttribute("account", account);
         }
 
         List<OrderItem> orderItems = new ArrayList<>();
@@ -159,7 +162,12 @@ public class CartController extends BaseController {
         model.addAttribute("isLogin", true);
 
         if (Objects.isNull(cartForm) || CollectionUtils.isEmpty(cartForm.getOrderItems())) {
-            cartForm = cartService.findFirstByAccountId(loginInfo.getId());
+            CartForm cartFormFromDb = cartService.findFirstByAccountId(loginInfo.getId());
+            if (cartFormFromDb != null) {
+                cartForm.setOrderItems(cartFormFromDb.getOrderItems());
+            } else {
+                cartForm.setOrderItems(new ArrayList<>());
+            }
             model.addAttribute("account", account);
         }
         
@@ -189,7 +197,7 @@ public class CartController extends BaseController {
     }
     
     @GetMapping("/order-history")
-    public String orderDetail(Model model, HttpSession session) {
+    public String orderDetail(Model model, @ModelAttribute("cartForm") CartForm cartForm, HttpSession session) {
         try {
             UserLoginInfo loginInfo = getLoginInfo(session);
             if (Objects.isNull(loginInfo)) {
@@ -197,6 +205,7 @@ public class CartController extends BaseController {
             }
             Account account = accountService.getAccount(loginInfo.getId());
             List<OrderPancakeResponse> orderPancake = pancakePosService.getAllOrderPancake(account.getPhone(), 0, 1000);
+            
             orderPancake.forEach(orderPancakeResponse -> {
                 if (orderPancakeResponse.getInserted_at() != null) {
                     String orderDate = DateUtil.stringToStringFormat(orderPancakeResponse.getInserted_at(), DateConst.YYYY_MM_DD_T_HH_MM_SS);
@@ -211,6 +220,7 @@ public class CartController extends BaseController {
             model.addAttribute("orderPancake", orderPancake);
             model.addAttribute("account", account);
             model.addAttribute("isLogin", true);
+            FunctionUtil.updateCartQuantity(model, cartForm);
 
 
         } catch (Exception e) {

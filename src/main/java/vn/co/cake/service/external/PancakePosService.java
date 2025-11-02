@@ -17,6 +17,7 @@ import vn.co.cake.dto.UpdateStockResponse;
 import vn.co.cake.entity.*;
 import vn.co.cake.repository.*;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
@@ -181,6 +182,10 @@ public class PancakePosService {
     public List<OrderPancakeResponse> getAllOrderPancake(String phone, int pageNumber, int pageSize) {
         try {
             PancakeProperties pancakeProperty = getDefault();
+            if (pancakeProperty == null) {
+                log.error("PancakeProperties not found");
+                return new ArrayList<>();
+            }
             String url = pancakeApiUrl + "/shops/" + pancakeProperty.getShopId() + "/orders?api_key=" + pancakeProperty.getToken() + "&page_size=" + pageSize + "&page_number=" + pageNumber + "&search=" + phone;
             ObjectMapper objectMapper = new ObjectMapper();
             objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
@@ -189,15 +194,16 @@ public class PancakePosService {
             if (response.getStatusCode() == HttpStatus.OK) {
                 JsonNode rootNode = objectMapper.readTree(response.getBody());
                 String variationJson = rootNode.path("data").toString();
-                return objectMapper.readValue(variationJson, objectMapper.getTypeFactory().constructCollectionType(List.class, OrderPancakeResponse.class));
+                List<OrderPancakeResponse> orders = objectMapper.readValue(variationJson, objectMapper.getTypeFactory().constructCollectionType(List.class, OrderPancakeResponse.class));
+                return orders != null ? orders : new ArrayList<>();
             } else {
                 log.error("Failed to sync Order with Pancake POS. Response: {}", response.getBody());
-                return null;
+                return new ArrayList<>();
             }
         } catch (Exception e) {
             e.printStackTrace();
             log.error("Error occurred while syncing Order: {}", e.getMessage());
-            return null;
+            return new ArrayList<>();
         }
     }
 
