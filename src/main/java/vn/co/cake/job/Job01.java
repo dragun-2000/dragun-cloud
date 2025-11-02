@@ -28,11 +28,14 @@ public class Job01 {
         this.pancakePosService = pancakePosService;
     }
 
-//    @Scheduled(cron = "0 * * * * ?")
+   @Scheduled(cron = "0 * * * * ?")
     public void updateDiscountIfNeeded() {
         LocalDate currentDate = LocalDate.now();
         
         Voucher voucher = voucherRepository.findFirstByCodeAndDeletedIsFalse("DISCOUNT_PRICE");
+        if (voucher == null) {
+            return;
+        }
         log.info(">> updateDiscountIfNeeded voucher = {} <<", voucher.getId());
 
         LocalDate startDate = voucher.getStartDate();
@@ -45,7 +48,7 @@ public class Job01 {
         }
     }
     
-//    @Scheduled(cron = "0 0 5 * * ?")
+   @Scheduled(cron = "0 0 5 * * ?")
     public void syncPancakeData() {
         log.info("*** Start syncProducts ***");
         int pageNumber = 0;

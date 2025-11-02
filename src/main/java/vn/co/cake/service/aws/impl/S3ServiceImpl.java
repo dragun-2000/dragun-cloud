@@ -62,7 +62,7 @@ public class S3ServiceImpl implements S3Service {
 
         // Trả về URL hiển thị
         // Nếu app đang chạy ở localhost:8080 và đã cấu hình spring.web.resources.static-locations
-        return "/images/" + fileName;
+        return "/external-images/" + fileName;
     }
 
     /**

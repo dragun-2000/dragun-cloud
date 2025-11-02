@@ -94,7 +94,6 @@ public class AM003Controller extends BaseController {
                                Model model, HttpSession session) {
 
         String bookmarkUrl = accountService.getBookmarkUrlLasted(BOOKMARK_STAFF_KEY);
-        log.info("Get bookmark url form redis= {}", bookmarkUrl);
 
         AdminLoginInfo adminLoginInfo = getLoginInfoAdmin(session);
         if (adminLoginInfo == null) {

@@ -29,7 +29,7 @@ public class PancakeController {
 
     @PostMapping("/webhook")
     public ResponseEntity<Void> handleWebhook(@RequestBody String payload) {
-        log.info("handleWebhook = {}", payload);
+        // log.info("handleWebhook = {}", payload);
         pancakePosService.saveWebhookHistory(payload);
         return ResponseEntity.ok().build();
     }

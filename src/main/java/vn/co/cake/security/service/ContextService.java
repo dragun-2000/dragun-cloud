@@ -89,10 +89,6 @@ public class ContextService {
         }
 
         String requestUrl = holder.getRequest().getRequestURL().toString();
-        log.info("Request root = {}", requestUrl);
-//        if (requestUrl.contains(PROTOCOL_LOCAL)) {
-//            requestUrl = requestUrl.replaceAll(PROTOCOL_LOCAL, PROTOCOL_PUBLIC);
-//        }
         
         // set bookmark url cake
         if (bookmarkValidForAM(requestUrl) && (context == null || context.getAuthentication() == null)) {
@@ -101,7 +97,6 @@ public class ContextService {
                 requestUrl = requestUrl.concat(PREFIX_QUERY).concat(holder.getRequest().getQueryString());
             }
 
-            log.info("Create bookmark url cake = {}", requestUrl);
             contextRepository.saveBookmarkUrl(BOOKMARK_STAFF_KEY, requestUrl);
         }
 
@@ -112,11 +107,9 @@ public class ContextService {
                 requestUrl = requestUrl.concat(PREFIX_QUERY).concat(holder.getRequest().getQueryString());
             }
 
-            log.info("Create bookmark url SA cake = {}", requestUrl);
             contextRepository.saveBookmarkUrl(BOOKMARK_USER_KEY, requestUrl);
         }
 
-        log.info("Request final = {}", requestUrl);
         return context;
     }
 

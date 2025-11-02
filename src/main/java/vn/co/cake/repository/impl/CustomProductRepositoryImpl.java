@@ -60,7 +60,7 @@ public class CustomProductRepositoryImpl extends BaseRepository implements Custo
                 .where(where)
                 .limit(pageable.getPageSize())
                 .offset(pageable.getOffset())
-                .orderBy(getOrderSpecifiers(pageable, Product.class))
+                .orderBy(qProduct.updated.desc())
                 .fetch();
 
         return new PageImpl<>(products, pageable, query.fetchCount());
