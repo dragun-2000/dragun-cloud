@@ -42,6 +42,11 @@ public class MomoController extends BaseController {
         this.cartService = cartService;
     }
 
+    @ModelAttribute("cartForm")
+    public CartForm initCartForm() {
+        return new CartForm();
+    }
+
     @PostMapping("/create")
     public ResponseEntity<?> createPayment(@RequestBody OrderDetailRequest request, HttpSession session,
                                            @ModelAttribute("cartForm") CartForm cartForm) {

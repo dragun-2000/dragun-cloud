@@ -46,6 +46,11 @@ public class SA001Controller extends BaseController {
         this.provinceRepository = provinceRepository;
     }
 
+    @ModelAttribute("cartForm")
+    public CartForm createCartForm() {
+        return new CartForm();
+    }
+
     /**
      * Login screen
      *

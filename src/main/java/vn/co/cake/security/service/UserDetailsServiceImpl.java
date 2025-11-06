@@ -27,19 +27,50 @@ public class UserDetailsServiceImpl implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        // Check username
-        if (StringUtils.isAllBlank(username)) {
-            throw new BadCredentialsException(BaseConst.ERROR);
+        try {
+            // Check username
+            if (StringUtils.isAllBlank(username)) {
+                throw new BadCredentialsException(BaseConst.ERROR);
+            }
+
+            // Search the account by username (can be phone or email)
+            Account account = accountRepository.findAccountForMember(username);
+            
+            // If not found by phone, try by email
+            if (account == null) {
+                account = accountRepository.findAccountForgetPassword(username);
+            }
+
+            if (account == null || account.isDeleted()) {
+                throw new UsernameNotFoundException(BaseConst.NOT_FOUND);
+            }
+
+            // Validate required fields
+            if (account.getId() == null) {
+                throw new BadCredentialsException("Account ID is null");
+            }
+
+            String mailAddress = account.getMailAddress();
+            if (StringUtils.isBlank(mailAddress)) {
+                throw new BadCredentialsException("Email address is required");
+            }
+
+            String password = account.getPassword();
+            if (StringUtils.isBlank(password)) {
+                throw new BadCredentialsException("Password is required");
+            }
+
+            String authorities = account.getAuthorities();
+            if (StringUtils.isBlank(authorities)) {
+                throw new BadCredentialsException("Account authorities is required");
+            }
+
+            return new UserDetails(account.getId(), mailAddress, password,
+                    Collections.singletonList(new SimpleGrantedAuthority(authorities)), mailAddress, account.isFirstLogin());
+        } catch (BadCredentialsException | UsernameNotFoundException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new BadCredentialsException("Error loading user: " + e.getMessage(), e);
         }
-
-        // Search the account by username
-        Account account = accountRepository.findAccountForMember(username);
-
-        if (account == null || account.isDeleted()) {
-            throw new UsernameNotFoundException(BaseConst.NOT_FOUND);
-        }
-
-        return new UserDetails(account.getId(), account.getMailAddress(), account.getPassword(),
-                Collections.singletonList(new SimpleGrantedAuthority(account.getAuthorities())), account.getMailAddress(), account.isFirstLogin());
     }
 }
