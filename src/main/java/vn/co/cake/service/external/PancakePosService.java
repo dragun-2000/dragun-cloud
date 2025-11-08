@@ -8,6 +8,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.HttpServerErrorException;
+import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 import vn.co.cake.controller.external.dto.MainOrderRequest;
 import vn.co.cake.controller.external.dto.OrderPancakeResponse;
@@ -181,28 +184,61 @@ public class PancakePosService {
 
     public List<OrderPancakeResponse> getAllOrderPancake(String phone, int pageNumber, int pageSize) {
         try {
+            // Validate input
+            if (phone == null || phone.trim().isEmpty()) {
+                log.warn("Phone number is null or empty, cannot fetch orders from Pancake POS");
+                return new ArrayList<>();
+            }
+
             PancakeProperties pancakeProperty = getDefault();
             if (pancakeProperty == null) {
                 log.error("PancakeProperties not found");
                 return new ArrayList<>();
             }
+
+            if (pancakeProperty.getShopId() == null || pancakeProperty.getToken() == null) {
+                log.error("PancakeProperties missing shopId or token");
+                return new ArrayList<>();
+            }
+
             String url = pancakeApiUrl + "/shops/" + pancakeProperty.getShopId() + "/orders?api_key=" + pancakeProperty.getToken() + "&page_size=" + pageSize + "&page_number=" + pageNumber + "&search=" + phone;
+            log.debug("Calling Pancake POS API: {}", url.replace(pancakeProperty.getToken(), "***"));
+            
             ObjectMapper objectMapper = new ObjectMapper();
             objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
             ResponseEntity<String> response = restTemplate.getForEntity(url, String.class);
 
             if (response.getStatusCode() == HttpStatus.OK) {
+                if (response.getBody() == null || response.getBody().isEmpty()) {
+                    log.warn("Pancake POS API returned empty response body");
+                    return new ArrayList<>();
+                }
+                
                 JsonNode rootNode = objectMapper.readTree(response.getBody());
                 String variationJson = rootNode.path("data").toString();
+                
+                if (variationJson == null || variationJson.isEmpty() || "null".equals(variationJson)) {
+                    log.debug("No order data found for phone: {}", phone);
+                    return new ArrayList<>();
+                }
+                
                 List<OrderPancakeResponse> orders = objectMapper.readValue(variationJson, objectMapper.getTypeFactory().constructCollectionType(List.class, OrderPancakeResponse.class));
                 return orders != null ? orders : new ArrayList<>();
             } else {
-                log.error("Failed to sync Order with Pancake POS. Response: {}", response.getBody());
+                log.error("Failed to sync Order with Pancake POS. Status: {}, Response: {}", response.getStatusCode(), response.getBody());
                 return new ArrayList<>();
             }
+        } catch (HttpServerErrorException e) {
+            log.error("Pancake POS API server error (5xx) for phone {}: Status={}, Response={}", phone, e.getStatusCode(), e.getResponseBodyAsString(), e);
+            return new ArrayList<>();
+        } catch (HttpClientErrorException e) {
+            log.error("Pancake POS API client error (4xx) for phone {}: Status={}, Response={}", phone, e.getStatusCode(), e.getResponseBodyAsString(), e);
+            return new ArrayList<>();
+        } catch (RestClientException e) {
+            log.error("Rest client error while calling Pancake POS API for phone {}: {}", phone, e.getMessage(), e);
+            return new ArrayList<>();
         } catch (Exception e) {
-            e.printStackTrace();
-            log.error("Error occurred while syncing Order: {}", e.getMessage());
+            log.error("Unexpected error occurred while syncing Order from Pancake POS for phone {}: {}", phone, e.getMessage(), e);
             return new ArrayList<>();
         }
     }

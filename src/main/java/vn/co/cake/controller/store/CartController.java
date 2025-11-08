@@ -29,6 +29,7 @@ import vn.co.cake.service.external.PancakePosService;
 import vn.co.cake.utils.BigDecimalUtil;
 import vn.co.cake.utils.DateUtil;
 import vn.co.cake.utils.FunctionUtil;
+import lombok.extern.slf4j.Slf4j;
 
 import javax.servlet.http.HttpSession;
 import java.math.BigDecimal;
@@ -36,6 +37,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+@Slf4j
 @Controller
 @SessionAttributes("cartForm") 
 public class CartController extends BaseController {
@@ -204,26 +206,44 @@ public class CartController extends BaseController {
                 return "login";
             }
             Account account = accountService.getAccount(loginInfo.getId());
-            List<OrderPancakeResponse> orderPancake = pancakePosService.getAllOrderPancake(account.getPhone(), 0, 1000);
+            if (account == null) {
+                return "login";
+            }
             
-            orderPancake.forEach(orderPancakeResponse -> {
-                if (orderPancakeResponse.getInserted_at() != null) {
-                    String orderDate = DateUtil.stringToStringFormat(orderPancakeResponse.getInserted_at(), DateConst.YYYY_MM_DD_T_HH_MM_SS);
-                    orderPancakeResponse.setInserted_at(orderDate);
-                }
-                
-                if (orderPancakeResponse.getMoney_to_collect() != null) {
-                    String money = BigDecimalUtil.formatMoney(orderPancakeResponse.getMoney_to_collect()) + " VND";
-                    orderPancakeResponse.setMoney_to_collect(money);
-                }
-            });
+            // Get phone number, use empty string if null to avoid NPE
+            String phone = account.getPhone();
+            if (phone == null) {
+                phone = "";
+            }
+            
+            List<OrderPancakeResponse> orderPancake = pancakePosService.getAllOrderPancake(phone, 0, 1000);
+            
+            // Ensure orderPancake is not null before iterating
+            if (orderPancake != null) {
+                orderPancake.forEach(orderPancakeResponse -> {
+                    if (orderPancakeResponse != null) {
+                        if (orderPancakeResponse.getInserted_at() != null) {
+                            String orderDate = DateUtil.stringToStringFormat(orderPancakeResponse.getInserted_at(), DateConst.YYYY_MM_DD_T_HH_MM_SS);
+                            orderPancakeResponse.setInserted_at(orderDate);
+                        }
+                        
+                        if (orderPancakeResponse.getMoney_to_collect() != null) {
+                            String money = BigDecimalUtil.formatMoney(orderPancakeResponse.getMoney_to_collect()) + " VND";
+                            orderPancakeResponse.setMoney_to_collect(money);
+                        }
+                    }
+                });
+            } else {
+                orderPancake = new ArrayList<>();
+            }
+            
             model.addAttribute("orderPancake", orderPancake);
             model.addAttribute("account", account);
             model.addAttribute("isLogin", true);
             FunctionUtil.updateCartQuantity(model, cartForm);
 
-
         } catch (Exception e) {
+            log.error("Error loading order history: {}", e.getMessage(), e);
             return "login";
         }
         return "order-status";
