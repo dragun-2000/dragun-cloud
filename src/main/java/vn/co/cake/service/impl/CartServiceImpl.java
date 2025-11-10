@@ -1,5 +1,6 @@
 package vn.co.cake.service.impl;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import vn.co.cake.dto.CartForm;
@@ -21,6 +22,7 @@ import java.math.BigDecimal;
 import java.util.*;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 public class CartServiceImpl implements CartService {
     private final CartRepository cartRepository;
@@ -131,7 +133,29 @@ public class CartServiceImpl implements CartService {
 
             if (!CollectionUtils.isEmpty(cartItemDeletedList)) {
                 cartItemExists.removeAll(cartItemDeletedList);
-                cartItemRepository.deleteAll(cartItemDeletedList);
+                // Only delete items that are persisted (have id > 0)
+                // Delete items one by one to handle cases where item might have been deleted by another request
+                List<CartItem> itemsToDelete = new ArrayList<>();
+                for (CartItem item : cartItemDeletedList) {
+                    if (item.getId() > 0) {
+                        itemsToDelete.add(item);
+                    }
+                }
+                
+                if (!CollectionUtils.isEmpty(itemsToDelete)) {
+                    // Delete items individually to handle optimistic locking failures gracefully
+                    for (CartItem item : itemsToDelete) {
+                        try {
+                            // Check if item still exists before deleting
+                            if (cartItemRepository.existsById(item.getId())) {
+                                cartItemRepository.delete(item);
+                            }
+                        } catch (Exception e) {
+                            // Log but don't fail if item was already deleted
+                            log.warn("Failed to delete cart item with id {}: {}", item.getId(), e.getMessage());
+                        }
+                    }
+                }
             }
 
             cartItemExists.addAll(newCartItems);
