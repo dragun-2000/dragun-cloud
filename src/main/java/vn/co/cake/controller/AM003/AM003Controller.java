@@ -173,7 +173,7 @@ public class AM003Controller extends BaseController {
                                                 @RequestParam String price,
                                                 @RequestParam(required = false) String discount,
                                                 @RequestParam(required = false) Long stockQuantity,
-                                                @RequestParam List<String> category,
+                                                @RequestParam(required = false) List<String> category,
                                                 @RequestParam(required = false) String relatedProduct1,
                                                 @RequestParam(required = false) String relatedProduct2,
                                                 @RequestParam(required = false) String relatedProduct3,
@@ -207,6 +207,11 @@ public class AM003Controller extends BaseController {
                 return new ResponseEntity<>(errorMessage, HttpStatus.BAD_REQUEST);
             }
             
+            // Validate category - UI shows it as required (※)
+            if (category == null || category.isEmpty()) {
+                return new ResponseEntity<>("Vui lòng chọn ít nhất một loại sản phẩm.", HttpStatus.BAD_REQUEST);
+            }
+            
             ProductCreateRequest request = new ProductCreateRequest();
             request.setName(name);
             request.setCode(code);
@@ -221,6 +226,7 @@ public class AM003Controller extends BaseController {
             if (StringUtils.isNotBlank(discountCustom)) {
                 request.setDiscount(BigDecimal.valueOf(Long.parseLong(discountCustom)));
             }
+            // Category đã được validate ở trên, nên chắc chắn không null và không empty
             request.setCategory(String.join(",", category));
             if (StringUtils.isNotEmpty(relatedProduct1)) {
                 request.setRelatedProduct1(relatedProduct1);
@@ -235,43 +241,43 @@ public class AM003Controller extends BaseController {
                 request.setRelatedProduct4(relatedProduct4);
             }
 
-            if (!file.isEmpty()) {
+            if (file != null && !file.isEmpty()) {
                 String imageUrl = s3Service.uploadImageToS3(file);
                 request.setImageUrl(imageUrl);
             }
-            if (!file1.isEmpty()) {
+            if (file1 != null && !file1.isEmpty()) {
                 String imageUrl = s3Service.uploadImageToS3(file1);
                 request.setImage1Url(imageUrl);
             }
-            if (!file2.isEmpty()) {
+            if (file2 != null && !file2.isEmpty()) {
                 String imageUrl = s3Service.uploadImageToS3(file2);
                 request.setImage2Url(imageUrl);
             }
-            if (!file3.isEmpty()) {
+            if (file3 != null && !file3.isEmpty()) {
                 String imageUrl = s3Service.uploadImageToS3(file3);
                 request.setImage3Url(imageUrl);
             }
-            if (!file4.isEmpty()) {
+            if (file4 != null && !file4.isEmpty()) {
                 String imageUrl = s3Service.uploadImageToS3(file4);
                 request.setImage4Url(imageUrl);
             }
-            if (!file5.isEmpty()) {
+            if (file5 != null && !file5.isEmpty()) {
                 String imageUrl = s3Service.uploadImageToS3(file5);
                 request.setImage5Url(imageUrl);
             }
-            if (!file6.isEmpty()) {
+            if (file6 != null && !file6.isEmpty()) {
                 String imageUrl = s3Service.uploadImageToS3(file6);
                 request.setImage6Url(imageUrl);
             }
-            if (!file7.isEmpty()) {
+            if (file7 != null && !file7.isEmpty()) {
                 String imageUrl = s3Service.uploadImageToS3(file7);
                 request.setImage7Url(imageUrl);
             }
-            if (!file8.isEmpty()) {
+            if (file8 != null && !file8.isEmpty()) {
                 String imageUrl = s3Service.uploadImageToS3(file8);
                 request.setImage8Url(imageUrl);
             }
-            if (!file9.isEmpty()) {
+            if (file9 != null && !file9.isEmpty()) {
                 String imageUrl = s3Service.uploadImageToS3(file9);
                 request.setImage9Url(imageUrl);
             }
@@ -333,7 +339,7 @@ public class AM003Controller extends BaseController {
                                                 @RequestParam String price,
                                                 @RequestParam(required = false) String discount,
                                                 @RequestParam(required = false) Long stockQuantity,
-                                                @RequestParam List<String> category,
+                                                @RequestParam(required = false) List<String> category,
                                                 @RequestParam(required = false) String relatedProduct1,
                                                 @RequestParam(required = false) String relatedProduct2,
                                                 @RequestParam(required = false) String relatedProduct3,
@@ -368,6 +374,11 @@ public class AM003Controller extends BaseController {
                 return new ResponseEntity<>(errorMessage, HttpStatus.BAD_REQUEST);
             }
 
+            // Validate category - UI shows it as required (※)
+            if (category == null || category.isEmpty()) {
+                return new ResponseEntity<>("Vui lòng chọn ít nhất một loại sản phẩm.", HttpStatus.BAD_REQUEST);
+            }
+
             ProductCreateRequest request = new ProductCreateRequest();
             request.setId(id);
             request.setCode(code);
@@ -383,6 +394,7 @@ public class AM003Controller extends BaseController {
             if (StringUtils.isNotBlank(discount)) {
                 request.setDiscount(BigDecimal.valueOf(Long.parseLong(discountCustom)));
             }
+            // Category đã được validate ở trên, nên chắc chắn không null và không empty
             request.setCategory(String.join(",", category));
             if (StringUtils.isNotEmpty(relatedProduct1)) {
                 request.setRelatedProduct1(relatedProduct1);
@@ -397,43 +409,43 @@ public class AM003Controller extends BaseController {
                 request.setRelatedProduct4(relatedProduct4);
             }
 
-            if (!file.isEmpty()) {
+            if (file != null && !file.isEmpty()) {
                 String imageUrl = s3Service.uploadImageToS3(file);
                 request.setImageUrl(imageUrl);
             }
-            if (!file1.isEmpty()) {
+            if (file1 != null && !file1.isEmpty()) {
                 String imageUrl = s3Service.uploadImageToS3(file1);
                 request.setImage1Url(imageUrl);
             }
-            if (!file2.isEmpty()) {
+            if (file2 != null && !file2.isEmpty()) {
                 String imageUrl = s3Service.uploadImageToS3(file2);
                 request.setImage2Url(imageUrl);
             }
-            if (!file3.isEmpty()) {
+            if (file3 != null && !file3.isEmpty()) {
                 String imageUrl = s3Service.uploadImageToS3(file3);
                 request.setImage3Url(imageUrl);
             }
-            if (!file4.isEmpty()) {
+            if (file4 != null && !file4.isEmpty()) {
                 String imageUrl = s3Service.uploadImageToS3(file4);
                 request.setImage4Url(imageUrl);
             }
-            if (!file5.isEmpty()) {
+            if (file5 != null && !file5.isEmpty()) {
                 String imageUrl = s3Service.uploadImageToS3(file5);
                 request.setImage5Url(imageUrl);
             }
-            if (!file6.isEmpty()) {
+            if (file6 != null && !file6.isEmpty()) {
                 String imageUrl = s3Service.uploadImageToS3(file6);
                 request.setImage6Url(imageUrl);
             }
-            if (!file7.isEmpty()) {
+            if (file7 != null && !file7.isEmpty()) {
                 String imageUrl = s3Service.uploadImageToS3(file7);
                 request.setImage7Url(imageUrl);
             }
-            if (!file8.isEmpty()) {
+            if (file8 != null && !file8.isEmpty()) {
                 String imageUrl = s3Service.uploadImageToS3(file8);
                 request.setImage8Url(imageUrl);
             }
-            if (!file9.isEmpty()) {
+            if (file9 != null && !file9.isEmpty()) {
                 String imageUrl = s3Service.uploadImageToS3(file9);
                 request.setImage9Url(imageUrl);
             }

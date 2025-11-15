@@ -3,26 +3,98 @@ $(function () {
 
     $(function () {
         $("#update_product_form").on('submit', function (event) {
+            // Validate category (must select at least one if required by UI)
+            const categorySelect = $('#categorySelect');
+            let categoryValues = [];
+            
+            // Handle both Select2 and regular select
+            if (categorySelect.length > 0) {
+                if ($.fn.select2 && categorySelect.data('select2')) {
+                    // Select2 is initialized
+                    categoryValues = categorySelect.val() || [];
+                } else {
+                    // Regular select
+                    const selectedOptions = categorySelect.find('option:selected');
+                    categoryValues = selectedOptions.map(function() { return $(this).val(); }).get();
+                }
+                
+                // Category is required (UI shows ※), validate before submit
+                if (categoryValues.length === 0) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    categorySelect.addClass('is-invalid');
+                    alert('Vui lòng chọn ít nhất một loại sản phẩm.');
+                    return false;
+                }
+                categorySelect.removeClass('is-invalid');
+            }
+            
             if (this.checkValidity() === false) {
                 event.preventDefault();
                 event.stopPropagation();
             } else {
                 const form = $('#update_product_form')[0]; // Lấy form HTML
                 const formData = new FormData(form); // Khởi tạo đối tượng FormData từ form
+                
+                // Đảm bảo CSRF token được thêm vào FormData
+                const csrfToken = $("input[name='_csrf']").val();
+                const csrfParamName = $("input[name='_csrf']").attr('name');
+                if (csrfToken) {
+                    // Thêm CSRF token vào FormData (Spring Security yêu cầu trong multipart)
+                    if (!formData.has(csrfParamName)) {
+                        formData.append(csrfParamName, csrfToken);
+                    }
+                }
+                
+                // Show loading indicator
+                const submitButton = $('#update_product_form').find('button[type="submit"]');
+                const originalButtonText = submitButton.text();
+                submitButton.prop('disabled', true).text('Đang xử lý...');
+                
                 $.ajax({
                     type: "POST",
                     url: "/AM/AM003-02/update",
                     data: formData,
-                    contentType: false,
-                    processData: false,
-                    headers: {"X-CSRF-TOKEN": $("input[name='_csrf']").val()},
+                    contentType: false,  // Quan trọng: để browser tự set Content-Type với boundary
+                    processData: false, // Quan trọng: không xử lý data, giữ nguyên FormData
+                    headers: {"X-CSRF-TOKEN": csrfToken}, // Thêm vào headers để đảm bảo
+                    timeout: 600000, // 10 minutes timeout for large file uploads
+                    xhr: function() {
+                        var xhr = new window.XMLHttpRequest();
+                        // Upload progress (optional, for future enhancement)
+                        xhr.upload.addEventListener("progress", function(evt) {
+                            if (evt.lengthComputable) {
+                                var percentComplete = (evt.loaded / evt.total) * 100;
+                                console.log('Upload progress: ' + percentComplete + '%');
+                            }
+                        }, false);
+                        return xhr;
+                    },
                     success: function (data) {
+                        submitButton.prop('disabled', false).text(originalButtonText);
                         $('#message-success').text(data);
                         $('#update-product-success').modal('show');
                     },
                     error: function(error) {
+                        submitButton.prop('disabled', false).text(originalButtonText);
                         console.log('error', error);
-                        $('#message-error').text(error.responseText);
+                        let errorMessage = 'Đã xảy ra lỗi khi cập nhật sản phẩm.';
+                        
+                        if (error.status === 0 || error.statusText === 'abort' || error.statusText === 'timeout') {
+                            errorMessage = 'Kết nối bị ngắt hoặc timeout. ';
+                            errorMessage += 'Có thể do file quá lớn hoặc mất kết nối mạng. ';
+                            errorMessage += 'Vui lòng thử lại với file nhỏ hơn hoặc kiểm tra kết nối mạng.';
+                        } else if (error.responseText) {
+                            errorMessage = error.responseText;
+                        } else if (error.status === 400) {
+                            errorMessage = 'Dữ liệu không hợp lệ. Vui lòng kiểm tra lại.';
+                        } else if (error.status === 500) {
+                            errorMessage = 'Lỗi server. Vui lòng thử lại sau.';
+                        } else if (error.status === 413) {
+                            errorMessage = 'File quá lớn. Vui lòng chọn file nhỏ hơn 100MB.';
+                        }
+                        
+                        $('#message-error').text(errorMessage);
                         $('#update-product-error').modal('show');
                     }
                 });

@@ -14,7 +14,7 @@ COPY . .
 RUN mvn -B clean package spring-boot:repackage -DskipTests
 
 ### RUNTIME STAGE
-FROM openjdk:11-jdk-slim AS runtime
+FROM eclipse-temurin:11-jdk AS runtime
 
 # App working directory
 ENV APP_HOME=/app
