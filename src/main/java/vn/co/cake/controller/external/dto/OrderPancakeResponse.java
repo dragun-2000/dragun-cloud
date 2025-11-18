@@ -10,6 +10,7 @@ public class OrderPancakeResponse {
     private String bill_full_name;
     private String money_to_collect;
     private String link_confirm_order;
+    private String tracking_link;
     private String inserted_at;
     private String status_name;
     private ShippingAddress shipping_address;

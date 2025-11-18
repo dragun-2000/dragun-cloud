@@ -6,7 +6,6 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 /**
@@ -17,16 +16,33 @@ public class UserAuthenticationProvider extends DaoAuthenticationProvider {
 
     @Override
     protected void additionalAuthenticationChecks(UserDetails userDetails, UsernamePasswordAuthenticationToken authentication) {
-
-        // Check password
-        PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
-        String password = authentication.getCredentials().toString();
-
-        if (!passwordEncoder.matches(password, userDetails.getPassword())) {
-            log.error("User account {} password {} incorrect", userDetails.getUsername(), password);
+        Object credentials = authentication.getCredentials();
+        
+        if (credentials == null) {
+            log.error("User account {} authentication failed: credentials are null", userDetails.getUsername());
             throw new BadCredentialsException(BaseConst.ERROR);
         }
 
+        String password = credentials.toString();
+
+        if (password == null || password.isEmpty()) {
+            log.error("User account {} authentication failed: password is empty", userDetails.getUsername());
+            throw new BadCredentialsException(BaseConst.ERROR);
+        }
+
+        // Use the configured password encoder from parent class
+        PasswordEncoder passwordEncoder = getPasswordEncoder();
+        if (passwordEncoder == null) {
+            log.error("User account {} authentication failed: password encoder is not configured", userDetails.getUsername());
+            throw new BadCredentialsException(BaseConst.ERROR);
+        }
+
+        if (!passwordEncoder.matches(password, userDetails.getPassword())) {
+            log.error("User account {} password incorrect", userDetails.getUsername());
+            throw new BadCredentialsException(BaseConst.ERROR);
+        }
+
+        // Call parent to perform additional checks (account status, etc.)
         super.additionalAuthenticationChecks(userDetails, authentication);
     }
 }

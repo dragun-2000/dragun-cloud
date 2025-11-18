@@ -216,7 +216,9 @@ public class CartController extends BaseController {
                 phone = "";
             }
             
+            log.info("Loading order history for account ID: {}, phone: {}", account.getId(), phone);
             List<OrderPancakeResponse> orderPancake = pancakePosService.getAllOrderPancake(phone, 0, 1000);
+            log.info("Retrieved {} orders from Pancake POS", orderPancake != null ? orderPancake.size() : 0);
             
             // Ensure orderPancake is not null before iterating
             if (orderPancake != null) {
@@ -237,6 +239,7 @@ public class CartController extends BaseController {
                 orderPancake = new ArrayList<>();
             }
             
+            log.info("Adding {} orders to model", orderPancake.size());
             model.addAttribute("orderPancake", orderPancake);
             model.addAttribute("account", account);
             model.addAttribute("isLogin", true);

@@ -186,7 +186,7 @@ public class PancakePosService {
         try {
             // Validate input
             if (phone == null || phone.trim().isEmpty()) {
-                log.warn("Phone number is null or empty, cannot fetch orders from Pancake POS");
+                log.error("Phone number is null or empty, cannot fetch orders from Pancake POS");
                 return new ArrayList<>();
             }
 
@@ -202,7 +202,7 @@ public class PancakePosService {
             }
 
             String url = pancakeApiUrl + "/shops/" + pancakeProperty.getShopId() + "/orders?api_key=" + pancakeProperty.getToken() + "&page_size=" + pageSize + "&page_number=" + pageNumber + "&search=" + phone;
-            log.debug("Calling Pancake POS API: {}", url.replace(pancakeProperty.getToken(), "***"));
+            log.info("Calling Pancake POS API: {}", url.replace(pancakeProperty.getToken(), "***"));
             
             ObjectMapper objectMapper = new ObjectMapper();
             objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
@@ -210,7 +210,7 @@ public class PancakePosService {
 
             if (response.getStatusCode() == HttpStatus.OK) {
                 if (response.getBody() == null || response.getBody().isEmpty()) {
-                    log.warn("Pancake POS API returned empty response body");
+                    log.info("Pancake POS API returned empty response body");
                     return new ArrayList<>();
                 }
                 
@@ -218,7 +218,7 @@ public class PancakePosService {
                 String variationJson = rootNode.path("data").toString();
                 
                 if (variationJson == null || variationJson.isEmpty() || "null".equals(variationJson)) {
-                    log.debug("No order data found for phone: {}", phone);
+                    log.info("No order data found for phone: {}", phone);
                     return new ArrayList<>();
                 }
                 

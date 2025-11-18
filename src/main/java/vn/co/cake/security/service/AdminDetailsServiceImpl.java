@@ -28,19 +28,45 @@ public class AdminDetailsServiceImpl implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        // Check username
-        if (StringUtils.isAllBlank(username)) {
-            throw new BadCredentialsException(BaseConst.ERROR);
+        try {
+            // Check username
+            if (StringUtils.isAllBlank(username)) {
+                throw new BadCredentialsException(BaseConst.ERROR);
+            }
+
+            // Search the account by username
+            Account account = accountRepository.findAccountForAdmin(username);
+
+            if (account == null || account.isDeleted()) {
+                throw new UsernameNotFoundException(BaseConst.NOT_FOUND);
+            }
+
+            // Validate required fields
+            if (account.getId() == null) {
+                throw new BadCredentialsException("Account ID is null");
+            }
+
+            String mailAddress = account.getMailAddress();
+            if (StringUtils.isBlank(mailAddress)) {
+                throw new BadCredentialsException("Email address is required");
+            }
+
+            String password = account.getPassword();
+            if (StringUtils.isBlank(password)) {
+                throw new BadCredentialsException("Password is required");
+            }
+
+            String authorities = account.getAuthorities();
+            if (StringUtils.isBlank(authorities)) {
+                throw new BadCredentialsException("Account authorities is required");
+            }
+
+            return new AdminDetails(account.getId(), mailAddress, password,
+                    Collections.singletonList(new SimpleGrantedAuthority(authorities)), mailAddress);
+        } catch (BadCredentialsException | UsernameNotFoundException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new BadCredentialsException("Error loading admin user: " + e.getMessage(), e);
         }
-
-        // Search the account by username
-        Account account = accountRepository.findAccountForAdmin(username);
-
-        if (account == null || account.isDeleted()) {
-            throw new UsernameNotFoundException(BaseConst.NOT_FOUND);
-        }
-
-        return new AdminDetails(account.getId(), account.getMailAddress(), account.getPassword(),
-                Collections.singletonList(new SimpleGrantedAuthority(account.getAuthorities())), account.getMailAddress());
     }
 }
