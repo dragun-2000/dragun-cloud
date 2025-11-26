@@ -4,12 +4,18 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.http.NoHttpResponseException;
+import org.apache.http.client.config.RequestConfig;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.http.*;
+import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
+import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 import vn.co.cake.controller.external.dto.MainOrderRequest;
@@ -20,6 +26,8 @@ import vn.co.cake.dto.UpdateStockResponse;
 import vn.co.cake.entity.*;
 import vn.co.cake.repository.*;
 
+import java.io.IOException;
+import java.net.SocketTimeoutException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -54,7 +62,26 @@ public class PancakePosService {
                              VariationRepository variationRepository,
                              WarehouseRepository warehouseRepository,
                              OrderRepository orderRepository) {
-        this.restTemplate = restTemplateBuilder.build();
+        // Configure RestTemplate with timeouts to prevent connection hangs
+        RequestConfig requestConfig = RequestConfig.custom()
+                .setConnectTimeout(10000) // 10 seconds connection timeout
+                .setSocketTimeout(30000) // 30 seconds socket timeout
+                .setConnectionRequestTimeout(10000) // 10 seconds connection request timeout
+                .build();
+        
+        CloseableHttpClient httpClient = HttpClients.custom()
+                .setDefaultRequestConfig(requestConfig)
+                .setMaxConnTotal(100)
+                .setMaxConnPerRoute(20)
+                .build();
+        
+        HttpComponentsClientHttpRequestFactory factory = new HttpComponentsClientHttpRequestFactory();
+        factory.setHttpClient(httpClient);
+        factory.setConnectTimeout(10000);
+        factory.setReadTimeout(30000);
+        factory.setConnectionRequestTimeout(10000);
+        
+        this.restTemplate = new RestTemplate(factory);
         this.voucherRepository = voucherRepository;
         this.pancakePropertyRepository = pancakePropertyRepository;
         this.webhookHistoryRepository = webhookHistoryRepository;
@@ -127,36 +154,172 @@ public class PancakePosService {
     }
 
     public boolean createOrder(Order order) {
-        try {
-            PancakeProperties pancakeProperty = this.getDefault();
-            Warehouse warehouse = this.getWarehouseDefault();
-            String url = pancakeApiUrl + "/shops/" + pancakeProperty.getShopId() + "/orders?api_key=" + pancakeProperty.getToken();
-            HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.APPLICATION_JSON);
-            ObjectMapper objectMapper = new ObjectMapper();
-            objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-
-            MainOrderRequest mainOrderRequest = new MainOrderRequest(order, pancakeProperty, warehouse);
-            HttpEntity<MainOrderRequest> request = new HttpEntity<>(mainOrderRequest, headers);
-
-            String jsonString = objectMapper.writeValueAsString(mainOrderRequest);
-            System.out.println("\n" + jsonString + "\n");
-            ResponseEntity<String> response = restTemplate.postForEntity(url, request, String.class);
-            if (response.getStatusCode() == HttpStatus.CREATED) {
-                JsonNode rootNode = objectMapper.readTree(response.getBody());
-                System.out.println(rootNode);
-                return true;
-            } else {
-                log.error("Failed to sync order with Pancake POS. Response: {}", response.getBody());
-                return false;
-            }
-        } catch (Exception e) {
-            order.setDeleted(true);
-            orderRepository.save(order);
-            e.printStackTrace();
-            log.error("Error occurred while syncing order: {}", e.getMessage());
+        if (order == null) {
+            log.error("Order is null, cannot sync to Pancake POS");
             return false;
         }
+        
+        int maxRetries = 3;
+        long retryDelayMs = 1000; // Start with 1 second
+        
+        for (int attempt = 1; attempt <= maxRetries; attempt++) {
+            try {
+                PancakeProperties pancakeProperty = this.getDefault();
+                if (pancakeProperty == null) {
+                    log.error("PancakeProperties not found, cannot sync order {}", order.getCode());
+                    // Set deleted to match original behavior when configuration is missing
+                    order.setDeleted(true);
+                    orderRepository.save(order);
+                    return false;
+                }
+                
+                Warehouse warehouse = this.getWarehouseDefault();
+                if (warehouse == null) {
+                    log.error("Warehouse not found, cannot sync order {}", order.getCode());
+                    // Set deleted to match original behavior when configuration is missing
+                    order.setDeleted(true);
+                    orderRepository.save(order);
+                    return false;
+                }
+                
+                String url = pancakeApiUrl + "/shops/" + pancakeProperty.getShopId() + "/orders?api_key=" + pancakeProperty.getToken();
+                HttpHeaders headers = new HttpHeaders();
+                headers.setContentType(MediaType.APPLICATION_JSON);
+                ObjectMapper objectMapper = new ObjectMapper();
+                objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+
+                MainOrderRequest mainOrderRequest = new MainOrderRequest(order, pancakeProperty, warehouse);
+                HttpEntity<MainOrderRequest> request = new HttpEntity<>(mainOrderRequest, headers);
+
+                log.info("Syncing order {} to Pancake POS (attempt {}/{}): {}", order.getCode(), attempt, maxRetries, url.replace(pancakeProperty.getToken(), "***"));
+                
+                ResponseEntity<String> response = restTemplate.postForEntity(url, request, String.class);
+                if (response.getStatusCode() == HttpStatus.CREATED) {
+                    // Verify response body to ensure order was actually created
+                    String responseBody = response.getBody();
+                    if (responseBody == null || responseBody.trim().isEmpty()) {
+                        log.error("Pancake POS returned empty response body for order {}, status was CREATED but no data returned", order.getCode());
+                        order.setDeleted(true);
+                        orderRepository.save(order);
+                        return false;
+                    }
+                    
+                    try {
+                        JsonNode rootNode = objectMapper.readTree(responseBody);
+                        JsonNode dataNode = rootNode.path("data");
+                        if (dataNode.isMissingNode() || dataNode.isNull()) {
+                            log.error("Pancake POS response for order {} missing data field. Response: {}", order.getCode(), responseBody);
+                            order.setDeleted(true);
+                            orderRepository.save(order);
+                            return false;
+                        }
+                        
+                        // Log successful creation with order details from response
+                        log.info("Successfully synced order {} to Pancake POS. Response data: {}", order.getCode(), dataNode.toString());
+                        return true;
+                    } catch (Exception parseException) {
+                        log.error("Failed to parse Pancake POS response for order {}. Response body: {}. Parse error: {}", 
+                                order.getCode(), responseBody, parseException.getMessage(), parseException);
+                        // Even though status is CREATED, if we can't parse the response, consider it a failure
+                        order.setDeleted(true);
+                        orderRepository.save(order);
+                        return false;
+                    }
+                } else {
+                    // If status is not CREATED (e.g., 200 OK but not 201), consider it a failure
+                    // This should rarely happen as RestTemplate throws exceptions for 4xx/5xx
+                    log.error("Failed to sync order {} with Pancake POS. Status: {}, Response: {}", order.getCode(), response.getStatusCode(), response.getBody());
+                    order.setDeleted(true);
+                    orderRepository.save(order);
+                    return false;
+                }
+            } catch (ResourceAccessException e) {
+                // Check if it's a transient error (connection timeout, NoHttpResponseException)
+                Throwable rootCause = getRootCause(e);
+                boolean isTransientError = rootCause instanceof NoHttpResponseException 
+                        || rootCause instanceof SocketTimeoutException 
+                        || rootCause instanceof IOException
+                        || (rootCause != null && rootCause.getMessage() != null 
+                            && (rootCause.getMessage().contains("failed to respond") 
+                                || rootCause.getMessage().contains("Connection timed out")
+                                || rootCause.getMessage().contains("Read timed out")));
+                
+                if (isTransientError && attempt < maxRetries) {
+                    log.error("Transient error while syncing order {} to Pancake POS (attempt {}/{}): {}. Retrying in {}ms...", 
+                            order.getCode(), attempt, maxRetries, rootCause != null ? rootCause.getMessage() : e.getMessage(), retryDelayMs);
+                    try {
+                        Thread.sleep(retryDelayMs);
+                        retryDelayMs *= 2; // Exponential backoff: 1s, 2s, 4s
+                    } catch (InterruptedException ie) {
+                        Thread.currentThread().interrupt();
+                        log.error("Retry interrupted for order {}", order.getCode());
+                        // Set deleted when retry is interrupted
+                        order.setDeleted(true);
+                        orderRepository.save(order);
+                        return false;
+                    }
+                    continue; // Retry
+                } else {
+                    // Permanent error or max retries reached
+                    log.error("Error occurred while syncing order {} to Pancake POS after {} attempts: {}", 
+                            order.getCode(), attempt, rootCause != null ? rootCause.getMessage() : e.getMessage(), e);
+                    order.setDeleted(true);
+                    orderRepository.save(order);
+                    return false;
+                }
+            } catch (HttpClientErrorException e) {
+                // 4xx errors are client errors, not retryable
+                log.error("Client error (4xx) while syncing order {} to Pancake POS: Status={}, Response={}", 
+                        order.getCode(), e.getStatusCode(), e.getResponseBodyAsString(), e);
+                order.setDeleted(true);
+                orderRepository.save(order);
+                return false;
+            } catch (HttpServerErrorException e) {
+                // 5xx errors might be retryable, but we'll only retry once more
+                if (attempt < maxRetries) {
+                    log.warn("Server error (5xx) while syncing order {} to Pancake POS (attempt {}/{}): Status={}. Retrying...", 
+                            order.getCode(), attempt, maxRetries, e.getStatusCode());
+                    try {
+                        Thread.sleep(retryDelayMs);
+                        retryDelayMs *= 2;
+                    } catch (InterruptedException ie) {
+                        Thread.currentThread().interrupt();
+                        log.error("Retry interrupted for order {}", order.getCode());
+                        // Set deleted when retry is interrupted
+                        order.setDeleted(true);
+                        orderRepository.save(order);
+                        return false;
+                    }
+                    continue;
+                } else {
+                    log.error("Server error (5xx) while syncing order {} to Pancake POS after {} attempts: Status={}, Response={}", 
+                            order.getCode(), attempt, e.getStatusCode(), e.getResponseBodyAsString(), e);
+                    order.setDeleted(true);
+                    orderRepository.save(order);
+                    return false;
+                }
+            } catch (Exception e) {
+                // Other unexpected errors
+                log.error("Unexpected error occurred while syncing order {} to Pancake POS: {}", order.getCode(), e.getMessage(), e);
+                order.setDeleted(true);
+                orderRepository.save(order);
+                return false;
+            }
+        }
+        
+        // If we get here, all retries failed
+        log.error("Failed to sync order {} to Pancake POS after {} attempts", order.getCode(), maxRetries);
+        order.setDeleted(true);
+        orderRepository.save(order);
+        return false;
+    }
+    
+    private Throwable getRootCause(Throwable throwable) {
+        Throwable cause = throwable.getCause();
+        if (cause == null || cause == throwable) {
+            return throwable;
+        }
+        return getRootCause(cause);
     }
     
     public List<VariationResponse> getAllProductPancake(int pageNumber, int pageSize) {

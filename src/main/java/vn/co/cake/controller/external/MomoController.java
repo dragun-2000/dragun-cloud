@@ -2,11 +2,9 @@ package vn.co.cake.controller.external;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.util.CollectionUtils;
 import org.springframework.web.bind.annotation.*;
 import vn.co.cake.controller.BaseController;
 import vn.co.cake.dto.CartForm;
-import vn.co.cake.dto.OrderItem;
 import vn.co.cake.entity.Order;
 import vn.co.cake.request.OrderDetailRequest;
 import vn.co.cake.request.PaymentRequest;
@@ -18,9 +16,7 @@ import vn.co.cake.service.external.PancakePosService;
 
 import javax.servlet.http.HttpSession;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Objects;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/payment")
@@ -64,7 +60,8 @@ public class MomoController extends BaseController {
             if (orderToPancakeSuccess) {
                 this.removeCartItemOrder(loginInfo.getId(), cartForm);
             } else {
-                order.setDeleted(true);
+                // Order deletion is already handled in PancakePosService.createOrder()
+                // No need to save again here as it's already done in the service
                 return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Order Sản phẩm thất bại!");
             }
 //            String paymentUrl = moMoPaymentService.createPaymentRequest(paymentRequest);

@@ -7,11 +7,13 @@ import vn.co.cake.entity.thiyen.YProduct;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 public class ProductMapper {
 
     public static ProductDTO toDTO(YProduct product, List<ProductGallery> galleryList, List<ProductVariant> variantList) {
         if (product == null) return null;
-
         ProductDTO dto = new ProductDTO();
         dto.setId(product.getId());
         dto.setName(product.getName());

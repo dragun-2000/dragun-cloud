@@ -17,7 +17,8 @@ public class WebConfig implements WebMvcConfigurer {
                         "https://dragun.cloud",
                         "https://debase.vn",
                         "https://thiyen.vn",
-                        "https://botnguhacmeden.thiyen.vn"
+                        "https://botnguhacmeden.thiyen.vn",
+                        "https://botngusachongdau.thiyen.vn"
                 )
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                 .allowedHeaders("*")

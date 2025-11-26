@@ -44,7 +44,7 @@ public class CustomProductRepositoryImpl extends BaseRepository implements Custo
         if (StringUtils.isNotEmpty(searchRequest.getColor())) {
             where.and(qProduct.colors.containsIgnoreCase(searchRequest.getColor().trim()));
         }
-        if ("SALE".equals(searchRequest.getCategory())) {
+        if ("SALE".equals(searchRequest.getCategory()) || "BLACK FRIDAY".equals(searchRequest.getCategory())) {
             where.and(qProduct.discount.gt(0));
         } else if (StringUtils.isNotEmpty(searchRequest.getCategory()) && !"ALL PRODUCTS".equals(searchRequest.getCategory())) {
             where.and(qProduct.categories.containsIgnoreCase(searchRequest.getCategory().trim()));

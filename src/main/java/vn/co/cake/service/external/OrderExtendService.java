@@ -51,10 +51,10 @@ public class OrderExtendService {
 
         orderDTO.setId(order.getId());
         
-        GenericMailForm genericMailForm = GenericMailForm.builder()
-                .url("https://www.phodem.click")
-                .build();
-        emailService.sendEmail("trinhhai28041994@gmail.com", genericMailForm);
+        // GenericMailForm genericMailForm = GenericMailForm.builder()
+        //         .url("https://www.phodem.click")
+        //         .build();
+        // emailService.sendEmail("trinhhai28041994@gmail.com", genericMailForm);
         return orderDTO;
     }
 

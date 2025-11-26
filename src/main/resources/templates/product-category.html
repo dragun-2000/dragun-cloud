@@ -12,8 +12,11 @@
       </div>
       <div class="groupProducts">
         <div class="title">
-          <h2 class="title-tlt text-shadow-bold text-responsive" th:text="${category}"></h2>
-        </div>
+          <h2 class="title-tlt text-shadow-bold text-responsive"
+              th:text="${category}"
+              th:style="${category} == 'BLACK FRIDAY' ? 'color:red;' : ''">
+          </h2>
+      </div>
         <div class="products-list">
           <ul class="list-style-none">
             <li th:each="product: ${products}">
