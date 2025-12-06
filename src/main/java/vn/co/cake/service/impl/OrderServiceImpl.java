@@ -7,7 +7,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 import vn.co.cake.common.DateConst;
+import vn.co.cake.constants.OrderConstants;
 import vn.co.cake.entity.*;
+import vn.co.cake.enums.OrderStatus;
 import vn.co.cake.exception.CommonServletException;
 import vn.co.cake.repository.*;
 import vn.co.cake.request.OrderDetailRequest;
@@ -86,10 +88,10 @@ public class OrderServiceImpl implements OrderService {
         }
 
         long discountPrice = 0;
-        Voucher shippingFee = voucherRepository.findFirstByCodeAndDeletedIsFalse("SHIPPING_FEE");
+        Voucher shippingFee = voucherRepository.findFirstByCodeAndDeletedIsFalse(OrderConstants.VOUCHER_SHIPPING_FEE);
         int fee = 0;
         BigDecimal totalPriceOrder = this.getTotalPriceOrder(itemOrders, discountPrice);
-        if (shippingFee != null && totalPriceOrder.longValue() < 1000000) {
+        if (shippingFee != null && totalPriceOrder.longValue() < OrderConstants.FREE_SHIPPING_THRESHOLD) {
             fee = shippingFee.getShippingFee();
         }
 
@@ -97,7 +99,7 @@ public class OrderServiceImpl implements OrderService {
         order.setCode(this.getCodeMaxOrder());
         order.setAccount(account);
         order.setPaymentMethod(request.getPaymentMethod());
-        order.setStatus("NEW");
+        order.setStatus(OrderStatus.NEW.getValue());
         order.setShippingAddress(this.getAddressShipping(request));
         order.setTotalAmount(this.getTotalPriceOrder(itemOrders, discountPrice));
         order.setShippingFee(BigDecimal.valueOf(fee));
@@ -122,6 +124,9 @@ public class OrderServiceImpl implements OrderService {
             }
 
             Product product = productRepository.findFirstByProductPancakeId(variation.getPancakeProductId());
+            if (Objects.isNull(product)) {
+                throw new CommonServletException("Sản phẩm không tồn tại trong hệ thống!");
+            }
 
             OrderItem orderItem = new OrderItem();
             orderItem.setOrder(order);

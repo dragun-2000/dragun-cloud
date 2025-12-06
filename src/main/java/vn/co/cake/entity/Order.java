@@ -34,6 +34,9 @@ public class Order extends BaseEntity {
     private String phone;
     private String note;
     private String voucher;
+    
+    private Integer countError = 0;
+    private String messageError;
 
     @Column(columnDefinition = "boolean default false")
     private boolean deleted;

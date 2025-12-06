@@ -56,14 +56,12 @@ public class MomoController extends BaseController {
             paymentRequest.setOrderId(order.getId());
             paymentRequest.setAmount(order.getTotalAmount());
 
-            boolean orderToPancakeSuccess = pancakePosService.createOrder(order);
-            if (orderToPancakeSuccess) {
-                this.removeCartItemOrder(loginInfo.getId(), cartForm);
-            } else {
-                // Order deletion is already handled in PancakePosService.createOrder()
-                // No need to save again here as it's already done in the service
-                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Order Sản phẩm thất bại!");
-            }
+            // Báo thành công ngay, không đợi Pancake sync
+            this.removeCartItemOrder(loginInfo.getId(), cartForm);
+            
+            // Sync Pancake POS async (Job002 sẽ retry nếu fail)
+            pancakePosService.syncOrderToPancakeAsync(order);
+            
 //            String paymentUrl = moMoPaymentService.createPaymentRequest(paymentRequest);
             return ResponseEntity.ok("Order Sản phẩm thành công!"); // Trả về URL thanh toán từ MoMo
         } catch (Exception e) {

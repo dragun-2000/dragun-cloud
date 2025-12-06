@@ -45,26 +45,26 @@
 <!--        </rollingPolicy>-->
     </appender>
 
-    <!-- LOG everything -->
-    <root level="ERROR">
+    <!-- LOG INFO và ERROR - Tắt DEBUG -->
+    <root level="INFO">
         <springProfile name="default">
             <appender-ref ref="Console"/>
         </springProfile>
         <appender-ref ref="RollingFile"/>
     </root>
-    <root level="ERROR">
+    <root level="INFO">
         <springProfile name="development">
             <appender-ref ref="Console"/>
         </springProfile>
         <appender-ref ref="RollingFile"/>
     </root>
-    <root level="ERROR">
+    <root level="INFO">
         <springProfile name="staging">
             <appender-ref ref="Console"/>
         </springProfile>
         <appender-ref ref="RollingFile"/>
     </root>
-    <root level="ERROR">
+    <root level="INFO">
         <springProfile name="production">
             <appender-ref ref="Console"/>
         </springProfile>
