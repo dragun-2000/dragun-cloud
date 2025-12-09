@@ -9,4 +9,5 @@ public interface OrderRepository extends JpaRepository<Order, Long>, CustomOrder
     Order findFirstByCode(String code);
     Order findFirstByAccountIdOrderByCreatedDesc(Long accountId);
     List<Order> findByStatusAndCountErrorLessThan(String status, int maxCountError);
+    List<Order> findByPhoneAndDeletedFalseOrderByCreatedDesc(String phone);
 }

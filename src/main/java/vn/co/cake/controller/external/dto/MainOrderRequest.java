@@ -107,26 +107,7 @@ class VariationInfo {
     }
 }
 
-@Data
-class ShippingAddress {
-    private String address;
-    private String commune_id;
-    private String country_code;
-    private String district_id;
-    private String full_address;
-    private String full_name;
-    private String phone_number;
-    private String post_code;
-    private String province_id;
-
-    public ShippingAddress() {}
-    public ShippingAddress(Order order) {
-        this.full_name = order.getFullName();
-        this.phone_number = order.getPhone();
-        this.address = order.getShippingAddress();
-        this.full_address = order.getShippingAddress();
-    }
-}
+// ShippingAddress class moved to separate file: ShippingAddress.java
 
 @Data
 class WarehouseInfo {

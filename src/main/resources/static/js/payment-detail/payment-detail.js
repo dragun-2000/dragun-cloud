@@ -8,9 +8,25 @@ $(function () {
 
     $(function () {
         $("#create-order").on('submit', function (event) {
+            // Disable button ngay khi submit để tránh click nhiều lần
+            const orderBtn = document.getElementById('order-btn');
+            const originalButtonText = orderBtn ? orderBtn.textContent : 'Đặt Hàng';
+            
+            if (orderBtn) {
+                orderBtn.disabled = true;
+                orderBtn.textContent = 'Đang xử lý...';
+                orderBtn.classList.add('disabled');
+            }
+            
             if (this.checkValidity() === false) {
                 event.preventDefault();
                 event.stopPropagation();
+                // Re-enable button nếu validation fail
+                if (orderBtn) {
+                    orderBtn.disabled = false;
+                    orderBtn.textContent = originalButtonText;
+                    orderBtn.classList.remove('disabled');
+                }
             } else {
                 const orderId = $('input[name=orderId]').val();
                 const fullName = $('input[name=fullName]').val();
@@ -36,10 +52,17 @@ $(function () {
                    headers: {"X-CSRF-TOKEN": $("input[name='_csrf']").val()},
                    success: function (data) {
                       showPopup('success');
+                      // Không re-enable button vì sẽ redirect
                    },
                    error: function(error) {
                       console.log('error', error);
                       showPopup('fail', error.responseText);
+                      // Re-enable button nếu có lỗi để user có thể thử lại
+                      if (orderBtn) {
+                          orderBtn.disabled = false;
+                          orderBtn.textContent = originalButtonText;
+                          orderBtn.classList.remove('disabled');
+                      }
                    }
                });
                event.preventDefault();

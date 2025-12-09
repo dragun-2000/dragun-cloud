@@ -18,6 +18,7 @@ import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.scheduling.annotation.Async;
+import org.springframework.transaction.annotation.Transactional;
 import vn.co.cake.controller.external.dto.MainOrderRequest;
 import vn.co.cake.controller.external.dto.OrderPancakeResponse;
 import vn.co.cake.controller.external.dto.ProductPancakeRequest;
@@ -256,18 +257,32 @@ public class PancakePosService {
         }
     }
     
+    @Transactional
     private void updateOrderSyncSuccess(Order order) {
-        order.setStatus(OrderStatus.NEW.getValue());
-        order.setCountError(0);
-        order.setMessageError(null);
-        orderRepository.save(order);
+        // Reload order để tránh stale data
+        Order freshOrder = orderRepository.findById(order.getId()).orElse(null);
+        if (freshOrder == null) {
+            log.error("Order {} not found when updating sync success", order.getId());
+            return;
+        }
+        freshOrder.setStatus(OrderStatus.NEW.getValue());
+        freshOrder.setCountError(0);
+        freshOrder.setMessageError(null);
+        orderRepository.save(freshOrder);
     }
     
+    @Transactional
     private void updateOrderSyncFailure(Order order, String errorMessage) {
-        order.setStatus(OrderStatus.SYNC_FAIL.getValue());
-        order.setCountError(order.getCountError() != null ? order.getCountError() + 1 : 1);
-        order.setMessageError(errorMessage);
-        orderRepository.save(order);
+        // Reload order để tránh stale data và race condition
+        Order freshOrder = orderRepository.findById(order.getId()).orElse(null);
+        if (freshOrder == null) {
+            log.error("Order {} not found when updating sync failure", order.getId());
+            return;
+        }
+        freshOrder.setStatus(OrderStatus.SYNC_FAIL.getValue());
+        freshOrder.setCountError(freshOrder.getCountError() != null ? freshOrder.getCountError() + 1 : 1);
+        freshOrder.setMessageError(errorMessage);
+        orderRepository.save(freshOrder);
     }
     
     private Throwable getRootCause(Throwable throwable) {
