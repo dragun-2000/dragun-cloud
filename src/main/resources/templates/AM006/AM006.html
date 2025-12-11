@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.w3.org/1999/xhtml" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security" layout:decorate="~{template/baseManage.html}">
+<div class="container-fluid" layout:fragment="main-content">
+  <link rel="stylesheet" th:href="@{/css/tempusdominus-bootstrap-4.min.css}"/>
+  <link rel="stylesheet" th:href="@{/css/bootstrap-select.css}" />
+  <link rel="Stylesheet" type="text/css" th:href="@{/css/jquery-ui.css}" />
+  <link rel="Stylesheet" type="text/css" th:href="@{/css/jquery-ui.min.css}" />
+  <script th:src="@{/js/jquery-3.3.1.min.js}"></script>
+  <script th:src="@{/js/jquery-ui.min.js}"></script>
+
+  <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+
+  <div class="row">
+    <div th:replace = "~{template/sidebar :: sidebar}"></div>
+
+    <main class="main-content col-lg-10 col-md-9 col-sm-12 p-0 offset-lg-2 offset-md-3">
+      <div th:replace = "~{template/navbar :: navbar}"></div>
+
+      <div class="main-content-container container-fluid">
+        <div class="page-header text-center no-gutters py-4">
+          <h3 class="page-title font-weight-bold">Đơn Hàng Lỗi Sync</h3>
+        </div>
+
+        <div class="info-fr-1400 w-1200 mt-5">
+          <form id="search_form" name="f" th:action="@{/AM/AM006}" method="GET" th:object="${searchCondition}" class="needs-validation" novalidate>
+            <div class="form-row">
+              <div class="form-group col-lg-3">
+                <div class="row">
+                  <label class="col-lg-5 col-form-label text-lg-right font-weight-bold">Mã Đơn Hàng</label>
+                  <div class="col-lg-7">
+                    <input type="text" class="form-control" th:field="*{code}"/>
+                  </div>
+                </div>
+              </div>
+              <div class="form-group col-lg-3">
+                <div class="row">
+                  <label for="updatedFrom" class="col-lg-5 col-form-label text-lg-right font-weight-bold">Ngày Tạo Đơn</label>
+                  <div class="col-lg-7">
+                    <div id="updatedFrom" class="input-group input-group-seamless date datepicker-input-group"
+                         data-target-input="nearest">
+                      <input style="background: white" id="lastUpdateDateFrom" type="text" class="update-date-from form-control form-control-sm datepicker-input-group h-35" th:field="*{lastUpdateDateFrom}"
+                             data-target="#updatedFrom" maxlength="10" size="10" readonly
+                             name="updatedFrom" placeholder="YYYY-MM-DD" data-toggle="datetimepicker">
+                      <span class="input-group-append" data-target="#updatedFrom" data-toggle="datetimepicker">
+                        <span class="input-group-text"><i class="fas fa-calendar-alt"></i></span>
+                      </span>
+                    </div>
+
+                    <div class="invalid-feedback fromDate-format-error"></div>
+
+                  </div>
+                </div>
+              </div>
+              <div class="form-group col-lg-3">
+                <div class="row">
+                  <label for="updatedTo" style="padding: 7px; padding-left: 20px;" class="col-form-label text-sm-center font-weight-bold">～</label>
+                  <div class="col-lg-7">
+                    <div id="updatedTo" class="input-group date datepicker-input-group input-group-seamless" data-target-input="nearest">
+                      <input style="background: white" type="text" class="update-date-to form-control form-control-sm datepicker-input-group" th:field="*{lastUpdateDateTo}"
+                             data-target="#updatedTo" maxlength="10" size="10" readonly
+                             id="lastUpdateDateTo" name="updatedTo" placeholder="YYYY-MM-DD" data-toggle="datetimepicker">
+                      <span class="input-group-append" data-target="#updatedTo" data-toggle="datetimepicker">
+                        <span class="input-group-text"><i class="fas fa-calendar-alt"></i></span>
+                      </span>
+                    </div>
+
+                    <div class="invalid-feedback date-error toDate-format-error"></div>
+
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="text-center mt-4">
+              <button type="submit" class="btn custom-btn-info mw-150 search">TÌM KIẾM</button>
+            </div>
+          </form>
+        </div>
+
+        <div class="d-flex flex-wrap justify-content-between align-items-center mt-4">
+          <div class="form-group" style="flex: 1 0 auto">
+            <div th:replace = "~{template/pagination :: top-pagination}"></div>
+          </div>
+        </div>
+        <div class="table-log">
+          <div class="card card-small mb-4">
+            <div class="card-body p-0 text-center">
+              <div class="table-responsive card-border">
+                <table class="table mb-0 table-bordered table-hover">
+                  <thead class="bg-light">
+                  <tr>
+                    <th scope="col" class="border-1 font-weight-bold" style="border-left:none !important">Mã Đơn</th>
+                    <th scope="col" class="border-1 font-weight-bold">Người Nhận Hàng</th>
+                    <th scope="col" class="border-1 font-weight-bold">Ngày Đặt Hàng</th>
+                    <th scope="col" class="border-1 font-weight-bold">Địa Chỉ Nhận Hàng</th>
+                    <th scope="col" class="border-1 font-weight-bold">Số Lần Lỗi</th>
+                    <th scope="col" class="border-1 font-weight-bold">Thông Báo Lỗi</th>
+                    <th scope="col" class="border-1 font-weight-bold">Tổng Tiền</th>
+                    <th scope="col" class="border-1 font-weight-bold">Thao Tác</th>
+                  </tr>
+                  </thead>
+                  <tbody>
+                  <tr th:each="order, item : ${orders}" th:if="${totalRecord > 0}">
+                    <td style="border-left:none !important">
+                      <span th:text="${order.code}"></span>
+                    </td>
+                    <td class="text-center" th:text="${order.fullName}"></td>
+                    <td class="text-center" th:text="${#dates.format(order.created, 'yyyy-MM-dd HH:mm:ss')}"></td>
+                    <td class="text-center" th:text="${order.shippingAddress}"></td>
+                    <td class="text-center" th:text="${order.countError != null ? order.countError : 0}"></td>
+                    <td class="text-left" style="max-width: 300px; min-width: 200px; word-wrap: break-word; word-break: break-word; white-space: normal;" th:text="${order.messageError != null ? order.messageError : 'N/A'}"></td>
+                    <td class="text-center" th:text="${order.totalAmount}"></td>
+                    <td class="text-center">
+                      <button type="button" 
+                              class="btn btn-sm btn-primary retry-sync-btn" 
+                              th:data-code="${order.code}"
+                              th:data-order-id="${order.code}">
+                        <span class="btn-text">Đồng Bộ Lại</span>
+                        <span class="btn-loading" style="display: none;">
+                          <i class="fas fa-spinner fa-spin"></i> Đang xử lý...
+                        </span>
+                      </button>
+                    </td>
+                  </tr>
+                  <tr th:if="${totalRecord == 0}">
+                      <td colspan="8">
+                          <span>Không có đơn hàng Nào</span>
+                      </td>
+                  </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <div th:replace = "~{template/pagination :: bottom-pagination}"></div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script th:src="@{/js/moment.min.js}"></script>
+  <script th:src="@{/js/moment-with-locales.min.js}"></script>
+  <script th:src="@{/js/tempusdominus-bootstrap-4.js}"></script>
+  <script th:src="@{/js/datetimepicker.js}"></script>
+  <script th:src="@{/js/bootstrap-select.min.js}"></script>
+  <script th:src="@{/js/popper.min.js}"></script>
+  <script th:src="@{/js/validation.common.js}"></script>
+  <script th:src="@{/js/validation.js}"></script>
+  <script th:src="@{/js/common.js}"></script>
+
+  <script>
+        $(document).on('mouseup touchend', function (e) {
+            var container = $('.bootstrap-datetimepicker-widget');
+            if (!container.is(e.target) && container.has(e.target).length === 0) {
+                container.parent().datetimepicker('hide');
+            }
+        });
+
+        $(document).ready(function(){
+          $('[data-toggle="tooltip"]').tooltip();
+        });
+
+        // Retry sync functionality
+        $(document).on('click', '.retry-sync-btn', function() {
+            var $btn = $(this);
+            var orderCode = $btn.data('code');
+            var $btnText = $btn.find('.btn-text');
+            var $btnLoading = $btn.find('.btn-loading');
+            
+            // Disable button and show loading
+            $btn.prop('disabled', true);
+            $btnText.hide();
+            $btnLoading.show();
+            
+            // Make AJAX request
+            $.ajax({
+                url: '/AM/AM006/retry-sync',
+                type: 'POST',
+                data: {
+                    code: orderCode
+                },
+                headers: {"X-CSRF-TOKEN": $("input[name='_csrf']").val()},
+                success: function(response) {
+                    if (response.success) {
+                        alert('Đồng bộ thành công!');
+                        // Reload page after 1 second to show updated status
+                        setTimeout(function() {
+                            location.reload();
+                        }, 1000);
+                    } else {
+                        alert('Đồng bộ thất bại: ' + (response.message || 'Lỗi không xác định'));
+                        // Re-enable button
+                        $btn.prop('disabled', false);
+                        $btnText.show();
+                        $btnLoading.hide();
+                    }
+                },
+                error: function(xhr) {
+                    var errorMessage = 'Lỗi hệ thống';
+                    if (xhr.responseJSON && xhr.responseJSON.message) {
+                        errorMessage = xhr.responseJSON.message;
+                    } else if (xhr.responseText) {
+                        try {
+                            var errorResponse = JSON.parse(xhr.responseText);
+                            if (errorResponse.message) {
+                                errorMessage = errorResponse.message;
+                            }
+                        } catch (e) {
+                            errorMessage = xhr.responseText;
+                        }
+                    }
+                    alert('Lỗi: ' + errorMessage);
+                    // Re-enable button
+                    $btn.prop('disabled', false);
+                    $btnText.show();
+                    $btnLoading.hide();
+                }
+            });
+        });
+    </script>
+</div>
+</html>
+

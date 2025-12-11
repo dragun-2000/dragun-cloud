@@ -67,6 +67,12 @@ public class OrderServiceImpl implements OrderService {
     public Page<Order> findAllByCondition(SearchRequest searchForm, Pageable pageable) {
         return orderRepository.findAllByCondition(searchForm, pageable);
     }
+
+    @Override
+    public Page<Order> findAllSyncFailOrders(SearchRequest searchRequest, Pageable pageable) {
+        return orderRepository.findAllSyncFailOrders(searchRequest, pageable);
+    }
+    
     @Override
     public Order create(Long accountId, List<vn.co.cake.dto.OrderItem> newOrderItems, OrderDetailRequest request) throws CommonServletException {
         Account account = accountRepository.findByIdAndDeletedFalse(accountId);

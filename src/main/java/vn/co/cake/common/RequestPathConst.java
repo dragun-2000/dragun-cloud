@@ -53,6 +53,10 @@ public class RequestPathConst {
     public static final String AM004_02_EDIT = "/AM/AM004-02/{ID}";
     public static final String AM004_02_SETTING = "/AM/AM004-02";
 
+    // AM006
+    public static final String AM006 = "/AM/AM006";
+    public static final String AM006_RETRY_SYNC = "/AM/AM006/retry-sync";
+
     // SA001
     public static final String SA001_01_REGISTER_VIEW = "/SA/SA001/register-view";
     public static final String SA001_LOGIN = "/SA/SA001/login";

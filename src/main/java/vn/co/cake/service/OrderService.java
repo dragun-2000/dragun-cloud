@@ -13,6 +13,7 @@ import java.util.List;
 public interface OrderService {
 
     Page<Order> findAllByCondition(SearchRequest searchForm, Pageable pageable);
+    Page<Order> findAllSyncFailOrders(SearchRequest searchRequest, Pageable pageable);
     Order create(Long accountId, List<OrderItem> newOrderItems, OrderDetailRequest request) throws CommonServletException;
     Order detail(String code);
     Order detail(Long accountId);

@@ -27,6 +27,8 @@ public class OrderDetailResponse {
     private String note;
     private String voucher;
     private boolean deleted;
+    private Integer countError;
+    private String messageError;
 
     private List<OrderItemDetailResponse> orderItems;
     private Date created;
@@ -44,6 +46,8 @@ public class OrderDetailResponse {
         this.phone = order.getPhone();
         this.note = order.getNote();
         this.deleted = order.isDeleted();
+        this.countError = order.getCountError();
+        this.messageError = order.getMessageError();
         this.created = DateUtil.plusHours(order.getCreated(), 7);
         this.orderItems = order.getOrderItems().stream().map(OrderItemDetailResponse::new).collect(Collectors.toList());
     }

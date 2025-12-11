@@ -159,7 +159,8 @@ public class PancakePosService {
         createOrder(order);
     }
 
-    public boolean createOrder(Order order) {
+    public boolean createOrder(Order inputOrder) {
+        Order order = orderRepository.findOrderWithFullItems(inputOrder.getId());
         if (order == null) {
             log.error("Order is null, cannot sync to Pancake POS");
             return false;
