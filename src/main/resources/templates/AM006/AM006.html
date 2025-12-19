@@ -121,6 +121,14 @@
                           <i class="fas fa-spinner fa-spin"></i> Đang xử lý...
                         </span>
                       </button>
+                      <button type="button" 
+                              class="btn btn-sm btn-danger delete-order-btn ml-2" 
+                              th:data-code="${order.code}">
+                        <span class="btn-text">Xóa</span>
+                        <span class="btn-loading" style="display: none;">
+                          <i class="fas fa-spinner fa-spin"></i> Đang xử lý...
+                        </span>
+                      </button>
                     </td>
                   </tr>
                   <tr th:if="${totalRecord == 0}">
@@ -191,6 +199,69 @@
                         }, 1000);
                     } else {
                         alert('Đồng bộ thất bại: ' + (response.message || 'Lỗi không xác định'));
+                        // Re-enable button
+                        $btn.prop('disabled', false);
+                        $btnText.show();
+                        $btnLoading.hide();
+                    }
+                },
+                error: function(xhr) {
+                    var errorMessage = 'Lỗi hệ thống';
+                    if (xhr.responseJSON && xhr.responseJSON.message) {
+                        errorMessage = xhr.responseJSON.message;
+                    } else if (xhr.responseText) {
+                        try {
+                            var errorResponse = JSON.parse(xhr.responseText);
+                            if (errorResponse.message) {
+                                errorMessage = errorResponse.message;
+                            }
+                        } catch (e) {
+                            errorMessage = xhr.responseText;
+                        }
+                    }
+                    alert('Lỗi: ' + errorMessage);
+                    // Re-enable button
+                    $btn.prop('disabled', false);
+                    $btnText.show();
+                    $btnLoading.hide();
+                }
+            });
+        });
+
+        // Delete order functionality
+        $(document).on('click', '.delete-order-btn', function() {
+            var $btn = $(this);
+            var orderCode = $btn.data('code');
+            var $btnText = $btn.find('.btn-text');
+            var $btnLoading = $btn.find('.btn-loading');
+            
+            // Confirm before deleting
+            if (!confirm('Bạn có chắc chắn muốn xóa đơn hàng ' + orderCode + '?')) {
+                return;
+            }
+            
+            // Disable button and show loading
+            $btn.prop('disabled', true);
+            $btnText.hide();
+            $btnLoading.show();
+            
+            // Make AJAX request
+            $.ajax({
+                url: '/AM/AM006/delete',
+                type: 'POST',
+                data: {
+                    code: orderCode
+                },
+                headers: {"X-CSRF-TOKEN": $("input[name='_csrf']").val()},
+                success: function(response) {
+                    if (response.success) {
+                        alert('Xóa đơn hàng thành công!');
+                        // Reload page after 1 second to remove deleted order from list
+                        setTimeout(function() {
+                            location.reload();
+                        }, 1000);
+                    } else {
+                        alert('Xóa đơn hàng thất bại: ' + (response.message || 'Lỗi không xác định'));
                         // Re-enable button
                         $btn.prop('disabled', false);
                         $btnText.show();

@@ -62,6 +62,13 @@ public class MomoController extends BaseController {
             // Sync Pancake POS async (Job002 sẽ retry nếu fail)
             pancakePosService.syncOrderToPancakeAsync(order);
             
+            // Sleep 3 giây để đảm bảo async call có thời gian bắt đầu
+            try {
+                Thread.sleep(3000);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+            
 //            String paymentUrl = moMoPaymentService.createPaymentRequest(paymentRequest);
             return ResponseEntity.ok("Order Sản phẩm thành công!"); // Trả về URL thanh toán từ MoMo
         } catch (Exception e) {

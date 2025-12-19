@@ -20,6 +20,7 @@ import vn.co.cake.controller.external.dto.response.OrderDetailResponse;
 import vn.co.cake.entity.Order;
 import vn.co.cake.request.SearchRequest;
 import vn.co.cake.security.admin.AdminLoginInfo;
+import vn.co.cake.exception.CommonServletException;
 import vn.co.cake.service.AccountService;
 import vn.co.cake.service.OrderService;
 import vn.co.cake.service.external.PancakePosService;
@@ -125,6 +126,29 @@ public class AM006Controller extends BaseController {
             }
         } catch (Exception e) {
             log.error("AM006: Error while retrying sync for order {}: {}", code, e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Map.of("success", false, "message", "Lỗi hệ thống: " + e.getMessage()));
+        }
+    }
+
+    @PostMapping(RequestPathConst.AM006_DELETE)
+    public ResponseEntity<?> deleteOrder(@RequestParam String code, HttpSession session) {
+        AdminLoginInfo adminLoginInfo = getLoginInfoAdmin(session);
+        if (adminLoginInfo == null) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Unauthorized");
+        }
+
+        try {
+            log.info("AM006: Admin {} deleting order {}", adminLoginInfo.getUsername(), code);
+            orderService.delete(code);
+            log.info("AM006: Successfully deleted order {}", code);
+            return ResponseEntity.ok(Map.of("success", true, "message", "Xóa đơn hàng thành công"));
+        } catch (CommonServletException e) {
+            log.error("AM006: Error deleting order {}: {}", code, e.getMessage());
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(Map.of("success", false, "message", e.getMessage()));
+        } catch (Exception e) {
+            log.error("AM006: Unexpected error while deleting order {}: {}", code, e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(Map.of("success", false, "message", "Lỗi hệ thống: " + e.getMessage()));
         }

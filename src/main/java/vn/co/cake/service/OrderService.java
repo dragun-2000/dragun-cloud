@@ -17,4 +17,5 @@ public interface OrderService {
     Order create(Long accountId, List<OrderItem> newOrderItems, OrderDetailRequest request) throws CommonServletException;
     Order detail(String code);
     Order detail(Long accountId);
+    void delete(String code) throws CommonServletException;
 }

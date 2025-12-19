@@ -160,6 +160,16 @@ public class OrderServiceImpl implements OrderService {
         return orderRepository.findFirstByAccountIdOrderByCreatedDesc(accountId);
     }
 
+    @Override
+    public void delete(String code) throws CommonServletException {
+        Order order = orderRepository.findFirstByCode(code);
+        if (Objects.isNull(order)) {
+            throw new CommonServletException("Order not found with code: " + code);
+        }
+        order.setDeleted(true);
+        orderRepository.save(order);
+    }
+
     private BigDecimal getTotalPriceOrder(List<vn.co.cake.dto.OrderItem> orderItems, long discountPrice) {
         long sum = orderItems.stream().mapToLong(orderItem -> orderItem.getPrice().multiply(BigDecimal.valueOf(orderItem.getQuantity())).longValue()).sum();
         sum = sum - discountPrice;

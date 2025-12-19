@@ -8,10 +8,17 @@ $(function () {
 
     $(function () {
         $("#create-order").on('submit', function (event) {
-            // Disable button ngay khi submit để tránh click nhiều lần
             const orderBtn = document.getElementById('order-btn');
             const originalButtonText = orderBtn ? orderBtn.textContent : 'Đặt Hàng';
             
+            // Nếu button đã disabled thì không cho submit lại
+            if (orderBtn && orderBtn.disabled) {
+                event.preventDefault();
+                event.stopPropagation();
+                return false;
+            }
+            
+            // Disable button ngay đầu để tránh click nhiều lần
             if (orderBtn) {
                 orderBtn.disabled = true;
                 orderBtn.textContent = 'Đang xử lý...';
@@ -21,13 +28,14 @@ $(function () {
             if (this.checkValidity() === false) {
                 event.preventDefault();
                 event.stopPropagation();
-                // Re-enable button nếu validation fail
+                // Chỉ re-enable button nếu validation fail ở client-side
                 if (orderBtn) {
                     orderBtn.disabled = false;
                     orderBtn.textContent = originalButtonText;
                     orderBtn.classList.remove('disabled');
                 }
             } else {
+                
                 const orderId = $('input[name=orderId]').val();
                 const fullName = $('input[name=fullName]').val();
                 const email = $('input[name=email]').val();
@@ -52,17 +60,12 @@ $(function () {
                    headers: {"X-CSRF-TOKEN": $("input[name='_csrf']").val()},
                    success: function (data) {
                       showPopup('success');
-                      // Không re-enable button vì sẽ redirect
+                      // Button vẫn disabled, không re-enable
                    },
                    error: function(error) {
                       console.log('error', error);
                       showPopup('fail', error.responseText);
-                      // Re-enable button nếu có lỗi để user có thể thử lại
-                      if (orderBtn) {
-                          orderBtn.disabled = false;
-                          orderBtn.textContent = originalButtonText;
-                          orderBtn.classList.remove('disabled');
-                      }
+                      // Button vẫn disabled, không re-enable để tránh duplicate order
                    }
                });
                event.preventDefault();

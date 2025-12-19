@@ -56,6 +56,7 @@ public class RequestPathConst {
     // AM006
     public static final String AM006 = "/AM/AM006";
     public static final String AM006_RETRY_SYNC = "/AM/AM006/retry-sync";
+    public static final String AM006_DELETE = "/AM/AM006/delete";
 
     // SA001
     public static final String SA001_01_REGISTER_VIEW = "/SA/SA001/register-view";
