@@ -1,30 +1,32 @@
 package vn.co.cake.helper;
 
-import com.sendgrid.Method;
-import com.sendgrid.Request;
-import com.sendgrid.Response;
-import com.sendgrid.SendGrid;
-import com.sendgrid.helpers.mail.Mail;
-import com.sendgrid.helpers.mail.objects.Content;
-import com.sendgrid.helpers.mail.objects.Email;
+import sibApi.TransactionalEmailsApi;
+import sibModel.*;
+import sendinblue.ApiClient;
+import sendinblue.ApiException;
+import sendinblue.Configuration;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import vn.co.cake.dto.GenericMailForm;
 import vn.co.cake.enums.MailType;
 
-import java.io.IOException;
+import java.util.Collections;
 
 @Slf4j
 @Service
 public class EmailService {
 
-    private static final String FROM_EMAIL = "reply.debase@gmail.com"; // phải là email đã xác minh trong SendGrid debase.1995@gmail.com
-    private final SendGrid sendGridClient;
+    private static final String FROM_EMAIL = "reply.debase@gmail.com"; // phải là email đã xác minh trong Brevo
+    private final String brevoApiKey;
 
     public EmailService() {
-        // Lấy API Key từ biến môi trường
-//        String apiKey = System.getenv("SENDGRID_API_KEY");
-        this.sendGridClient = new SendGrid("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");
+        // Lấy API Key từ biến môi trường hoặc hardcode (tạm thời)
+        String apiKey = System.getenv("BREVO_API_KEY");
+        // if (apiKey == null || apiKey.isEmpty()) {
+        //     // Fallback: có thể thêm vào application.properties sau
+        //     // apiKey = apiKey; // Thay thế bằng API key thực tế
+        // }
+        this.brevoApiKey = apiKey;
     }
 
     /**
@@ -56,28 +58,30 @@ public class EmailService {
     }
 
     /**
-     * Hàm xử lý gửi email qua SendGrid API
+     * Hàm xử lý gửi email qua Brevo API
      */
     private void send(String emailTo, String subject, String textContent) {
-        Email from = new Email(FROM_EMAIL);
-        Email to = new Email(emailTo);
-        Content content = new Content("text/plain", textContent);
-        Mail mail = new Mail(from, subject, to, content);
+        ApiClient defaultClient = Configuration.getDefaultApiClient();
+        defaultClient.setApiKey(brevoApiKey);
 
-        Request request = new Request();
+        TransactionalEmailsApi apiInstance = new TransactionalEmailsApi(defaultClient);
+        SendSmtpEmail sendSmtpEmail = new SendSmtpEmail();
+
+        sendSmtpEmail.setSubject(subject);
+        sendSmtpEmail.setTextContent(textContent);
+        sendSmtpEmail.setSender(new SendSmtpEmailSender()
+                .name("Debase")
+                .email(FROM_EMAIL));
+        sendSmtpEmail.setTo(Collections.singletonList(
+                new SendSmtpEmailTo().email(emailTo)));
+
         try {
-            request.setMethod(Method.POST);
-            request.setEndpoint("mail/send");
-            request.setBody(mail.build());
-            Response response = sendGridClient.api(request);
-
-            if (response.getStatusCode() == 202) {
-                log.info("✅ Email sent successfully to {} with subject '{}'", emailTo, subject);
-            } else {
-                log.warn("⚠️ SendGrid returned code {}: {}", response.getStatusCode(), response.getBody());
-            }
-        } catch (IOException e) {
-            log.error("❌ Failed to send email to {} - {}", emailTo, e.getMessage(), e);
+            CreateSmtpEmail response = apiInstance.sendTransacEmail(sendSmtpEmail);
+            log.info("Email sent successfully to {} with subject '{}'. Message ID: {}", 
+                    emailTo, subject, response.getMessageId());
+        } catch (ApiException e) {
+            log.error("Failed to send email to {} - Status: {}, Body: {}", 
+                    emailTo, e.getCode(), e.getResponseBody(), e);
         }
     }
 }

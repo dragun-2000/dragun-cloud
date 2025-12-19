@@ -363,7 +363,7 @@ Voucher shippingFee = voucherRepository.findFirstByCodeAndDeletedIsFalse(OrderCo
 **Line 92: Thay đổi**
 ```java
 // CŨ:
-if (shippingFee != null && totalPriceOrder.longValue() < 1000000) {
+if (shippingFee != null && totalPriceOrder.longValue() < 2000000) {
 
 // MỚI:
 if (shippingFee != null && totalPriceOrder.longValue() < OrderConstants.FREE_SHIPPING_THRESHOLD) {

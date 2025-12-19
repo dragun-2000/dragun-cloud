@@ -196,7 +196,7 @@ public class CartController extends BaseController {
 
         Voucher shippingFee = voucherRepository.findFirstByCodeAndDeletedIsFalse("SHIPPING_FEE");
         int shippingFeeDefault = 0;
-        if (shippingFee != null && Long.parseLong(totalPrice) < 1000000) {
+        if (shippingFee != null && Long.parseLong(totalPrice) < 2000000) {
             shippingFeeDefault = shippingFee.getShippingFee();
         }
         model.addAttribute("shippingFee", shippingFeeDefault);
