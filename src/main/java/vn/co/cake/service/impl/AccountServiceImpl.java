@@ -2,10 +2,13 @@ package vn.co.cake.service.impl;
 
 import vn.co.cake.common.MessageConst;
 import vn.co.cake.dto.GenericMailForm;
+import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import vn.co.cake.entity.Account;
 import vn.co.cake.entity.District;
 import vn.co.cake.entity.Province;
 import vn.co.cake.entity.Ward;
+import vn.co.cake.utils.DateUtil;
 import vn.co.cake.enums.AccountStatus;
 import vn.co.cake.enums.MailType;
 import vn.co.cake.exception.CommonServletException;
@@ -38,10 +41,14 @@ import org.springframework.ui.Model;
 import org.springframework.util.CollectionUtils;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import java.util.Collections;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import static vn.co.cake.common.StringConst.ROLE_USER;
 
@@ -381,6 +388,165 @@ public class AccountServiceImpl implements AccountService {
     @Override
     public Page<Account> getAllAccountByCondition(AccountSearchRequest accountSearchRequest, String email, Pageable pageable) {
         return accountRepository.findAllByDeletedIsFalseAndCondition(accountSearchRequest.getKeyword(), email, pageable);
+    }
+
+    @Override
+    public List<Account> getAllAccountsForExport(AccountSearchRequest accountSearchRequest, String adminEmail) {
+        return accountRepository.findAllByDeletedIsFalseAndConditionForExport(accountSearchRequest.getKeyword(), adminEmail);
+    }
+
+    @Override
+    public byte[] exportAccountsToExcel(AccountSearchRequest accountSearchRequest, String adminEmail) throws IOException {
+        // Get all accounts for export (no pagination)
+        List<Account> accounts = getAllAccountsForExport(accountSearchRequest, adminEmail);
+        
+        // Get ward information for addresses
+        List<String> wardIds = accounts.stream()
+                .map(Account::getWard)
+                .filter(Objects::nonNull)
+                .distinct()
+                .collect(Collectors.toList());
+        Map<String, Ward> wardMap = wardRepository.findAllByCodeIn(wardIds).stream()
+                .collect(Collectors.toMap(Ward::getCode, x -> x));
+
+        // Create Excel workbook
+        XSSFWorkbook workbook = new XSSFWorkbook();
+        Sheet sheet = workbook.createSheet("Danh Sách Khách Hàng");
+
+        // Create header style
+        CellStyle headerStyle = createHeaderStyle(workbook);
+        
+        // Create data style
+        CellStyle dataStyle = createDataStyle(workbook);
+
+        // Create header row
+        String[] headers = {
+            "STT", "Tên Khách Hàng", "Email", "Số Điện Thoại", 
+            "Địa Chỉ", "Tỉnh/Thành", "Quận/Huyện", "Phường/Xã", "Ngày Tạo"
+        };
+        createHeaderRow(sheet, headers, headerStyle);
+
+        // Create data rows
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        int rowNum = 1;
+        for (Account account : accounts) {
+            createDataRow(sheet, rowNum++, account, wardMap, dateFormat, dataStyle);
+        }
+
+        // Auto-size columns
+        autoSizeColumns(sheet, headers.length);
+
+        // Write workbook to byte array
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        workbook.write(outputStream);
+        workbook.close();
+        
+        log.info("Exported {} customers to Excel", accounts.size());
+        return outputStream.toByteArray();
+    }
+
+    private CellStyle createHeaderStyle(XSSFWorkbook workbook) {
+        CellStyle headerStyle = workbook.createCellStyle();
+        Font headerFont = workbook.createFont();
+        headerFont.setBold(true);
+        headerFont.setFontHeightInPoints((short) 12);
+        headerStyle.setFont(headerFont);
+        headerStyle.setFillForegroundColor(IndexedColors.GREY_25_PERCENT.getIndex());
+        headerStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+        headerStyle.setAlignment(HorizontalAlignment.CENTER);
+        headerStyle.setVerticalAlignment(VerticalAlignment.CENTER);
+        headerStyle.setBorderBottom(BorderStyle.THIN);
+        headerStyle.setBorderTop(BorderStyle.THIN);
+        headerStyle.setBorderLeft(BorderStyle.THIN);
+        headerStyle.setBorderRight(BorderStyle.THIN);
+        return headerStyle;
+    }
+
+    private CellStyle createDataStyle(XSSFWorkbook workbook) {
+        CellStyle dataStyle = workbook.createCellStyle();
+        dataStyle.setBorderBottom(BorderStyle.THIN);
+        dataStyle.setBorderTop(BorderStyle.THIN);
+        dataStyle.setBorderLeft(BorderStyle.THIN);
+        dataStyle.setBorderRight(BorderStyle.THIN);
+        dataStyle.setVerticalAlignment(VerticalAlignment.CENTER);
+        return dataStyle;
+    }
+
+    private void createHeaderRow(Sheet sheet, String[] headers, CellStyle headerStyle) {
+        Row headerRow = sheet.createRow(0);
+        for (int i = 0; i < headers.length; i++) {
+            Cell cell = headerRow.createCell(i);
+            cell.setCellValue(headers[i]);
+            cell.setCellStyle(headerStyle);
+        }
+    }
+
+    private void createDataRow(Sheet sheet, int rowNum, Account account, Map<String, Ward> wardMap, 
+                               SimpleDateFormat dateFormat, CellStyle dataStyle) {
+        Row row = sheet.createRow(rowNum);
+        
+        // STT
+        Cell cell0 = row.createCell(0);
+        cell0.setCellValue(rowNum);
+        cell0.setCellStyle(dataStyle);
+        
+        // Tên Khách Hàng
+        Cell cell1 = row.createCell(1);
+        cell1.setCellValue(account.getFullName() != null ? account.getFullName() : "");
+        cell1.setCellStyle(dataStyle);
+        
+        // Email
+        Cell cell2 = row.createCell(2);
+        cell2.setCellValue(account.getMailAddress() != null ? account.getMailAddress() : "");
+        cell2.setCellStyle(dataStyle);
+        
+        // Số Điện Thoại
+        Cell cell3 = row.createCell(3);
+        cell3.setCellValue(account.getPhone() != null ? account.getPhone() : "");
+        cell3.setCellStyle(dataStyle);
+        
+        // Địa Chỉ (đã bao gồm ward path nếu có)
+        String address = account.getAddress() != null ? account.getAddress() : "";
+        Ward ward = wardMap.get(account.getWard());
+        if (ward != null) {
+            address = address + (StringUtils.isNotBlank(address) ? " " : "") + ward.getPathWithType();
+        }
+        Cell cell4 = row.createCell(4);
+        cell4.setCellValue(address);
+        cell4.setCellStyle(dataStyle);
+        
+        // Tỉnh/Thành
+        Cell cell5 = row.createCell(5);
+        cell5.setCellValue(account.getProvince() != null ? account.getProvince() : "");
+        cell5.setCellStyle(dataStyle);
+        
+        // Quận/Huyện
+        Cell cell6 = row.createCell(6);
+        cell6.setCellValue(account.getDistrict() != null ? account.getDistrict() : "");
+        cell6.setCellStyle(dataStyle);
+        
+        // Phường/Xã
+        Cell cell7 = row.createCell(7);
+        String wardName = ward != null ? ward.getName() : (account.getWard() != null ? account.getWard() : "");
+        cell7.setCellValue(wardName);
+        cell7.setCellStyle(dataStyle);
+        
+        // Ngày Tạo
+        Cell cell8 = row.createCell(8);
+        if (account.getCreated() != null) {
+            cell8.setCellValue(dateFormat.format(DateUtil.plusHours(account.getCreated(), 7)));
+        } else {
+            cell8.setCellValue("");
+        }
+        cell8.setCellStyle(dataStyle);
+    }
+
+    private void autoSizeColumns(Sheet sheet, int columnCount) {
+        for (int i = 0; i < columnCount; i++) {
+            sheet.autoSizeColumn(i);
+            // Add some padding
+            sheet.setColumnWidth(i, sheet.getColumnWidth(i) + 1000);
+        }
     }
 
     @Override

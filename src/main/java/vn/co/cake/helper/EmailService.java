@@ -16,7 +16,7 @@ import java.util.Collections;
 @Service
 public class EmailService {
 
-    private static final String FROM_EMAIL = "reply.debase@gmail.com"; // phải là email đã xác minh trong Brevo
+    private static final String FROM_EMAIL = "reply@debase.vn"; // phải là email đã xác minh trong Brevo
     private final String brevoApiKey;
 
     public EmailService() {

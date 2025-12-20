@@ -13,6 +13,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.ui.Model;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.io.IOException;
 import java.util.List;
 
 /**
@@ -45,6 +46,10 @@ public interface AccountService {
     void changePasswordForStaff(ChangePasswordRequest request, AdminLoginInfo adminLoginInfo, Model model, RedirectAttributes redirectAttributes) throws CommonServletException;
 
     Page<Account> getAllAccountByCondition(AccountSearchRequest accountSearchRequest, String email, Pageable pageable);
+
+    List<Account> getAllAccountsForExport(AccountSearchRequest accountSearchRequest, String adminEmail);
+
+    byte[] exportAccountsToExcel(AccountSearchRequest accountSearchRequest, String adminEmail) throws IOException;
 
     String getBookmarkUrlLasted(String key);
 

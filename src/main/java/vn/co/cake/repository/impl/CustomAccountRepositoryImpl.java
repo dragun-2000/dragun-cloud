@@ -54,6 +54,26 @@ public class CustomAccountRepositoryImpl extends BaseRepository implements Custo
     }
 
     @Override
+    public List<Account> findAllByDeletedIsFalseAndConditionForExport(String keyword, String email) {
+        JPAQuery<Account> query = new JPAQuery<>(entityManager);
+        QAccount account = QAccount.account;
+
+        BooleanBuilder where = new BooleanBuilder();
+        where.and(account.deleted.eq(false));
+        where.and(account.mailAddress.ne(email));
+        if (!StringUtils.isBlank(keyword)) {
+            where.and(account.fullName.containsIgnoreCase(keyword)
+            .or(account.phone.containsIgnoreCase(keyword))
+            .or(account.mailAddress.containsIgnoreCase(keyword))
+            );
+        }
+        return query.from(account)
+                .where(where)
+                .orderBy(account.id.desc())
+                .fetch();
+    }
+
+    @Override
     public List<Long> findIdAllByDeletedIsFalseAndFullNameContaining(String name, String email) {
         JPAQuery<Account> query = new JPAQuery<>(entityManager);
         QAccount account = QAccount.account;

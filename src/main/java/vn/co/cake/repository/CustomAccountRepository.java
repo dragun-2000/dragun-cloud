@@ -13,6 +13,8 @@ public interface CustomAccountRepository {
 
     Page<Account> findAllByDeletedIsFalseAndCondition(String username, String email, Pageable pageable);
 
+    List<Account> findAllByDeletedIsFalseAndConditionForExport(String keyword, String email);
+
     List<Long> findIdAllByDeletedIsFalseAndFullNameContaining(String name, String email);
 
     Account findAccountForAdmin(String phone);

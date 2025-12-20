@@ -30,6 +30,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -119,6 +121,42 @@ public class AM004Controller extends BaseController {
 
         addSideMenu(model, RequestPathConst.AM004);
         return ScreenPathConst.AM004_SCREEN;
+    }
+
+    /**
+     * Export customer list to Excel
+     *
+     * @param accountSearchRequest search condition
+     * @param session HttpSession
+     * @param response HttpServletResponse
+     * @throws IOException
+     */
+    @GetMapping(RequestPathConst.AM004_EXPORT_EXCEL)
+    public void exportExcel(AccountSearchRequest accountSearchRequest,
+                           HttpSession session,
+                           HttpServletResponse response) throws IOException {
+        AdminLoginInfo info = getLoginInfoAdmin(session);
+        if (info == null) {
+            response.sendError(HttpServletResponse.SC_FORBIDDEN, "Unauthorized");
+            return;
+        }
+
+        // Call service to generate Excel file
+        byte[] excelBytes = accountService.exportAccountsToExcel(accountSearchRequest, info.getEmail());
+
+        // Set response headers
+        String timestamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+        String filename = "DanhSachKhachHang_" + timestamp + ".xlsx";
+        
+        response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+        response.setHeader("Content-Disposition", "attachment; filename=\"" + filename + "\"");
+        response.setContentLength(excelBytes.length);
+        
+        // Write Excel bytes to response
+        response.getOutputStream().write(excelBytes);
+        response.getOutputStream().flush();
+        
+        log.info("Exported Excel file: {}", filename);
     }
 
     private Map<String, Object> settingConditionForAccount(AccountSearchRequest searchForm) {

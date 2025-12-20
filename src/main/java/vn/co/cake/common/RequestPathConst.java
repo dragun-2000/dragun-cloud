@@ -52,6 +52,7 @@ public class RequestPathConst {
     public static final String AM004_DELETED = "/AM/AM004/deleted";
     public static final String AM004_02_EDIT = "/AM/AM004-02/{ID}";
     public static final String AM004_02_SETTING = "/AM/AM004-02";
+    public static final String AM004_EXPORT_EXCEL = "/AM/AM004/export-excel";
 
     // AM006
     public static final String AM006 = "/AM/AM006";
