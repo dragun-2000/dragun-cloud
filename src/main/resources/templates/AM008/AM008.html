@@ -54,21 +54,35 @@
 
         <div class="card card-small mb-4 mt-4">
           <div class="card-body">
-            <div class="form-row align-items-end">
-              <div class="form-group col-lg-3 col-md-4">
-                <label class="font-weight-bold mb-2">Giảm Giá (%)</label>
-                <input type="number" id="discountInput" class="form-control" min="0.01" max="99.99" step="0.01" placeholder="Nhập % giảm giá">
-                <small class="form-text text-muted">Nhập số từ 0.01 đến 99.99</small>
+            <div class="form-row">
+              <div class="form-group col-lg-4">
+                <div class="row align-items-end">
+                  <label class="col-lg-4 col-form-label text-lg-right font-weight-bold mb-0">Giảm Giá (%)</label>
+                  <div class="col-lg-8">
+                    <input type="number" id="discountInput" class="form-control" min="0.01" max="99.99" step="0.01" placeholder="Nhập % giảm giá">
+                    <small class="form-text text-muted mb-0">Nhập số từ 0.01 đến 99.99</small>
+                  </div>
+                </div>
               </div>
-              <div class="form-group col-lg-3 col-md-4">
-                <label class="font-weight-bold mb-2">Số Sản Phẩm Đã Chọn</label>
-                <input type="text" id="selectedCount" class="form-control" value="0" readonly>
+              <div class="form-group col-lg-4">
+                <div class="row align-items-end">
+                  <label class="col-lg-4 col-form-label text-lg-right font-weight-bold mb-0">Số Sản Phẩm Đã Chọn</label>
+                  <div class="col-lg-8">
+                    <input type="text" id="selectedCount" class="form-control" value="0" readonly>
+                    <small class="form-text text-muted mb-0" style="visibility: hidden;">Placeholder</small>
+                  </div>
+                </div>
               </div>
-              <div class="form-group col-lg-3 col-md-4">
-                <label class="font-weight-bold mb-2 d-block" style="visibility: hidden;">Button</label>
-                <button type="button" id="updateDiscountBtn" class="btn btn-primary btn-lg w-100" disabled>
-                  Cập Nhật Giảm Giá
-                </button>
+              <div class="form-group col-lg-4">
+                <div class="row align-items-end">
+                  <label class="col-lg-4 col-form-label text-lg-right font-weight-bold mb-0" style="visibility: hidden;">Button</label>
+                  <div class="col-lg-8">
+                    <button type="button" id="updateDiscountBtn" class="btn btn-primary btn-lg w-100" disabled>
+                      Cập Nhật Giảm Giá
+                    </button>
+                    <small class="form-text text-muted mb-0" style="visibility: hidden;">Placeholder</small>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
