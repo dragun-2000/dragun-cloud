@@ -31,7 +31,7 @@ public class MainOrderRequest {
 
     public MainOrderRequest() {}
 
-    public MainOrderRequest(Order order, PancakeProperties properties, Warehouse warehouse) {
+    public MainOrderRequest(Order order, PancakeProperties properties, Warehouse warehouse, List<OrderItem> orderItems) {
         this.bill_full_name = order.getFullName();
         this.bill_phone_number = order.getPhone();
         this.is_free_shipping = true;
@@ -48,7 +48,6 @@ public class MainOrderRequest {
         this.shop_id = Integer.parseInt(properties.getShopId());
         this.discount = this.discount(order.getOrderItems());
         this.custom_id = order.getCode();
-        List<OrderItem> orderItems = order.getOrderItems();
         this.items = orderItems.stream().map(Item::new).collect(Collectors.toList());
         this.shipping_address = new ShippingAddress(order);
         this.warehouse_info = new WarehouseInfo(warehouse);
