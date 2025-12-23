@@ -10,6 +10,7 @@ import vn.co.cake.exception.CommonServletException;
 import vn.co.cake.request.ProductCreateRequest;
 import vn.co.cake.request.ProductSearchRequest;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Set;
 
@@ -26,4 +27,5 @@ public interface ProductService {
     void syncProductPancake(Set<VariationResponse> variationResponses);
     void updateProductDiscountPrice(ShippingDto discountDto);
     void resetProductDiscountPrice();
+    void updateProductsDiscount(List<Long> productIds, BigDecimal discount) throws CommonServletException;
 }

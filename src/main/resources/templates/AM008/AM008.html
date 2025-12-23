@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.w3.org/1999/xhtml" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{template/baseManage.html}">
+<div class="container-fluid" layout:fragment="main-content">
+  <link rel="stylesheet" th:href="@{/css/bootstrap-select.css}" />
+  <script th:src="@{/js/jquery-3.3.1.min.js}"></script>
+
+  <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+
+  <div class="row">
+    <div th:replace = "~{template/sidebar :: sidebar}"></div>
+
+    <main class="main-content col-lg-10 col-md-9 col-sm-12 p-0 offset-lg-2 offset-md-3">
+      <div th:replace = "~{template/navbar :: navbar}"></div>
+
+      <div class="main-content-container container-fluid">
+        <div class="page-header text-center no-gutters py-4">
+          <h3 class="page-title font-weight-bold">Cập Nhật Giảm Giá Sản Phẩm</h3>
+        </div>
+
+        <div class="info-fr-1400 w-1200 mt-5">
+          <form id="search_form" th:action="@{/AM/AM008}" method="GET" th:object="${searchCondition}">
+            <div class="form-row">
+              <div class="form-group col-lg-3">
+                <div class="row">
+                  <label class="col-lg-5 col-form-label text-lg-right font-weight-bold">Tên Sản Phẩm</label>
+                  <div class="col-lg-7">
+                    <input type="text" class="form-control" th:field="*{name}"/>
+                  </div>
+                </div>
+              </div>
+              <div class="form-group col-lg-3">
+                <div class="row">
+                  <label class="col-lg-5 col-form-label text-lg-right font-weight-bold">Mã Sản Phẩm</label>
+                  <div class="col-lg-7">
+                    <input type="text" class="form-control" th:field="*{code}"/>
+                  </div>
+                </div>
+              </div>
+              <div class="form-group col-lg-3">
+                <div class="row">
+                  <label class="col-lg-5 col-form-label text-lg-right font-weight-bold">Mã Sản Phẩm Con</label>
+                  <div class="col-lg-7">
+                    <input type="text" class="form-control" th:field="*{subCode}"/>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="text-center mt-4">
+              <button type="submit" class="btn custom-btn-info mw-150 search">TÌM KIẾM</button>
+            </div>
+          </form>
+        </div>
+
+        <div class="card card-small mb-4 mt-4">
+          <div class="card-body">
+            <div class="form-row align-items-center">
+              <div class="form-group col-md-4">
+                <label class="font-weight-bold">Giảm Giá (%)</label>
+                <input type="number" id="discountInput" class="form-control" min="0.01" max="99.99" step="0.01" placeholder="Nhập % giảm giá">
+                <small class="form-text text-muted">Nhập số từ 0.01 đến 99.99</small>
+              </div>
+              <div class="form-group col-md-4">
+                <label class="font-weight-bold">Số Sản Phẩm Đã Chọn</label>
+                <input type="text" id="selectedCount" class="form-control" value="0" readonly>
+              </div>
+              <div class="form-group col-md-4">
+                <button type="button" id="updateDiscountBtn" class="btn btn-primary btn-lg w-100" disabled>
+                  Cập Nhật Giảm Giá
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="d-flex flex-wrap justify-content-between align-items-center mt-4">
+          <div class="form-group" style="flex: 1 0 auto">
+            <div th:replace = "~{template/pagination :: top-pagination}"></div>
+          </div>
+        </div>
+        <div class="table-log">
+          <div class="card card-small mb-4">
+            <div class="card-body p-0 text-center">
+              <div class="table-responsive card-border">
+                <table class="table mb-0 table-bordered table-hover">
+                  <thead class="bg-light">
+                  <tr>
+                    <th scope="col" class="border-1 font-weight-bold" style="border-left:none !important">
+                      <input type="checkbox" id="selectAll" title="Chọn tất cả">
+                    </th>
+                    <th scope="col" class="border-1 font-weight-bold">Mã Sản Phẩm</th>
+                    <th scope="col" class="border-1 font-weight-bold">Tên Sản Phẩm</th>
+                    <th scope="col" class="border-1 font-weight-bold">Giá Gốc</th>
+                    <th scope="col" class="border-1 font-weight-bold">Giảm Giá (%)</th>
+                    <th scope="col" class="border-1 font-weight-bold">Giá Sau Giảm</th>
+                  </tr>
+                  </thead>
+                  <tbody>
+                  <tr th:each="product : ${products}" th:if="${totalRecord > 0}">
+                    <td style="border-left:none !important">
+                      <input type="checkbox" class="product-checkbox" th:data-product-id="${product.id}" th:value="${product.id}">
+                    </td>
+                    <td th:text="${product.code}"></td>
+                    <td class="text-left" th:text="${product.name}"></td>
+                    <td class="text-right" th:text="${product.price}"></td>
+                    <td class="text-center" th:text="${product.discount != null ? product.discount : 0}"></td>
+                    <td class="text-right" th:text="${product.finalPrice != null ? product.finalPrice : product.price}"></td>
+                  </tr>
+                  <tr th:if="${totalRecord == 0}">
+                      <td colspan="6"><span>Không có sản phẩm nào</span></td>
+                  </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+          <div th:replace = "~{template/pagination :: bottom-pagination}"></div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script th:src="@{/js/common.js}"></script>
+  <script>
+    $(document).ready(function(){
+      $('#selectAll').on('change', function() {
+        $('.product-checkbox').prop('checked', $(this).is(':checked'));
+        updateSelectedCount();
+        updateButtonState();
+      });
+
+      $(document).on('change', '.product-checkbox', function() {
+        updateSelectedCount();
+        updateButtonState();
+        $('#selectAll').prop('checked', $('.product-checkbox:checked').length === $('.product-checkbox').length);
+      });
+
+      $('#discountInput').on('input', function() {
+        updateButtonState();
+      });
+
+      function updateSelectedCount() {
+        $('#selectedCount').val($('.product-checkbox:checked').length);
+      }
+
+      function updateButtonState() {
+        var selectedCount = $('.product-checkbox:checked').length;
+        var discountValue = parseFloat($('#discountInput').val());
+        $('#updateDiscountBtn').prop('disabled', !(selectedCount > 0 && discountValue > 0 && discountValue < 100));
+      }
+
+      $('#updateDiscountBtn').on('click', function() {
+        var selectedProducts = [];
+        $('.product-checkbox:checked').each(function() {
+          selectedProducts.push($(this).data('product-id'));
+        });
+        var discountValue = parseFloat($('#discountInput').val());
+        
+        if (selectedProducts.length === 0) {
+          alert('Vui lòng chọn ít nhất một sản phẩm!');
+          return;
+        }
+        if (!discountValue || discountValue <= 0 || discountValue >= 100) {
+          alert('Vui lòng nhập % giảm giá hợp lệ (lớn hơn 0 và nhỏ hơn 100)!');
+          return;
+        }
+        if (!confirm('Bạn có chắc chắn muốn cập nhật giảm giá ' + discountValue + '% cho ' + selectedProducts.length + ' sản phẩm đã chọn?')) {
+          return;
+        }
+
+        var $btn = $(this);
+        var originalText = $btn.html();
+        $btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Đang xử lý...');
+
+        $.ajax({
+          url: '/AM/AM008/update-discount',
+          type: 'POST',
+          contentType: 'application/json',
+          data: JSON.stringify({productIds: selectedProducts, discount: discountValue}),
+          headers: {"X-CSRF-TOKEN": $("input[name='_csrf']").val()},
+          success: function(response) {
+            if (response.success) {
+              alert('Cập nhật giảm giá thành công!');
+              setTimeout(function() { location.reload(); }, 1000);
+            } else {
+              alert('Cập nhật thất bại: ' + (response.message || 'Lỗi không xác định'));
+              $btn.prop('disabled', false).html(originalText);
+            }
+          },
+          error: function(xhr) {
+            var errorMessage = 'Lỗi hệ thống';
+            if (xhr.responseJSON && xhr.responseJSON.message) {
+              errorMessage = xhr.responseJSON.message;
+            }
+            alert('Lỗi: ' + errorMessage);
+            $btn.prop('disabled', false).html(originalText);
+          }
+        });
+      });
+    });
+  </script>
+</div>
+</html>
+

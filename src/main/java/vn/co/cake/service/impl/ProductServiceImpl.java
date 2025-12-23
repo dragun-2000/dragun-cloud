@@ -19,6 +19,7 @@ import vn.co.cake.service.ProductService;
 import vn.co.cake.service.external.PancakePosService;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -272,6 +273,43 @@ public class ProductServiceImpl implements ProductService {
             product.setFinalPrice(product.getPrice());
             
             log.info("*** Reset discount success for product = {} with old discount = {}", product.getName(), oldDiscount.intValue());
+        });
+        
+        productRepository.saveAll(products);
+    }
+
+    @Override
+    public void updateProductsDiscount(List<Long> productIds, BigDecimal discount) throws CommonServletException {
+        if (productIds == null || productIds.isEmpty()) {
+            throw new CommonServletException("Vui lòng chọn ít nhất một sản phẩm!");
+        }
+        
+        if (discount == null || discount.compareTo(BigDecimal.ZERO) <= 0 || discount.compareTo(new BigDecimal("100")) >= 0) {
+            throw new CommonServletException("Giảm giá phải lớn hơn 0 và nhỏ hơn 100!");
+        }
+        
+        List<Product> products = productRepository.findAllByIdIn(productIds);
+        if (products.isEmpty()) {
+            throw new CommonServletException("Không tìm thấy sản phẩm nào!");
+        }
+        
+        products.forEach(product -> {
+            if (product.getPrice() != null && product.getPrice().compareTo(BigDecimal.ZERO) > 0) {
+                // Logic giống Product.java lines 167-174
+                BigDecimal discountAmount = BigDecimal.ZERO;
+                BigDecimal finalPrice = product.getPrice();
+                
+                if (discount.compareTo(BigDecimal.ZERO) > 0) {
+                    discountAmount = product.getPrice()
+                        .multiply(discount)
+                        .divide(new BigDecimal("100"), RoundingMode.HALF_UP);
+                    finalPrice = product.getPrice().subtract(discountAmount);
+                }
+                
+                product.setDiscount(discount);
+                product.setDiscountPrice(discountAmount);
+                product.setFinalPrice(finalPrice);
+            }
         });
         
         productRepository.saveAll(products);
