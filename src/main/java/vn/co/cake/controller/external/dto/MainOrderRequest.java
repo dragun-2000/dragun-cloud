@@ -46,7 +46,7 @@ public class MainOrderRequest {
         this.warehouse_id = properties.getWarehouseId();
         this.shipping_fee = order.getShippingFee().intValue();
         this.shop_id = Integer.parseInt(properties.getShopId());
-        this.discount = this.discount(order.getOrderItems());
+        this.discount = this.discount(orderItems);
         this.custom_id = order.getCode();
         this.items = orderItems.stream().map(Item::new).collect(Collectors.toList());
         this.shipping_address = new ShippingAddress(order);

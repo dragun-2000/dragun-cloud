@@ -48,6 +48,7 @@ public class PancakePosService {
     private final VariationRepository variationRepository;
     private final WarehouseRepository warehouseRepository;
     private final OrderRepository orderRepository;
+    private final OrderItemRepository orderItemRepository;
     private final RestTemplate restTemplate;
 
     public PancakePosService(RestTemplateBuilder restTemplateBuilder,
@@ -56,12 +57,14 @@ public class PancakePosService {
                              VariationRepository variationRepository,
                              WarehouseRepository warehouseRepository,
                              OrderRepository orderRepository,
+                             OrderItemRepository orderItemRepository,
                              @Qualifier("pancakeRestTemplate") RestTemplate restTemplate) {
         this.pancakePropertyRepository = pancakePropertyRepository;
         this.productRepository = productRepository;
         this.variationRepository = variationRepository;
         this.warehouseRepository = warehouseRepository;
         this.orderRepository = orderRepository;
+        this.orderItemRepository = orderItemRepository;
         this.restTemplate = restTemplate;
     }
 
@@ -143,16 +146,20 @@ public class PancakePosService {
         }
 
         log.info("Pancake createOrder 1.1 {}", order.getCode());
-        List<OrderItem> orderItems = order.getOrderItems();
-        log.info("Pancake createOrder 2 {}", order.getCode());
+        List<OrderItem> orderItems = orderItemRepository.findAllByOrderId(order.getId());
+        log.info("Pancake orderItems 2 {}", orderItems.size());
 
         PancakeProperties pancake = getDefault();
         Warehouse warehouse = getWarehouseDefault();
+
+        log.info("Pancake createOrder 3 {}", order.getCode());
 
         if (pancake == null || warehouse == null) {
             updateOrderSyncFailure(order, "Missing Pancake config");
             return false;
         }
+
+        log.info("Pancake createOrder 4 {}", order.getCode());
 
         String url = pancakeApiUrl
                 + "/shops/" + pancake.getShopId()
@@ -165,8 +172,11 @@ public class PancakePosService {
             // 🔥 CỰC KỲ QUAN TRỌNG
             headers.set("Connection", "close");
 
+            log.info("Pancake orderItems 4.1 {}", orderItems.size());
             MainOrderRequest body =
                     new MainOrderRequest(order, pancake, warehouse, orderItems);
+
+            log.info("Pancake createOrder 5 {}", order.getCode());
 
             HttpEntity<MainOrderRequest> request =
                     new HttpEntity<>(body, headers);
@@ -187,18 +197,18 @@ public class PancakePosService {
                 return false;
             }
 
-            log.info("Pancake createOrder 4 {}", inputOrder.getCode());
+            log.info("Pancake createOrder 6.1 {}", inputOrder.getCode());
             if (response.getBody() == null || response.getBody().isBlank()) {
                 updateOrderSyncFailure(order, "Empty response body");
                 return false;
             }
 
-            log.info("Pancake createOrder 4 {}", inputOrder.getCode());
+            log.info("Pancake createOrder 6.2 {}", inputOrder.getCode());
             updateOrderSyncSuccess(order);
             return true;
 
         } catch (ResourceAccessException e) {
-            log.info("Pancake createOrder 5 {}", inputOrder.getCode());
+            log.info("Pancake createOrder 6.3 {}", inputOrder.getCode());
             Throwable root = getRootCause(e);
             String msg = root != null ? root.getMessage() : e.getMessage();
 

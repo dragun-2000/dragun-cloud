@@ -41,7 +41,7 @@ public class Job002 {
 
         for (Order order : failedOrders) {
             try {
-                log.info("Job002: Found 1 {} failed getOrderItems to retry", order.getOrderItems().size());
+                log.info("Job002: Found 1.1 failed getOrderItems to retry");
                 boolean success = pancakePosService.createOrder(order);
                 if (!success) {
                     log.info("Job002: Fail retry");
