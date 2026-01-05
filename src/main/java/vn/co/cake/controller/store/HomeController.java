@@ -91,14 +91,20 @@ public class HomeController extends BaseController {
         searchForm = getSessionProductForm(session);
         
         Page<Product> products = productService.getAllByCondition(searchForm, pageUtil, false);
-        List<ProductResponse> responses = products.stream().map(ProductResponse::new).collect(Collectors.toList());
+        List<ProductResponse> responses = products.stream()
+                                                .sorted(Comparator.comparing(Product::getUpdated).reversed())
+                                                .map(ProductResponse::new)
+                                                .collect(Collectors.toList());
         model.addAttribute("products", responses);
 
         String categoryRoot = searchForm.getCategory();
         
         searchForm.setCategory(Categories.NEW_IN.getText());
         Page<Product> newInProductPage = productService.getAllByCondition(searchForm, pageUtil, false);
-        List<ProductResponse> newInProducts = newInProductPage.stream().map(ProductResponse::new).collect(Collectors.toList());
+        List<ProductResponse> newInProducts = newInProductPage.stream()
+                                                .sorted(Comparator.comparing(Product::getUpdated).reversed())
+                                                .map(ProductResponse::new)
+                                                .collect(Collectors.toList());
         model.addAttribute("newInProducts", newInProducts);
         
         searchForm.setCategory(categoryRoot);
