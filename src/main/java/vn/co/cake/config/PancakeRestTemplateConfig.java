@@ -41,4 +41,22 @@ public class PancakeRestTemplateConfig {
 
         return new RestTemplate(factory);
     }
+
+    @Bean("openaiRestTemplate")
+    public RestTemplate openaiRestTemplate() {
+        RequestConfig requestConfig = RequestConfig.custom()
+                .setConnectTimeout(30_000)
+                .setSocketTimeout(60_000)
+                .setConnectionRequestTimeout(5_000)
+                .build();
+
+        CloseableHttpClient httpClient = HttpClients.custom()
+                .setDefaultRequestConfig(requestConfig)
+                .build();
+
+        HttpComponentsClientHttpRequestFactory factory =
+                new HttpComponentsClientHttpRequestFactory(httpClient);
+
+        return new RestTemplate(factory);
+    }
 }

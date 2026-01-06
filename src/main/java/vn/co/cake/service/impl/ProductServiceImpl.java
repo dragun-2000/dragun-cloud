@@ -55,34 +55,34 @@ public class ProductServiceImpl implements ProductService {
             }
 
             Product product = new Product(request, request.getCategory());
-            List<VariationResponse> variationResponses = pancakePosService.createProduct(new ProductPancakeRequest(product));
-            String pancakeProductId = "";
-            if (!variationResponses.isEmpty()) {
-                List<Variation> variations = new ArrayList<>();
-                for (VariationResponse variationResponse : variationResponses) {
-                    pancakeProductId = variationResponse.getProduct_id();
-                    Variation variation = new Variation();
-                    variation.setName(variationResponse.getBarcode());
-                    variation.setDisplayId(variationResponse.getDisplay_id());
-                    variation.setVariationId(variationResponse.getId());
-                    variation.setPancakeProductId(variationResponse.getProduct_id());
-                    variation.setRetailPrice(variationResponse.getRetail_price());
-                    variation.setRemainQuantity(variationResponse.getRemain_quantity());
-                    List<VariationResponse.Field> fields = variationResponse.getFields();
-                    for (VariationResponse.Field field : fields) {
-                        if ("Size".equalsIgnoreCase(field.getName())) {
-                            variation.setSize(field.getValue());
-                        } else if ("Màu".equalsIgnoreCase(field.getName())) {
-                            variation.setColor(field.getValue());
-                        } else if ("Kiểu".equalsIgnoreCase(field.getName())) {
-                            variation.setType(field.getValue());
-                        }
-                    }
-                    variations.add(variation);
-                }
-              variationRepository.saveAll(variations);
-            }
-            product.setProductPancakeId(pancakeProductId);
+//            List<VariationResponse> variationResponses = pancakePosService.createProduct(new ProductPancakeRequest(product));
+//            String pancakeProductId = "";
+//            if (!variationResponses.isEmpty()) {
+//                List<Variation> variations = new ArrayList<>();
+//                for (VariationResponse variationResponse : variationResponses) {
+//                    pancakeProductId = variationResponse.getProduct_id();
+//                    Variation variation = new Variation();
+//                    variation.setName(variationResponse.getBarcode());
+//                    variation.setDisplayId(variationResponse.getDisplay_id());
+//                    variation.setVariationId(variationResponse.getId());
+//                    variation.setPancakeProductId(variationResponse.getProduct_id());
+//                    variation.setRetailPrice(variationResponse.getRetail_price());
+//                    variation.setRemainQuantity(variationResponse.getRemain_quantity());
+//                    List<VariationResponse.Field> fields = variationResponse.getFields();
+//                    for (VariationResponse.Field field : fields) {
+//                        if ("Size".equalsIgnoreCase(field.getName())) {
+//                            variation.setSize(field.getValue());
+//                        } else if ("Màu".equalsIgnoreCase(field.getName())) {
+//                            variation.setColor(field.getValue());
+//                        } else if ("Kiểu".equalsIgnoreCase(field.getName())) {
+//                            variation.setType(field.getValue());
+//                        }
+//                    }
+//                    variations.add(variation);
+//                }
+//              variationRepository.saveAll(variations);
+//            }
+//            product.setProductPancakeId(pancakeProductId);
             productRepository.save(product);
         } catch (Exception e) {
             throw new CommonServletException(String.format("Tạo Sản Phẩm Thất Bại! %s", e.getMessage()));

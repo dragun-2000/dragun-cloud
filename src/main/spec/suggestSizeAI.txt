@@ -1,0 +1,186 @@
+Bạn là một Senior Fullstack Engineer.
+Hãy thiết kế và triển khai tính năng “Gợi ý size” cho website bán quần áo,
+sử dụng Backend Spring Boot và AI (GPT).
+
+========================
+I. MỤC TIÊU TÍNH NĂNG
+========================
+Khi user đang xem trang chi tiết sản phẩm:
+- User click nút “Gợi ý size”
+- Hệ thống hiển thị popup cho user nhập thông tin cơ thể
+- Sau khi submit, hệ thống gọi AI để tư vấn size
+- Hiển thị kết quả rõ ràng: size phù hợp nhất + size dự phòng + lý do
+
+Mục tiêu:
+- Giúp user chọn size chính xác
+- Giảm đổi trả
+- UX đơn giản, dễ hiểu
+- Backend kiểm soát toàn bộ prompt & logic
+
+========================
+II. LUỒNG NGHIỆP VỤ
+========================
+1. User mở trang chi tiết sản phẩm
+2. User click button “Gợi ý size”
+3. Popup (modal) hiển thị form nhập thông tin
+4. User submit form
+5. Frontend gửi request lên Backend
+6. Backend:
+   - Lấy thông tin sản phẩm
+   - Tạo prompt chuẩn cho AI
+   - Call GPT API
+7. Nhận response JSON
+8. Trả kết quả về frontend
+9. Frontend render nội dung gợi ý size cho user
+
+========================
+III. YÊU CẦU FRONTEND (MÔ TẢ ĐỂ BACKEND HIỂU)
+========================
+Popup nhập thông tin gồm:
+
+BẮT BUỘC:
+- Chiều cao (cm) – number
+- Cân nặng (kg) – number
+
+TÙY CHỌN:
+- Phong cách mặc:
+  - ôm
+  - vừa
+  - rộng
+  - giống mẫu
+- Mô tả thêm (textarea):
+  ví dụ: vai rộng, bụng to, thích tay dài, không thích áo dài
+
+Frontend chỉ gửi DATA, KHÔNG xây prompt.
+
+========================
+IV. API BACKEND
+========================
+Endpoint: POST /api/size-advice
+
+Request body:
+{
+  "productId": 1,
+  "gender": "male | female | unisex",
+  "height": 170,
+  "weight": 65,
+  "fitPreference": "ôm | vừa | rộng | giống mẫu | chưa rõ",
+  "note": "vai rộng, thích mặc thoải mái"
+}
+
+========================
+V. BACKEND XỬ LÝ
+========================
+Backend Spring Boot phải:
+
+1. Validate input:
+   - height, weight bắt buộc
+2. Lấy dữ liệu sản phẩm từ DB:
+   - productId
+   - productName
+   - productForm (ôm / vừa / rộng / oversize)
+   - bảng đo size thực tế
+   - thông tin mẫu mặc (nếu có)
+3. Tạo PROMPT cho AI theo chuẩn (xem phần VI)
+4. Call GPT API
+5. Parse JSON response
+6. Trả kết quả cho frontend
+
+========================
+VI. PROMPT GỬI AI (BẮT BUỘC GIỮ LOGIC)
+========================
+
+SYSTEM PROMPT:
+Bạn là nhân viên tư vấn size quần áo cho website thương mại điện tử.
+Mục tiêu của bạn là đề xuất size CHÍNH XÁC NHẤT cho khách hàng.
+
+Nguyên tắc:
+1. Ưu tiên bảng đo THỰC TẾ của sản phẩm.
+2. So sánh khách với mẫu mặc nếu có.
+3. Tránh tư vấn size quá rộng hoặc quá dài.
+4. Nếu thiếu thông tin quan trọng, hỏi tối đa 2 câu ngắn.
+5. Chỉ trả về JSON đúng format, không thêm nội dung ngoài JSON.
+
+USER PROMPT:
+THÔNG TIN KHÁCH HÀNG:
+- Giới tính: {{gender}}
+- Chiều cao (cm): {{height}}
+- Cân nặng (kg): {{weight}}
+- Phong cách mong muốn: {{fitPreference}}
+- Mô tả thêm: {{note}}
+
+THÔNG TIN SẢN PHẨM:
+- Product ID: {{productId}}
+- Tên sản phẩm: {{productName}}
+- Form sản phẩm: {{productForm}}
+
+BẢNG ĐO SẢN PHẨM:
+{{productSizeTable}}
+
+THÔNG TIN MẪU MẶC (NẾU CÓ):
+{{modelInfo}}
+
+BẢNG SIZE THAM CHIẾU CHUNG (CHỈ DÙNG KHI KHÔNG CÓ BẢNG ĐO):
+Áo nam / unisex:
+- 45–55kg: S
+- 56–65kg: M
+- 66–75kg: L
+- 76–85kg: XL
+- 86–95kg: XXL
+
+Áo nữ:
+- 40–47kg: S
+- 48–55kg: M
+- 56–62kg: L
+- 63–70kg: XL
+
+Tinh chỉnh chiều cao:
+- >175cm: ưu tiên size đủ dài
+- <160cm: tránh size quá dài hoặc quá rộng
+
+========================
+VII. FORMAT RESPONSE TỪ AI (BẮT BUỘC)
+========================
+AI CHỈ được trả về JSON sau:
+
+{
+  "data": {
+    "productId": 1,
+    "message": {
+      "recommendedSize": "L",
+      "backupSize": "M",
+      "reason": [
+        "So sánh chiều cao/cân nặng với bảng đo sản phẩm",
+        "So sánh với mẫu mặc (nếu có)"
+      ],
+      "productFitComment": "Form oversize, mặc rộng thoải mái",
+      "closingQuestion": "Bạn thích mặc vừa hay rộng hơn?"
+    }
+  }
+}
+
+========================
+VIII. FRONTEND HIỂN THỊ (ĐỂ BACKEND ĐẢM BẢO DATA)
+========================
+- Highlight size đề xuất chính
+- Size dự phòng hiển thị nhỏ hơn
+- Lý do ngắn gọn, dễ đọc
+- Câu hỏi chốt để user xác nhận
+
+========================
+IX. YÊU CẦU KỸ THUẬT
+========================
+- Spring Boot
+- DTO rõ ràng cho request/response
+- Có thể mở rộng cache sau này
+- Nếu AI lỗi → fallback trả bảng size thường
+- Không hardcode prompt trong controller (tách service)
+
+========================
+X. KẾT QUẢ MONG MUỐN
+========================
+Sau khi hoàn thành:
+- User click “Gợi ý size” → nhận tư vấn rõ ràng
+- Backend kiểm soát logic & prompt
+- AI trả JSON ổn định, dễ parse
+- Dễ scale cho hàng nghìn request/ngày

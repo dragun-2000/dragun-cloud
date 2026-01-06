@@ -51,8 +51,11 @@ public class Product extends BaseEntity {
     private BigDecimal price;
     private BigDecimal discountPrice;
     private BigDecimal finalPrice;
-    
-    @Column(columnDefinition = "0")
+
+    @Column(
+            name = "discount",
+            columnDefinition = "numeric(5,2) default 0"
+    )
     private BigDecimal discount;
     private Long stockQuantity;
     private String relatedProduct1;

@@ -31,6 +31,6 @@ public class Voucher {
     @Column(name = "end_date")
     private LocalDate endDate;
     
-    @Column(name = "deleted", columnDefinition = "false")
+    @Column(name = "deleted")
     private boolean deleted;
 }

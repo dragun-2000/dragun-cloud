@@ -24,8 +24,15 @@ import javax.persistence.Table;
 public class Account extends BaseEntity {
 
     @Id
-    @SequenceGenerator(name = "AccountId", sequenceName = "account_seq", allocationSize = 1)
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "account_seq")
+    @SequenceGenerator(
+            name = "account_seq",
+            sequenceName = "account_seq",
+            allocationSize = 1
+    )
+    @GeneratedValue(
+            strategy = GenerationType.SEQUENCE,
+            generator = "account_seq"
+    )
     private Long id;
 
     @Column(length = 100)
@@ -66,7 +73,7 @@ public class Account extends BaseEntity {
 
     private boolean deleted;
 
-    @Column(name = "first_login", columnDefinition = "false")
+    @Column(name = "first_login")
     private boolean firstLogin;
 
     public Account() {

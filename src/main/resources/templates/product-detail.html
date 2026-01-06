@@ -35,6 +35,11 @@
                   <ul class="xans-size">
                     <li th:each="size : ${sizes}" class="size-button" th:id="'size-pc-' + ${size}" th:text="${size}" th:classappend="${product.outStock ? 'disabled' : ''}"></li>
                   </ul>
+                  <div class="mt-2">
+                    <button type="button" class="btn btn-sm btn-outline-primary" onclick="openSizeAdviceModal()" style="font-size: 12px;">
+                      <i class="fas fa-magic"></i> Gợi ý size
+                    </button>
+                  </div>
                 </div>
                 <div class="xans-product" th:if="${types != null and !types.isEmpty()}">
                   <span class="xans-label">KIỂU</span>
@@ -183,6 +188,11 @@
                       <ul class="xans-size">
                         <li th:each="size : ${sizes}" class="size-button-mobile" th:id="'size-' + ${size}" th:text="${size}" th:classappend="${product.outStock ? 'disabled' : ''}"></li>
                       </ul>
+                      <div class="mt-2">
+                        <button type="button" class="btn btn-sm btn-outline-primary" onclick="openSizeAdviceModal()" style="font-size: 12px;">
+                          <i class="fas fa-magic"></i> Gợi ý size
+                        </button>
+                      </div>
                     </div>
                     <div class="xans-product" th:if="${types != null and !types.isEmpty()}">
                       <span class="xans-label">KIỂU</span>
@@ -326,12 +336,239 @@
           <button class="close-btn fail" onclick="closePopup('showOutStockPopup')">Đóng</button>
         </div>
       </div>
+
+      <!-- Modal Gợi ý size - Form nhập thông tin -->
+      <div class="popup" id="sizeAdviceModal">
+        <div class="popup-content size-advice-modal">
+          <div class="modal-header-custom">
+            <h2>Gợi ý size phù hợp</h2>
+            <button type="button" class="close-modal-btn" onclick="closeSizeAdviceModal()">&times;</button>
+          </div>
+          <form id="sizeAdviceForm" onsubmit="submitSizeAdvice(event)">
+            <div class="form-group">
+              <label for="gender">Giới tính <span class="required">*</span></label>
+              <select class="form-control" id="gender" required>
+                <option value="">-- Chọn giới tính --</option>
+                <option value="male">Nam</option>
+                <option value="female">Nữ</option>
+                <option value="unisex">Unisex</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="height">Chiều cao (cm) <span class="required">*</span></label>
+              <input type="number" class="form-control" id="height" min="1" max="250" required placeholder="Ví dụ: 170">
+            </div>
+            <div class="form-group">
+              <label for="weight">Cân nặng (kg) <span class="required">*</span></label>
+              <input type="number" class="form-control" id="weight" min="1" max="200" required placeholder="Ví dụ: 65">
+            </div>
+            <div class="form-group">
+              <label for="fitPreference">Phong cách mặc</label>
+              <select class="form-control" id="fitPreference">
+                <option value="">-- Chọn phong cách --</option>
+                <option value="ôm">Ôm</option>
+                <option value="vừa">Vừa</option>
+                <option value="rộng">Rộng</option>
+                <option value="giống mẫu">Giống mẫu</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="note">Mô tả thêm</label>
+              <textarea class="form-control" id="note" rows="3" placeholder="Ví dụ: vai rộng, bụng to, thích tay dài"></textarea>
+            </div>
+            <div class="form-actions">
+              <button type="button" class="btn btn-secondary" onclick="closeSizeAdviceModal()">Hủy</button>
+              <button type="submit" class="btn btn-primary" id="submitSizeAdviceBtn">
+                <span id="submitBtnText">Tư vấn size</span>
+                <span id="submitBtnLoading" style="display: none;">
+                  <i class="fas fa-spinner fa-spin"></i> Đang xử lý...
+                </span>
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Modal Hiển thị kết quả gợi ý size -->
+      <div class="popup" id="sizeAdviceResultModal">
+        <div class="popup-content size-advice-result-modal">
+          <div class="modal-header-custom">
+            <h2>Kết quả gợi ý size</h2>
+            <button type="button" class="close-modal-btn" onclick="closeSizeAdviceResultModal()">&times;</button>
+          </div>
+          <div id="sizeAdviceResultContent">
+            <!-- Nội dung sẽ được điền bằng JavaScript -->
+          </div>
+          <div class="form-actions">
+            <button type="button" class="btn btn-primary" onclick="closeSizeAdviceResultModal()">Đóng</button>
+          </div>
+        </div>
+      </div>
       
       <div th:replace="header :: footer"></div>
   </div><!--/wrapper -->
 
   <script src="/js/product/product-detail.js"></script>
   <script src="/css/product/style.css"></script>
+
+  <script>
+    // Mở modal gợi ý size
+    function openSizeAdviceModal() {
+      document.getElementById('sizeAdviceModal').style.display = 'flex';
+      document.getElementById('sizeAdviceForm').reset();
+    }
+
+    // Đóng modal gợi ý size
+    function closeSizeAdviceModal() {
+      document.getElementById('sizeAdviceModal').style.display = 'none';
+    }
+
+    // Đóng modal kết quả
+    function closeSizeAdviceResultModal() {
+      document.getElementById('sizeAdviceResultModal').style.display = 'none';
+    }
+
+    // Submit form gợi ý size
+    function submitSizeAdvice(event) {
+      event.preventDefault();
+      
+      const productId = document.getElementById('product-id').value;
+      const gender = document.getElementById('gender').value;
+      const height = document.getElementById('height').value;
+      const weight = document.getElementById('weight').value;
+      const fitPreference = document.getElementById('fitPreference').value;
+      const note = document.getElementById('note').value;
+
+      // Validate
+      if (!gender || !height || !weight) {
+        alert('Vui lòng điền đầy đủ thông tin bắt buộc!');
+        return;
+      }
+
+      // Disable button và hiển thị loading
+      const submitBtn = document.getElementById('submitSizeAdviceBtn');
+      const submitBtnText = document.getElementById('submitBtnText');
+      const submitBtnLoading = document.getElementById('submitBtnLoading');
+      submitBtn.disabled = true;
+      submitBtnText.style.display = 'none';
+      submitBtnLoading.style.display = 'inline';
+
+      // Gọi API
+      fetch('/api/size-advice', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          productId: parseInt(productId),
+          gender: gender,
+          height: parseInt(height),
+          weight: parseInt(weight),
+          fitPreference: fitPreference || null,
+          note: note || null
+        })
+      })
+      .then(response => {
+        if (!response.ok) {
+          if (response.status === 404) {
+            throw new Error('Không tìm thấy sản phẩm');
+          } else if (response.status === 400) {
+            throw new Error('Thông tin không hợp lệ');
+          } else {
+            throw new Error('Lỗi khi tư vấn size. Vui lòng thử lại sau.');
+          }
+        }
+        return response.json();
+      })
+      .then(data => {
+        // Hiển thị kết quả
+        displaySizeAdviceResult(data);
+        // Đóng modal form
+        closeSizeAdviceModal();
+      })
+      .catch(error => {
+        alert(error.message || 'Có lỗi xảy ra. Vui lòng thử lại sau.');
+        console.error('Error:', error);
+      })
+      .finally(() => {
+        // Enable button và ẩn loading
+        submitBtn.disabled = false;
+        submitBtnText.style.display = 'inline';
+        submitBtnLoading.style.display = 'none';
+      });
+    }
+
+    // Hiển thị kết quả gợi ý size
+    function displaySizeAdviceResult(data) {
+      const resultContent = document.getElementById('sizeAdviceResultContent');
+      const message = data.data?.message;
+
+      if (!message) {
+        resultContent.innerHTML = '<p class="error-message">Không có dữ liệu trả về.</p>';
+        document.getElementById('sizeAdviceResultModal').style.display = 'flex';
+        return;
+      }
+
+      let html = '<div class="size-advice-result">';
+      
+      // Size đề xuất chính
+      html += '<div class="recommended-size">';
+      html += '<h3 class="result-title">Size đề xuất</h3>';
+      html += '<div class="size-badge recommended">' + (message.recommendedSize || 'N/A') + '</div>';
+      html += '</div>';
+
+      // Size dự phòng
+      if (message.backupSize) {
+        html += '<div class="backup-size">';
+        html += '<h4 class="result-subtitle">Size dự phòng</h4>';
+        html += '<div class="size-badge backup">' + message.backupSize + '</div>';
+        html += '</div>';
+      }
+
+      // Lý do
+      if (message.reason && message.reason.length > 0) {
+        html += '<div class="reason-section">';
+        html += '<h4 class="result-subtitle">Lý do</h4>';
+        html += '<ul class="reason-list">';
+        message.reason.forEach(reason => {
+          html += '<li>' + reason + '</li>';
+        });
+        html += '</ul>';
+        html += '</div>';
+      }
+
+      // Comment về form sản phẩm
+      if (message.productFitComment) {
+        html += '<div class="fit-comment">';
+        html += '<p class="comment-text">' + message.productFitComment + '</p>';
+        html += '</div>';
+      }
+
+      // Câu hỏi chốt
+      if (message.closingQuestion) {
+        html += '<div class="closing-question">';
+        html += '<p class="question-text"><strong>' + message.closingQuestion + '</strong></p>';
+        html += '</div>';
+      }
+
+      html += '</div>';
+      resultContent.innerHTML = html;
+      document.getElementById('sizeAdviceResultModal').style.display = 'flex';
+    }
+
+    // Đóng popup khi click ra ngoài
+    window.onclick = function(event) {
+      const sizeAdviceModal = document.getElementById('sizeAdviceModal');
+      const sizeAdviceResultModal = document.getElementById('sizeAdviceResultModal');
+      
+      if (event.target === sizeAdviceModal) {
+        closeSizeAdviceModal();
+      }
+      if (event.target === sizeAdviceResultModal) {
+        closeSizeAdviceResultModal();
+      }
+    }
+  </script>
 
   <style>
     body {
@@ -400,6 +637,239 @@
       pointer-events: none; /* Ngăn chặn các sự kiện click */
       color: gray;         /* Làm mờ nội dung để biểu thị trạng thái bị vô hiệu */
       cursor: not-allowed; /* Hiển thị con trỏ không được phép */
+    }
+
+    /* Style cho modal gợi ý size */
+    .size-advice-modal {
+      max-width: 500px;
+      width: 90%;
+      max-height: 90vh;
+      overflow-y: auto;
+      text-align: left;
+    }
+
+    .size-advice-result-modal {
+      max-width: 600px;
+      width: 90%;
+      max-height: 90vh;
+      overflow-y: auto;
+      text-align: left;
+    }
+
+    .modal-header-custom {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      padding-bottom: 15px;
+      border-bottom: 2px solid #eee;
+    }
+
+    .modal-header-custom h2 {
+      margin: 0;
+      font-size: 20px;
+      color: #333;
+    }
+
+    .close-modal-btn {
+      background: none;
+      border: none;
+      font-size: 28px;
+      color: #999;
+      cursor: pointer;
+      padding: 0;
+      width: 30px;
+      height: 30px;
+      line-height: 30px;
+      text-align: center;
+    }
+
+    .close-modal-btn:hover {
+      color: #333;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: 500;
+      color: #333;
+    }
+
+    .form-group .required {
+      color: #dc3545;
+    }
+
+    .form-control {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 14px;
+      box-sizing: border-box;
+    }
+
+    .form-control:focus {
+      outline: none;
+      border-color: #007bff;
+      box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+    }
+
+    .form-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-top: 25px;
+      padding-top: 20px;
+      border-top: 1px solid #eee;
+    }
+
+    .btn {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: all 0.3s;
+    }
+
+    .btn-primary {
+      background-color: #007bff;
+      color: white;
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      background-color: #0056b3;
+    }
+
+    .btn-primary:disabled {
+      background-color: #6c757d;
+      cursor: not-allowed;
+    }
+
+    .btn-secondary {
+      background-color: #6c757d;
+      color: white;
+    }
+
+    .btn-secondary:hover {
+      background-color: #545b62;
+    }
+
+    /* Style cho kết quả */
+    .size-advice-result {
+      padding: 10px 0;
+    }
+
+    .recommended-size {
+      text-align: center;
+      margin-bottom: 25px;
+      padding: 20px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border-radius: 8px;
+      color: white;
+    }
+
+    .result-title {
+      font-size: 18px;
+      margin-bottom: 15px;
+      font-weight: 600;
+    }
+
+    .result-subtitle {
+      font-size: 16px;
+      margin: 20px 0 10px 0;
+      color: #333;
+      font-weight: 600;
+    }
+
+    .size-badge {
+      display: inline-block;
+      padding: 15px 40px;
+      font-size: 32px;
+      font-weight: bold;
+      border-radius: 8px;
+      margin: 10px 0;
+    }
+
+    .size-badge.recommended {
+      background-color: rgba(255, 255, 255, 0.2);
+      color: white;
+      border: 2px solid white;
+    }
+
+    .size-badge.backup {
+      background-color: #f8f9fa;
+      color: #333;
+      border: 2px solid #dee2e6;
+      font-size: 24px;
+      padding: 10px 30px;
+    }
+
+    .reason-section {
+      margin: 20px 0;
+    }
+
+    .reason-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    .reason-list li {
+      padding: 8px 0;
+      padding-left: 25px;
+      position: relative;
+      color: #555;
+    }
+
+    .reason-list li:before {
+      content: "✓";
+      position: absolute;
+      left: 0;
+      color: #28a745;
+      font-weight: bold;
+    }
+
+    .fit-comment {
+      margin: 20px 0;
+      padding: 15px;
+      background-color: #f8f9fa;
+      border-left: 4px solid #007bff;
+      border-radius: 4px;
+    }
+
+    .comment-text {
+      margin: 0;
+      color: #555;
+      font-style: italic;
+    }
+
+    .closing-question {
+      margin: 20px 0;
+      padding: 15px;
+      background-color: #fff3cd;
+      border-left: 4px solid #ffc107;
+      border-radius: 4px;
+    }
+
+    .question-text {
+      margin: 0;
+      color: #856404;
+    }
+
+    .error-message {
+      color: #dc3545;
+      text-align: center;
+      padding: 20px;
+    }
+
+    .backup-size {
+      text-align: center;
+      margin: 20px 0;
     }
   </style>
 </body>
