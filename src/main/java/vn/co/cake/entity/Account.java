@@ -76,6 +76,12 @@ public class Account extends BaseEntity {
     @Column(name = "first_login")
     private boolean firstLogin;
 
+    @Column(name = "height")
+    private Integer height; // Chiều cao (cm)
+
+    @Column(name = "weight")
+    private Integer weight; // Cân nặng (kg)
+
     public Account() {
     }
 }

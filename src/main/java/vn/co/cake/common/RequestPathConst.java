@@ -67,6 +67,9 @@ public class RequestPathConst {
     public static final String SA001_01_REGISTER_VIEW = "/SA/SA001/register-view";
     public static final String SA001_LOGIN = "/SA/SA001/login";
     public static final String SA001_REGISTER = "/SA/SA001/register";
+    public static final String SA001_REGISTER_SEND_OTP = "/SA/SA001/register/send-otp";
+    public static final String SA001_REGISTER_VERIFY_OTP = "/SA/SA001/register/verify-otp";
+    public static final String SA001_REGISTER_RESEND_OTP = "/SA/SA001/register/resend-otp";
     public static final String SA001_PROFILE = "/SA/SA001/profile";
     public static final String SA001_LOGOUT = "/SA/SA001/logout";
     public static final String SA001 = "/SA/SA001";

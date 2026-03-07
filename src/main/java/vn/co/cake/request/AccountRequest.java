@@ -16,6 +16,10 @@ public class AccountRequest {
     private String confirmPassword;
     
     private String phone;
+
+    private Integer height;
+    private Integer weight;
+
     private String province;
     private String district;
     private String ward;

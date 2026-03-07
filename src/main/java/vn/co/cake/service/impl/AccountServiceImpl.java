@@ -1,35 +1,10 @@
 package vn.co.cake.service.impl;
 
-import vn.co.cake.common.MessageConst;
-import vn.co.cake.dto.GenericMailForm;
-import org.apache.poi.ss.usermodel.*;
-import org.apache.poi.xssf.usermodel.XSSFWorkbook;
-import vn.co.cake.entity.Account;
-import vn.co.cake.entity.District;
-import vn.co.cake.entity.Province;
-import vn.co.cake.entity.Ward;
-import vn.co.cake.utils.DateUtil;
-import vn.co.cake.enums.AccountStatus;
-import vn.co.cake.enums.MailType;
-import vn.co.cake.exception.CommonServletException;
-//import vn.co.cake.helper.EmailService;
-import vn.co.cake.helper.EmailService;
-import vn.co.cake.repository.AccountRepository;
-import vn.co.cake.repository.DistrictRepository;
-import vn.co.cake.repository.ProvinceRepository;
-import vn.co.cake.repository.WardRepository;
-import vn.co.cake.request.AccountRequest;
-import vn.co.cake.request.AccountSearchRequest;
-import vn.co.cake.request.ChangePasswordRequest;
-import vn.co.cake.request.ForgetPasswordRequest;
-import vn.co.cake.request.ResetPasswordRequest;
-import vn.co.cake.security.admin.AdminLoginInfo;
-import vn.co.cake.security.repository.ContextRepository;
-import vn.co.cake.service.AccountService;
-//import vn.co.cake.service.MailService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -40,6 +15,26 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
 import org.springframework.util.CollectionUtils;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import vn.co.cake.common.MessageConst;
+import vn.co.cake.dto.GenericMailForm;
+import vn.co.cake.entity.Account;
+import vn.co.cake.entity.District;
+import vn.co.cake.entity.Province;
+import vn.co.cake.entity.Ward;
+import vn.co.cake.enums.AccountStatus;
+import vn.co.cake.enums.MailType;
+import vn.co.cake.exception.CommonServletException;
+import vn.co.cake.helper.EmailService;
+import vn.co.cake.repository.AccountRepository;
+import vn.co.cake.repository.DistrictRepository;
+import vn.co.cake.repository.ProvinceRepository;
+import vn.co.cake.repository.WardRepository;
+import vn.co.cake.request.*;
+import vn.co.cake.security.admin.AdminLoginInfo;
+import vn.co.cake.security.repository.ContextRepository;
+import vn.co.cake.service.AccountService;
+import vn.co.cake.utils.DateUtil;
+import vn.co.cake.utils.PhoneValidator;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -121,9 +116,27 @@ public class AccountServiceImpl implements AccountService {
      */
     @Override
     public void addAccount(AccountRequest accountRequest) throws CommonServletException {
-        if (StringUtils.isBlank(accountRequest.getPhone()) || accountRequest.getPhone().length() > 11) {
+        // Validate phone number
+        if (StringUtils.isBlank(accountRequest.getPhone())) {
+            throw new CommonServletException("Số điện thoại không được để trống!");
+        }
+        
+        // Validate format số điện thoại Việt Nam
+        if (!PhoneValidator.validateVietnamPhoneNumber(accountRequest.getPhone())) {
+            throw new CommonServletException("Số điện thoại không hợp lệ! Vui lòng nhập số điện thoại 10 số bắt đầu bằng 0 (ví dụ: 0912345678)");
+        }
+        
+        // Normalize phone number về format 0xxxxxxxxx
+        String normalizedPhone = PhoneValidator.normalizeVietnamPhone(accountRequest.getPhone());
+        if (normalizedPhone == null) {
             throw new CommonServletException("Số điện thoại không hợp lệ!");
         }
+        
+        // Kiểm tra length sau khi normalize (phải là 10 số)
+        if (normalizedPhone.length() != 10) {
+            throw new CommonServletException("Số điện thoại phải có 10 số!");
+        }
+        
         Account account = new Account();
         if (StringUtils.isNotBlank(accountRequest.getAccountId())) {
             account = accountRepository.findFirstByIdAndDeletedIsFalse(Long.parseLong(accountRequest.getAccountId()));
@@ -131,7 +144,8 @@ public class AccountServiceImpl implements AccountService {
                 throw new CommonServletException("Tài khoản không tồn tại!");
             }
         } else {
-            account = accountRepository.findAccountForMember(accountRequest.getPhone());
+            // Sử dụng normalized phone để check duplicate
+            account = accountRepository.findAccountForMember(normalizedPhone);
             if (!accountRequest.getPassword().equals(accountRequest.getConfirmPassword())) {
                 throw new CommonServletException(MessageConst.PASSWORD_RE_ENTER_NOT_MATCH);
             }
@@ -148,7 +162,17 @@ public class AccountServiceImpl implements AccountService {
         }
         account.setFullName(accountRequest.getFullName());
         account.setMailAddress(accountRequest.getMailAddress());
-        account.setPhone(accountRequest.getPhone());
+        // Lưu normalized phone
+        account.setPhone(normalizedPhone);
+
+        if (accountRequest.getHeight() != null && (accountRequest.getHeight() < 120 || accountRequest.getHeight() > 250)) {
+            throw new CommonServletException("Chiều cao phải từ 120cm đến 250cm!");
+        }
+        if (accountRequest.getWeight() != null && (accountRequest.getWeight() < 30 || accountRequest.getWeight() > 150)) {
+            throw new CommonServletException("Cân nặng phải từ 30kg đến 150kg!");
+        }
+        account.setHeight(accountRequest.getHeight());
+        account.setWeight(accountRequest.getWeight());
         account.setProvince(accountRequest.getProvince());
         account.setDistrict(accountRequest.getDistrict());
         account.setWard(accountRequest.getWard());
@@ -192,6 +216,15 @@ public class AccountServiceImpl implements AccountService {
         account.setFullName(accountRequest.getFullName());
 //        account.setMailAddress(accountRequest.getMailAddress());
         account.setPhone(accountRequest.getPhone());
+
+        if (accountRequest.getHeight() != null && (accountRequest.getHeight() < 120 || accountRequest.getHeight() > 250)) {
+            throw new CommonServletException("Chiều cao phải từ 120cm đến 250cm!");
+        }
+        if (accountRequest.getWeight() != null && (accountRequest.getWeight() < 30 || accountRequest.getWeight() > 150)) {
+            throw new CommonServletException("Cân nặng phải từ 30kg đến 150kg!");
+        }
+        account.setHeight(accountRequest.getHeight());
+        account.setWeight(accountRequest.getWeight());
         accountRepository.save(account);
     }
 

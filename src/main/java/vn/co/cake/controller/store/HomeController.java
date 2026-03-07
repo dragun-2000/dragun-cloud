@@ -254,6 +254,19 @@ public class HomeController extends BaseController {
         }
 		model.addAttribute("descriptionSizes", descriptionSizes);
 
+        // Thêm thông tin account để fill form size advice
+        Integer userHeight = null;
+        Integer userWeight = null;
+        if (loginInfo != null) {
+            Account account = accountService.getAccount(loginInfo.getId());
+            if (account != null) {
+                userHeight = account.getHeight();
+                userWeight = account.getWeight();
+            }
+        }
+        model.addAttribute("userHeight", userHeight);
+        model.addAttribute("userWeight", userWeight);
+
         List<OrderItem> orderItems = new ArrayList<>();
         if (!CollectionUtils.isEmpty(cartForm.getOrderItems())) {
             orderItems.addAll(cartForm.getOrderItems());

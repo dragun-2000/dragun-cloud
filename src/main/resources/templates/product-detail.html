@@ -389,18 +389,34 @@
         </div>
       </div>
 
-      <!-- Modal Hiển thị kết quả gợi ý size -->
+      <!-- Modal Hiển thị kết quả gợi ý size - Chat Interface -->
       <div class="popup" id="sizeAdviceResultModal">
-        <div class="popup-content size-advice-result-modal">
-          <div class="modal-header-custom">
-            <h2>Kết quả gợi ý size</h2>
+        <div class="popup-content chat-modal">
+          <div class="chat-header">
+            <h2>Tư vấn size</h2>
             <button type="button" class="close-modal-btn" onclick="closeSizeAdviceResultModal()">&times;</button>
           </div>
-          <div id="sizeAdviceResultContent">
-            <!-- Nội dung sẽ được điền bằng JavaScript -->
+          <div class="chat-container" id="chatContainer">
+            <div class="chat-messages" id="chatMessages">
+              <!-- Messages will be inserted here -->
+            </div>
           </div>
-          <div class="form-actions">
-            <button type="button" class="btn btn-primary" onclick="closeSizeAdviceResultModal()">Đóng</button>
+          <div class="chat-input-container">
+            <form id="chatInputForm" onsubmit="sendChatMessage(event)">
+              <div class="chat-input-wrapper">
+                <input 
+                  type="text" 
+                  id="chatInput" 
+                  class="chat-input" 
+                  placeholder="Nhập câu hỏi của bạn..." 
+                  autocomplete="off"
+                />
+                <button type="submit" class="chat-send-btn" id="chatSendBtn">
+                  <span id="chatSendIcon">➤</span>
+                  <span id="chatSendLoading" style="display: none;">⏳</span>
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       </div>
@@ -411,11 +427,35 @@
   <script src="/js/product/product-detail.js"></script>
   <script src="/css/product/style.css"></script>
 
-  <script>
+  <script th:inline="javascript">
     // Mở modal gợi ý size
     function openSizeAdviceModal() {
       document.getElementById('sizeAdviceModal').style.display = 'flex';
+      
+      // Fill sẵn thông tin từ account (nếu có)
+      const userHeight = /*[[${userHeight}]]*/ null;
+      const userWeight = /*[[${userWeight}]]*/ null;
+
+      // Reset form trước
       document.getElementById('sizeAdviceForm').reset();
+
+      // Reset context khi mở form mới
+      chatContext = null;
+      currentUserInput = null;
+      conversationHistory = [];
+
+      // Set mặc định giới tính = Nam
+      document.getElementById('gender').value = 'male';
+
+      // Fill chiều cao nếu có
+      if (userHeight !== null) {
+        document.getElementById('height').value = userHeight;
+      }
+
+      // Fill cân nặng nếu có
+      if (userWeight !== null) {
+        document.getElementById('weight').value = userWeight;
+      }
     }
 
     // Đóng modal gợi ý size
@@ -426,7 +466,16 @@
     // Đóng modal kết quả
     function closeSizeAdviceResultModal() {
       document.getElementById('sizeAdviceResultModal').style.display = 'none';
+      // Reset conversation history khi đóng modal
+      conversationHistory = [];
     }
+
+    // Lưu thông tin user input để hiển thị trong chat
+    let currentUserInput = null;
+    // Lưu context từ lần tư vấn đầu để dùng cho chat tiếp
+    let chatContext = null;
+    // Lưu conversation history để AI hiểu được luồng chat
+    let conversationHistory = [];
 
     // Submit form gợi ý size
     function submitSizeAdvice(event) {
@@ -444,6 +493,22 @@
         alert('Vui lòng điền đầy đủ thông tin bắt buộc!');
         return;
       }
+
+      // Lưu thông tin user input
+      const genderText = gender === 'male' ? 'Nam' : gender === 'female' ? 'Nữ' : 'Unisex';
+      const fitText = fitPreference ? `, phong cách mặc: ${fitPreference}` : '';
+      const noteText = note ? `, ${note}` : '';
+      currentUserInput = `Tôi cao ${height}cm và nặng ${weight}kg, giới tính ${genderText}${fitText}${noteText}. Tôi nên mặc size nào?`;
+      
+      // Lưu context để dùng cho chat tiếp
+      chatContext = {
+        productId: parseInt(productId),
+        gender: gender,
+        height: parseInt(height),
+        weight: parseInt(weight),
+        fitPreference: fitPreference || null,
+        note: note || null
+      };
 
       // Disable button và hiển thị loading
       const submitBtn = document.getElementById('submitSizeAdviceBtn');
@@ -481,7 +546,8 @@
         return response.json();
       })
       .then(data => {
-        // Hiển thị kết quả
+        // Lưu height và weight nếu user đang login (đã được lưu tự động trong controller)
+        // Hiển thị kết quả dạng chat
         displaySizeAdviceResult(data);
         // Đóng modal form
         closeSizeAdviceModal();
@@ -498,62 +564,289 @@
       });
     }
 
-    // Hiển thị kết quả gợi ý size
+    // Hiển thị kết quả gợi ý size dạng chat
     function displaySizeAdviceResult(data) {
-      const resultContent = document.getElementById('sizeAdviceResultContent');
+      const chatMessages = document.getElementById('chatMessages');
       const message = data.data?.message;
 
       if (!message) {
-        resultContent.innerHTML = '<p class="error-message">Không có dữ liệu trả về.</p>';
+        chatMessages.innerHTML = '<div class="chat-message error">Không có dữ liệu trả về.</div>';
         document.getElementById('sizeAdviceResultModal').style.display = 'flex';
         return;
       }
 
-      let html = '<div class="size-advice-result">';
-      
-      // Size đề xuất chính
-      html += '<div class="recommended-size">';
-      html += '<h3 class="result-title">Size đề xuất</h3>';
-      html += '<div class="size-badge recommended">' + (message.recommendedSize || 'N/A') + '</div>';
-      html += '</div>';
+      // Clear previous messages
+      chatMessages.innerHTML = '';
 
-      // Size dự phòng
-      if (message.backupSize) {
-        html += '<div class="backup-size">';
-        html += '<h4 class="result-subtitle">Size dự phòng</h4>';
-        html += '<div class="size-badge backup">' + message.backupSize + '</div>';
-        html += '</div>';
+      // Hiển thị câu hỏi của user
+      if (currentUserInput) {
+        const userMessage = createChatMessage(currentUserInput, 'user');
+        chatMessages.appendChild(userMessage);
       }
 
-      // Lý do
-      if (message.reason && message.reason.length > 0) {
-        html += '<div class="reason-section">';
-        html += '<h4 class="result-subtitle">Lý do</h4>';
-        html += '<ul class="reason-list">';
-        message.reason.forEach(reason => {
-          html += '<li>' + reason + '</li>';
+      // Build AI response text như chuyên viên sale
+      let aiResponseText = buildSalesAdvisorResponse(message);
+
+      // Hiển thị câu trả lời của AI
+      const aiMessage = createChatMessage(aiResponseText, 'assistant');
+      chatMessages.appendChild(aiMessage);
+
+      // Scroll to bottom
+      const chatContainer = document.getElementById('chatContainer');
+      chatContainer.scrollTop = chatContainer.scrollHeight;
+
+      // Lưu AI message để copy/speak
+      window.currentAIMessage = aiResponseText;
+
+      // Khởi tạo conversation history với message đầu tiên
+      conversationHistory = [];
+      if (currentUserInput) {
+        conversationHistory.push({
+          role: 'user',
+          content: currentUserInput
         });
-        html += '</ul>';
-        html += '</div>';
+      }
+      conversationHistory.push({
+        role: 'assistant',
+        content: aiResponseText
+      });
+
+      // Hiển thị modal
+      document.getElementById('sizeAdviceResultModal').style.display = 'flex';
+    }
+
+    // Tạo chat message element với hỗ trợ markdown đơn giản
+    function createChatMessage(text, type) {
+      const messageDiv = document.createElement('div');
+      messageDiv.className = `chat-message ${type}`;
+      
+      // Convert markdown đơn giản và xuống dòng
+      let formattedText = text
+        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') // Bold
+        .replace(/\n/g, '<br>'); // Line breaks
+      
+      messageDiv.innerHTML = formattedText;
+      return messageDiv;
+    }
+
+    // Tạo typing indicator (loading message) giống Facebook
+    function createTypingIndicator() {
+      const typingDiv = document.createElement('div');
+      typingDiv.className = 'chat-message assistant typing-indicator';
+      typingDiv.id = 'typingIndicator';
+      typingDiv.innerHTML = `
+        <div class="typing-dots">
+          <span></span>
+          <span></span>
+          <span></span>
+        </div>
+      `;
+      return typingDiv;
+    }
+
+    // Build response text như chuyên viên sale
+    function buildSalesAdvisorResponse(message) {
+      let response = '';
+
+      // Kiểm tra trường hợp không có size phù hợp
+      if (message.recommendedSize === 'NOT_AVAILABLE' || 
+          message.recommendedSize === 'KHÔNG PHÙ HỢP' ||
+          message.recommendedSize?.toUpperCase() === 'NOT_AVAILABLE') {
+        // Trường hợp không có size phù hợp
+        response += '**Không có size phù hợp**\n\n';
+        
+        // Lý do chi tiết
+        if (message.reason && message.reason.length > 0) {
+          message.reason.forEach((reason, index) => {
+            response += reason;
+            if (index < message.reason.length - 1) {
+              response += '\n';
+            }
+          });
+          response += '\n\n';
+        }
+        
+        // Comment
+        if (message.productFitComment) {
+          response += message.productFitComment + '\n\n';
+        }
+        
+        // Câu hỏi chốt
+        if (message.closingQuestion) {
+          response += message.closingQuestion;
+        }
+        
+        return response.trim();
+      }
+
+      // Trường hợp có size phù hợp
+      // Mở đầu với size đề xuất
+      if (message.recommendedSize) {
+        response += `Dựa vào bảng size, bạn nên chọn **Size ${message.recommendedSize}**.\n\n`;
+      }
+
+      // Lý do chi tiết - format tự nhiên như chuyên viên sale
+      if (message.reason && message.reason.length > 0) {
+        message.reason.forEach((reason, index) => {
+          response += reason;
+          if (index < message.reason.length - 1) {
+            response += '\n';
+          }
+        });
+        response += '\n\n';
       }
 
       // Comment về form sản phẩm
       if (message.productFitComment) {
-        html += '<div class="fit-comment">';
-        html += '<p class="comment-text">' + message.productFitComment + '</p>';
-        html += '</div>';
+        response += message.productFitComment + '\n\n';
       }
 
-      // Câu hỏi chốt
+      // Gợi ý thêm về size dự phòng (chỉ khi có backupSize)
+      if (message.backupSize && message.backupSize.trim() !== '') {
+        response += '**Gợi ý thêm:**\n';
+        response += `- Nếu bạn thích mặc vừa vặn, Size ${message.recommendedSize} là phù hợp nhất.\n`;
+        response += `- Nếu bạn thích mặc rộng/oversize, có thể cân nhắc Size ${message.backupSize}.\n\n`;
+      }
+
+      // Câu hỏi chốt để tương tác thêm
       if (message.closingQuestion) {
-        html += '<div class="closing-question">';
-        html += '<p class="question-text"><strong>' + message.closingQuestion + '</strong></p>';
-        html += '</div>';
+        response += message.closingQuestion;
       }
 
-      html += '</div>';
-      resultContent.innerHTML = html;
-      document.getElementById('sizeAdviceResultModal').style.display = 'flex';
+      return response.trim();
+    }
+
+    // Copy chat message (giữ lại để tương thích, không sử dụng)
+    function copyChatMessage(event) {
+      // Function kept for compatibility but not used
+    }
+
+    // Speak chat message (giữ lại để tương thích, không sử dụng)
+    function speakChatMessage() {
+      // Function kept for compatibility but not used
+    }
+
+    // Refresh size advice
+    function refreshSizeAdvice() {
+      closeSizeAdviceResultModal();
+      openSizeAdviceModal();
+    }
+
+    // Gửi tin nhắn chat tiếp theo
+    function sendChatMessage(event) {
+      event.preventDefault();
+      
+      const chatInput = document.getElementById('chatInput');
+      const message = chatInput.value.trim();
+      
+      if (!message) {
+        return;
+      }
+
+      // Kiểm tra context từ lần tư vấn đầu
+      if (!chatContext || !chatContext.productId) {
+        alert('Vui lòng tư vấn size trước khi chat tiếp.');
+        return;
+      }
+
+      // Hiển thị tin nhắn của user
+      const chatMessages = document.getElementById('chatMessages');
+      const userMessage = createChatMessage(message, 'user');
+      chatMessages.appendChild(userMessage);
+      
+      // Clear input
+      chatInput.value = '';
+      
+      // Disable input và button
+      const sendBtn = document.getElementById('chatSendBtn');
+      const sendIcon = document.getElementById('chatSendIcon');
+      const sendLoading = document.getElementById('chatSendLoading');
+      chatInput.disabled = true;
+      sendBtn.disabled = true;
+      sendIcon.style.display = 'none';
+      sendLoading.style.display = 'inline';
+
+      // Scroll to bottom
+      const chatContainer = document.getElementById('chatContainer');
+      chatContainer.scrollTop = chatContainer.scrollHeight;
+
+      // Hiển thị typing indicator (loading) giống Facebook
+      const typingIndicator = createTypingIndicator();
+      chatMessages.appendChild(typingIndicator);
+      chatContainer.scrollTop = chatContainer.scrollHeight;
+
+      // Delay 5 giây để tạo hiệu ứng chờ người trả lời như Facebook
+      setTimeout(() => {
+        // Gọi API để lấy phản hồi với context và conversation history
+        fetch('/api/size-advice/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          productId: chatContext.productId,
+          message: message,
+          gender: chatContext.gender,
+          height: chatContext.height,
+          weight: chatContext.weight,
+          fitPreference: chatContext.fitPreference,
+          note: chatContext.note,
+          conversationHistory: conversationHistory
+        })
+      })
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Lỗi khi gửi tin nhắn');
+        }
+        return response.json();
+      })
+        .then(data => {
+          // Xóa typing indicator
+          const typingIndicatorElement = document.getElementById('typingIndicator');
+          if (typingIndicatorElement) {
+            typingIndicatorElement.remove();
+          }
+          
+          // Hiển thị phản hồi từ AI
+          const aiResponse = data.message || data.response || 'Xin lỗi, tôi không thể trả lời câu hỏi này.';
+          const aiMessage = createChatMessage(aiResponse, 'assistant');
+          chatMessages.appendChild(aiMessage);
+          
+          // Cập nhật conversation history
+          conversationHistory.push({
+            role: 'user',
+            content: message
+          });
+          conversationHistory.push({
+            role: 'assistant',
+            content: aiResponse
+          });
+          
+          // Scroll to bottom
+          chatContainer.scrollTop = chatContainer.scrollHeight;
+        })
+        .catch(error => {
+          console.error('Error:', error);
+          
+          // Xóa typing indicator
+          const typingIndicatorElement = document.getElementById('typingIndicator');
+          if (typingIndicatorElement) {
+            typingIndicatorElement.remove();
+          }
+          
+          const errorMessage = createChatMessage('Xin lỗi, có lỗi xảy ra. Vui lòng thử lại sau.', 'error');
+          chatMessages.appendChild(errorMessage);
+          chatContainer.scrollTop = chatContainer.scrollHeight;
+        })
+        .finally(() => {
+          // Enable input và button
+          chatInput.disabled = false;
+          sendBtn.disabled = false;
+          sendIcon.style.display = 'inline';
+          sendLoading.style.display = 'none';
+          chatInput.focus();
+        });
+      }, 5000); // Delay 5 giây
     }
 
     // Đóng popup khi click ra ngoài
@@ -641,51 +934,513 @@
 
     /* Style cho modal gợi ý size */
     .size-advice-modal {
-      max-width: 500px;
+      max-width: 520px;
       width: 90%;
       max-height: 90vh;
+      text-align: left;
+      background: #ffffff;
+      border-radius: 16px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      overflow: visible;
+      min-width: 300px;
+    }
+
+    /* Mobile responsive cho form modal */
+    @media (max-width: 768px) {
+      .size-advice-modal {
+        max-width: 100%;
+        width: 100%;
+        max-height: 100vh;
+        height: 100vh;
+        border-radius: 0;
+        margin: 0;
+      }
+
+      #sizeAdviceModal {
+        padding: 0;
+      }
+    }
+
+    /* Chat Modal Styles - Hiển thị ở góc dưới bên phải như Facebook */
+    #sizeAdviceResultModal {
+      top: auto !important;
+      left: auto !important;
+      right: 20px !important;
+      bottom: 20px !important;
+      width: auto !important;
+      height: auto !important;
+      background: transparent !important;
+      justify-content: flex-end !important;
+      align-items: flex-end !important;
+    }
+
+    .chat-modal {
+      width: 380px;
+      max-width: calc(100vw - 40px);
+      max-height: calc(100vh - 40px);
+      height: 550px;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      background: #1a1a1a;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+    }
+
+    /* Mobile responsive - Fullscreen hoặc gần fullscreen */
+    @media (max-width: 768px) {
+      #sizeAdviceResultModal {
+        top: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        bottom: 0 !important;
+        width: 100% !important;
+        height: 100% !important;
+        background: rgba(0, 0, 0, 0.8) !important;
+        justify-content: center !important;
+        align-items: center !important;
+        padding: 0 !important;
+      }
+      
+      .chat-modal {
+        width: 100% !important;
+        max-width: 100% !important;
+        height: 100% !important;
+        max-height: 100% !important;
+        border-radius: 0 !important;
+        margin: 0 !important;
+        box-shadow: none !important;
+      }
+    }
+
+    /* Tablet responsive */
+    @media (min-width: 769px) and (max-width: 1024px) {
+      .chat-modal {
+        width: 450px;
+        height: 650px;
+      }
+    }
+
+    .chat-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 16px;
+      background: #2d2d2d;
+      border-bottom: 1px solid #3d3d3d;
+      flex-shrink: 0;
+    }
+
+    .chat-header h2 {
+      margin: 0;
+      font-size: 16px;
+      color: #fff;
+      font-weight: 600;
+    }
+
+    .chat-container {
+      flex: 1;
       overflow-y: auto;
+      padding: 12px 16px;
+      background: #1a1a1a;
+      min-height: 200px;
+      max-height: calc(90vh - 120px);
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .chat-messages {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .chat-message {
+      padding: 10px 14px;
+      border-radius: 10px;
+      line-height: 1.5;
+      font-size: 13px;
+      word-wrap: break-word;
+      max-width: 85%;
+    }
+    
+    /* Đảm bảo text trong assistant message căn trái */
+    .chat-message.assistant * {
       text-align: left;
     }
 
-    .size-advice-result-modal {
-      max-width: 600px;
-      width: 90%;
-      max-height: 90vh;
-      overflow-y: auto;
+    /* Mobile responsive - Text và spacing nhỏ hơn */
+    @media (max-width: 768px) {
+      .chat-header {
+        padding: 10px 12px;
+        min-height: 44px;
+      }
+
+      .chat-header h2 {
+        font-size: 15px;
+        font-weight: 600;
+      }
+
+      .chat-container {
+        padding: 10px 12px;
+        max-height: calc(100vh - 100px);
+        min-height: 0;
+      }
+
+      .chat-messages {
+        gap: 10px;
+      }
+
+      .chat-message {
+        padding: 8px 12px;
+        font-size: 12px;
+        line-height: 1.4;
+        max-width: 92%;
+        border-radius: 8px;
+      }
+
+      .chat-message.user {
+        max-width: 90%;
+        font-size: 12px;
+      }
+
+      .chat-message.assistant {
+        font-size: 12px;
+        text-align: left;
+      }
+
+      .chat-message.assistant strong {
+        font-size: 12px;
+        font-weight: 600;
+      }
+      
+      .chat-message.assistant p,
+      .chat-message.assistant div {
+        text-align: left;
+      }
+
+      /* Typing indicator trên mobile */
+      .typing-indicator {
+        padding: 10px 14px;
+        max-width: 85%;
+      }
+
+      .typing-dots span {
+        width: 7px;
+        height: 7px;
+      }
+
+      /* Đảm bảo close button dễ click trên mobile */
+      .chat-header .close-modal-btn {
+        width: 32px;
+        height: 32px;
+        font-size: 20px;
+        line-height: 32px;
+      }
+    }
+
+    /* Typing indicator (loading) giống Facebook */
+    .typing-indicator {
+      padding: 12px 16px;
+      background: #2d2d2d;
+      border-radius: 18px;
+      display: inline-block;
+      max-width: 80%;
+      margin-bottom: 12px;
+      align-self: flex-start;
+    }
+
+    .typing-dots {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 0;
+    }
+
+    .typing-dots span {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #b0b0b0;
+      display: inline-block;
+      animation: typing 1.4s infinite ease-in-out;
+    }
+
+    .typing-dots span:nth-child(1) {
+      animation-delay: 0s;
+    }
+
+    .typing-dots span:nth-child(2) {
+      animation-delay: 0.2s;
+    }
+
+    .typing-dots span:nth-child(3) {
+      animation-delay: 0.4s;
+    }
+
+    @keyframes typing {
+      0%, 60%, 100% {
+        transform: translateY(0);
+        opacity: 0.7;
+      }
+      30% {
+        transform: translateY(-10px);
+        opacity: 1;
+      }
+    }
+
+    .chat-message.user {
+      background: #3d3d3d;
+      color: #e0e0e0;
+      align-self: flex-end;
+      border-bottom-right-radius: 4px;
+    }
+
+    .chat-message.assistant {
+      background: transparent;
+      color: #ffffff;
+      align-self: flex-start;
+      border-bottom-left-radius: 4px;
       text-align: left;
+    }
+
+    .chat-message.assistant strong {
+      color: #fff;
+      font-weight: 600;
+    }
+    
+    .chat-message.assistant p,
+    .chat-message.assistant div {
+      text-align: left;
+      margin: 0;
+    }
+
+    .chat-message.error {
+      background: #dc3545;
+      color: #fff;
+      align-self: center;
+      max-width: 100%;
+    }
+
+    /* Chat Input Container */
+    .chat-input-container {
+      padding: 12px 16px;
+      background: #2d2d2d;
+      border-top: 1px solid #3d3d3d;
+      flex-shrink: 0;
+    }
+
+    .chat-input-wrapper {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .chat-input {
+      flex: 1;
+      padding: 10px 14px;
+      background: #1a1a1a;
+      border: 1px solid #3d3d3d;
+      border-radius: 20px;
+      color: #fff;
+      font-size: 14px;
+      outline: none;
+      transition: all 0.2s;
+    }
+
+    .chat-input::placeholder {
+      color: #6c757d;
+    }
+
+    .chat-input:focus {
+      border-color: #007bff;
+      box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.2);
+    }
+
+    .chat-send-btn {
+      width: 40px;
+      height: 40px;
+      background: #007bff;
+      border: none;
+      border-radius: 50%;
+      color: #fff;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+
+    .chat-send-btn:hover:not(:disabled) {
+      background: #0056b3;
+      transform: scale(1.05);
+    }
+
+    .chat-send-btn:active:not(:disabled) {
+      transform: scale(0.95);
+    }
+
+    .chat-send-btn:disabled {
+      background: #6c757d;
+      cursor: not-allowed;
+      opacity: 0.6;
+    }
+
+    /* Mobile responsive cho chat input */
+    @media (max-width: 768px) {
+      .chat-input-container {
+        padding: 10px 12px;
+      }
+
+      .chat-input-wrapper {
+        gap: 6px;
+      }
+
+      .chat-input {
+        padding: 8px 12px;
+        font-size: 13px;
+        border-radius: 18px;
+      }
+
+      .chat-send-btn {
+        width: 36px;
+        height: 36px;
+        font-size: 16px;
+      }
+    }
+
+    /* Scrollbar styling for chat container */
+    .chat-container::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    .chat-container::-webkit-scrollbar-track {
+      background: #2d2d2d;
+    }
+
+    .chat-container::-webkit-scrollbar-thumb {
+      background: #5d5d5d;
+      border-radius: 4px;
+    }
+
+    .chat-container::-webkit-scrollbar-thumb:hover {
+      background: #6d6d6d;
     }
 
     .modal-header-custom {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 20px;
-      padding-bottom: 15px;
-      border-bottom: 2px solid #eee;
+      padding: 20px 24px;
+      border-bottom: 1px solid #e9ecef;
+      background: #fff;
+      border-radius: 16px 16px 0 0;
+      flex-shrink: 0;
+      overflow: visible;
+      word-wrap: break-word;
     }
 
     .modal-header-custom h2 {
       margin: 0;
       font-size: 20px;
-      color: #333;
+      color: #212529;
+      font-weight: 600;
+      word-wrap: break-word;
+      overflow-wrap: break-word;
+      white-space: normal;
+      overflow: visible;
+      text-overflow: unset;
+      flex: 1;
+      min-width: 0;
     }
 
     .close-modal-btn {
-      background: none;
+      background: #f8f9fa;
       border: none;
-      font-size: 28px;
-      color: #999;
+      font-size: 20px;
+      color: #6c757d;
       cursor: pointer;
       padding: 0;
-      width: 30px;
-      height: 30px;
-      line-height: 30px;
+      width: 32px;
+      height: 32px;
+      line-height: 32px;
       text-align: center;
+      transition: all 0.2s;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
 
     .close-modal-btn:hover {
-      color: #333;
+      background: #e9ecef;
+      color: #212529;
+      transform: rotate(90deg);
+    }
+
+    .close-modal-btn:active {
+      transform: rotate(90deg) scale(0.95);
+    }
+
+    /* Mobile responsive cho header */
+    @media (max-width: 768px) {
+      .modal-header-custom {
+        padding: 16px 20px;
+      }
+
+      .modal-header-custom h2 {
+        font-size: 18px;
+      }
+
+      .close-modal-btn {
+        width: 36px;
+        height: 36px;
+        font-size: 22px;
+      }
+    }
+
+    /* Chat modal close button */
+    .chat-header .close-modal-btn {
+      color: #b0b0b0;
+    }
+
+    .chat-header .close-modal-btn:hover {
+      color: #fff;
+    }
+
+    /* Form container */
+    #sizeAdviceForm {
+      padding: 24px;
+      flex: 1;
+      overflow-y: auto;
+      overflow-x: visible;
+      -webkit-overflow-scrolling: touch;
+      min-height: 0;
+      word-wrap: break-word;
+      overflow-wrap: break-word;
+    }
+
+    /* Scrollbar styling for form */
+    #sizeAdviceForm::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    #sizeAdviceForm::-webkit-scrollbar-track {
+      background: #f8f9fa;
+    }
+
+    #sizeAdviceForm::-webkit-scrollbar-thumb {
+      background: #dee2e6;
+      border-radius: 3px;
+    }
+
+    #sizeAdviceForm::-webkit-scrollbar-thumb:hover {
+      background: #adb5bd;
     }
 
     .form-group {
@@ -694,46 +1449,204 @@
 
     .form-group label {
       display: block;
-      margin-bottom: 5px;
+      margin-bottom: 8px;
       font-weight: 500;
-      color: #333;
+      color: #212529;
+      font-size: 14px;
+      word-wrap: break-word;
+      overflow-wrap: break-word;
+      white-space: normal;
+      overflow: visible;
+      text-overflow: unset;
     }
 
     .form-group .required {
       color: #dc3545;
+      margin-left: 2px;
     }
 
     .form-control {
       width: 100%;
-      padding: 10px;
-      border: 1px solid #ddd;
-      border-radius: 4px;
-      font-size: 14px;
+      padding: 12px 14px;
+      border: 1.5px solid #dee2e6;
+      border-radius: 8px;
+      font-size: 15px;
       box-sizing: border-box;
+      transition: all 0.2s;
+      background: #fff;
+      color: #212529;
+      overflow: visible;
+    }
+    
+    /* Đảm bảo select có đủ không gian */
+    select.form-control {
+      min-width: 200px;
+      width: 100%;
+      max-width: 100%;
+    }
+
+    .form-control:hover {
+      border-color: #adb5bd;
     }
 
     .form-control:focus {
       outline: none;
       border-color: #007bff;
-      box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+      box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+      background: #fff;
+    }
+
+    .form-control::placeholder {
+      color: #adb5bd;
+      font-size: 14px;
+    }
+
+    /* Select styling */
+    select.form-control {
+      cursor: pointer;
+      appearance: none;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23333' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 14px center;
+      padding-right: 50px;
+      overflow: visible;
+      text-overflow: unset;
+      white-space: nowrap;
+      word-wrap: normal;
+      min-width: 200px;
+      width: 100%;
+      max-width: 100%;
+      box-sizing: border-box;
+    }
+
+    /* Đảm bảo option không bị cắt - hiển thị đầy đủ */
+    select.form-control option {
+      padding: 8px 12px;
+      white-space: normal;
+      word-wrap: break-word;
+      overflow: visible;
+      display: block;
+      width: 100%;
+    }
+
+    /* Khi select được chọn, đảm bảo text hiển thị đầy đủ */
+    select.form-control:focus {
+      padding-right: 50px;
+      overflow: visible;
+    }
+    
+    /* Đảm bảo select không bị cắt text khi hiển thị */
+    select.form-control,
+    select.form-control:focus,
+    select.form-control:hover {
+      text-overflow: unset;
+      overflow: visible;
+    }
+
+    /* Textarea styling */
+    textarea.form-control {
+      resize: vertical;
+      min-height: 80px;
+      font-family: inherit;
+    }
+
+    /* Mobile responsive cho form */
+    @media (max-width: 768px) {
+      .size-advice-modal {
+        min-width: 100%;
+        overflow: visible;
+      }
+      
+      #sizeAdviceForm {
+        padding: 20px 16px;
+        overflow-x: visible;
+        word-wrap: break-word;
+      }
+
+      .form-group {
+        margin-bottom: 18px;
+        overflow: visible;
+      }
+
+      .form-group label {
+        font-size: 13px;
+        margin-bottom: 6px;
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+        white-space: normal;
+        overflow: visible;
+      }
+      
+      .modal-header-custom h2 {
+        font-size: 18px;
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+      }
+
+      .form-control {
+        padding: 10px 12px;
+        font-size: 14px;
+        border-radius: 6px;
+      }
+
+      select.form-control {
+        padding-right: 45px;
+        background-position: right 12px center;
+        font-size: 14px;
+        text-overflow: unset;
+        overflow: visible;
+      }
+
+      select.form-control option {
+        padding: 6px 10px;
+        font-size: 14px;
+        white-space: normal;
+        word-wrap: break-word;
+        overflow: visible;
+      }
+      
+      select.form-control:focus {
+        padding-right: 45px;
+        overflow: visible;
+      }
+
+      textarea.form-control {
+        min-height: 70px;
+        font-size: 14px;
+      }
     }
 
     .form-actions {
       display: flex;
       justify-content: flex-end;
-      gap: 10px;
-      margin-top: 25px;
+      gap: 12px;
+      margin-top: 24px;
       padding-top: 20px;
-      border-top: 1px solid #eee;
+      border-top: 1px solid #e9ecef;
+      flex-shrink: 0;
+      overflow: visible;
+      word-wrap: break-word;
     }
 
     .btn {
-      padding: 10px 20px;
+      padding: 12px 24px;
       border: none;
-      border-radius: 4px;
+      border-radius: 8px;
       cursor: pointer;
-      font-size: 14px;
-      transition: all 0.3s;
+      font-size: 15px;
+      font-weight: 500;
+      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 120px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      white-space: nowrap;
+      overflow: visible;
+      text-overflow: unset;
+      word-wrap: normal;
     }
 
     .btn-primary {
@@ -743,11 +1656,20 @@
 
     .btn-primary:hover:not(:disabled) {
       background-color: #0056b3;
+      box-shadow: 0 4px 8px rgba(0, 123, 255, 0.3);
+      transform: translateY(-1px);
+    }
+
+    .btn-primary:active:not(:disabled) {
+      transform: translateY(0);
+      box-shadow: 0 2px 4px rgba(0, 123, 255, 0.2);
     }
 
     .btn-primary:disabled {
       background-color: #6c757d;
       cursor: not-allowed;
+      opacity: 0.6;
+      box-shadow: none;
     }
 
     .btn-secondary {
@@ -757,120 +1679,41 @@
 
     .btn-secondary:hover {
       background-color: #545b62;
+      box-shadow: 0 4px 8px rgba(108, 117, 125, 0.3);
+      transform: translateY(-1px);
     }
 
-    /* Style cho kết quả */
-    .size-advice-result {
-      padding: 10px 0;
+    .btn-secondary:active {
+      transform: translateY(0);
+      box-shadow: 0 2px 4px rgba(108, 117, 125, 0.2);
     }
 
-    .recommended-size {
-      text-align: center;
-      margin-bottom: 25px;
-      padding: 20px;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      border-radius: 8px;
-      color: white;
+    /* Mobile responsive cho buttons */
+    @media (max-width: 768px) {
+      .form-actions {
+        margin-top: 20px;
+        padding-top: 16px;
+        gap: 10px;
+        flex-direction: column-reverse;
+      }
+
+      .btn {
+        width: 100%;
+        padding: 14px 20px;
+        font-size: 15px;
+        min-width: auto;
+        border-radius: 8px;
+      }
+
+      .btn-primary {
+        order: 1;
+      }
+
+      .btn-secondary {
+        order: 2;
+      }
     }
 
-    .result-title {
-      font-size: 18px;
-      margin-bottom: 15px;
-      font-weight: 600;
-    }
-
-    .result-subtitle {
-      font-size: 16px;
-      margin: 20px 0 10px 0;
-      color: #333;
-      font-weight: 600;
-    }
-
-    .size-badge {
-      display: inline-block;
-      padding: 15px 40px;
-      font-size: 32px;
-      font-weight: bold;
-      border-radius: 8px;
-      margin: 10px 0;
-    }
-
-    .size-badge.recommended {
-      background-color: rgba(255, 255, 255, 0.2);
-      color: white;
-      border: 2px solid white;
-    }
-
-    .size-badge.backup {
-      background-color: #f8f9fa;
-      color: #333;
-      border: 2px solid #dee2e6;
-      font-size: 24px;
-      padding: 10px 30px;
-    }
-
-    .reason-section {
-      margin: 20px 0;
-    }
-
-    .reason-list {
-      list-style: none;
-      padding: 0;
-      margin: 0;
-    }
-
-    .reason-list li {
-      padding: 8px 0;
-      padding-left: 25px;
-      position: relative;
-      color: #555;
-    }
-
-    .reason-list li:before {
-      content: "✓";
-      position: absolute;
-      left: 0;
-      color: #28a745;
-      font-weight: bold;
-    }
-
-    .fit-comment {
-      margin: 20px 0;
-      padding: 15px;
-      background-color: #f8f9fa;
-      border-left: 4px solid #007bff;
-      border-radius: 4px;
-    }
-
-    .comment-text {
-      margin: 0;
-      color: #555;
-      font-style: italic;
-    }
-
-    .closing-question {
-      margin: 20px 0;
-      padding: 15px;
-      background-color: #fff3cd;
-      border-left: 4px solid #ffc107;
-      border-radius: 4px;
-    }
-
-    .question-text {
-      margin: 0;
-      color: #856404;
-    }
-
-    .error-message {
-      color: #dc3545;
-      text-align: center;
-      padding: 20px;
-    }
-
-    .backup-size {
-      text-align: center;
-      margin: 20px 0;
-    }
   </style>
 </body>
 </html>

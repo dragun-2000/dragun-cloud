@@ -20,6 +20,9 @@ import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 import static vn.co.cake.common.RequestPathConst.SA001_REGISTER;
+import static vn.co.cake.common.RequestPathConst.SA001_REGISTER_RESEND_OTP;
+import static vn.co.cake.common.RequestPathConst.SA001_REGISTER_SEND_OTP;
+import static vn.co.cake.common.RequestPathConst.SA001_REGISTER_VERIFY_OTP;
 import static vn.co.cake.common.RequestPathConst.SA002_FORGET_PASSWORD;
 import static vn.co.cake.common.RequestPathConst.SA002_RESET_PASSWORD;
 import static vn.co.cake.common.RequestPathConst.SA002_SEND_MAIL;
@@ -62,7 +65,8 @@ public class UserSecurityConfiguration extends WebSecurityConfigurerAdapter {
             .authorizeRequests()
             .antMatchers("/favicon-16x16.png", RequestPathConst.SA001, RequestPathConst.SA001_LOGIN,
              SA002_FORGET_PASSWORD, SA002_SEND_MAIL, SA002_VERIFY_USER, SA002_RESET_PASSWORD).permitAll()
-            .antMatchers(RequestPathConst.SA001.concat("/**"), RequestPathConst.PAGE_ERROR, SA001_REGISTER).permitAll()
+            .antMatchers(RequestPathConst.SA001.concat("/**"), RequestPathConst.PAGE_ERROR, SA001_REGISTER,
+             SA001_REGISTER_SEND_OTP, SA001_REGISTER_VERIFY_OTP, SA001_REGISTER_RESEND_OTP).permitAll()
             .antMatchers("/SA/**").hasRole("USER")
             .antMatchers("/HO/**").hasRole("MANAGE")
             .antMatchers("/csv/**").hasAnyRole("ADMIN", "MANAGE", "USER", "STAFF")
@@ -102,7 +106,8 @@ public class UserSecurityConfiguration extends WebSecurityConfigurerAdapter {
 
         http.csrf()
                 .ignoringAntMatchers(RequestPathConst.SA, RequestPathConst.SA001, RequestPathConst.SA001_LOGIN,
-                 SA002_FORGET_PASSWORD, SA001_REGISTER, SA002_SEND_MAIL, SA002_VERIFY_USER, SA002_RESET_PASSWORD)
+                 SA002_FORGET_PASSWORD, SA001_REGISTER, SA001_REGISTER_SEND_OTP, SA001_REGISTER_VERIFY_OTP, SA001_REGISTER_RESEND_OTP,
+                 SA002_SEND_MAIL, SA002_VERIFY_USER, SA002_RESET_PASSWORD)
         ;
 
         http.headers()

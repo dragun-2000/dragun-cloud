@@ -1,9 +1,9 @@
 package vn.co.cake.utils;
 
-import vn.co.cake.common.DateConst;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateUtils;
+import vn.co.cake.common.DateConst;
 
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
@@ -16,15 +16,9 @@ import java.time.LocalDateTime;
 import java.time.Period;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.GregorianCalendar;
-import java.util.Locale;
-import java.util.Objects;
-import java.util.TimeZone;
+import java.util.*;
 
 import static vn.co.cake.common.DateConst.YYYY_MM_DD_HH_MM_SS;
-import static vn.co.cake.common.DateConst.YYYY_MM_DD_T_HH_MM_SS;
 
 /**
  * DateUtil

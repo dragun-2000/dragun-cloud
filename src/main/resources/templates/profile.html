@@ -52,6 +52,32 @@
                 </div>
                 <div class="formGroup-item">
                   <label class="formGroup-label">
+                    <span class="label-text">Chiều cao / Cân nặng</span>
+                    <span class="label-character">(Không bắt buộc)</span>
+                  </label>
+                  <div class="formGroup-control">
+                    <div class="row">
+                      <div class="col-6">
+                        <div class="input-group">
+                          <input id="height" type="number" name="height" class="form-control" min="120" max="250" step="1" placeholder="120 ~ 250" th:value="${account.height}">
+                          <div class="input-group-append">
+                            <span class="input-group-text">cm</span>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="col-6">
+                        <div class="input-group">
+                          <input id="weight" type="number" name="weight" class="form-control" min="30" max="150" step="1" placeholder="30 ~ 150" th:value="${account.weight}">
+                          <div class="input-group-append">
+                            <span class="input-group-text">kg</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="formGroup-item">
+                  <label class="formGroup-label">
                     <span class="label-text">Address<span class="req">*</span></span>
                   </label>
                   <div class="formGroup-control">
