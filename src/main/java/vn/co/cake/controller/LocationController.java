@@ -37,7 +37,7 @@ public class LocationController {
     @GetMapping("/provinces")
     @ResponseBody
     public List<Province> getDistrictsByProvince() {
-        return provinceRepository.findAll();
+        return provinceRepository.findAllByDeletedFalse();
     }
 
     @GetMapping("/districts/{provinceCode}")

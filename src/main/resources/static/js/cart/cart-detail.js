@@ -232,6 +232,20 @@ function addToCart() {
     });
 }
 
+function handleOrderClick() {
+    // Check if there are active provinces
+    const hasActiveProvinces = document.getElementById('hasActiveProvinces')?.value === 'true';
+    
+    if (!hasActiveProvinces) {
+        // Show popup notification
+        showPopup('orderDisabled');
+        return;
+    }
+    
+    // Proceed with normal order flow
+    order();
+}
+
 function order() {
     let items = sessionStorage.getItem('orderItems');
     fetch('/update-to-cart', {
@@ -260,6 +274,8 @@ function reUpdateTotalCartDetail(orderItems) {
 function showPopup(type) {
     if (type === 'success') {
         document.getElementById("removeToCardSuccess").style.display = "flex";
+    } else if (type === 'orderDisabled') {
+        document.getElementById("orderDisabledPopup").style.display = "flex";
     } else {
         document.getElementById("removeToCardFail").style.display = "flex";
     }

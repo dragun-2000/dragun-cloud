@@ -21,7 +21,7 @@ public class EmailService {
 
     public EmailService() {
         // Lấy API Key từ biến môi trường hoặc hardcode (tạm thời)
-        String apiKey = "";
+        String apiKey = "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";
         // if (apiKey == null || apiKey.isEmpty()) {
         //     // Fallback: có thể thêm vào application.properties sau
         //     // apiKey = apiKey; // Thay thế bằng API key thực tế

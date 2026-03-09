@@ -2,7 +2,7 @@
 <html lang="ja" xmlns:th="http://www.w3.org/1999/xhtml" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
  xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
-    <link rel="icon" href="../../static/images/data/favicon.png" type="image/x-icon" />
+    <link rel="icon" th:href="@{/images/data/favicon.png}" type="image/x-icon" />
     <title sec:authorize="isAuthenticated() && hasAnyRole('ROLE_ADMIN', 'ROLE_STAFF')">Màn Hình Quản Lý</title>
     <title sec:authorize="isAuthenticated() && hasAnyRole('ROLE_USER')">De Basé</title>
     <meta charset="utf-8">

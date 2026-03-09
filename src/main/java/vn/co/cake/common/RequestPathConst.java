@@ -63,6 +63,11 @@ public class RequestPathConst {
     public static final String AM008 = "/AM/AM008";
     public static final String AM008_UPDATE_DISCOUNT = "/AM/AM008/update-discount";
 
+    // AM009
+    public static final String AM009 = "/AM/AM009";
+    public static final String AM009_UPDATE_STATUS = "/AM/AM009/update-status";
+    public static final String AM009_UPDATE_ALL_STATUS = "/AM/AM009/update-all-status";
+
     // SA001
     public static final String SA001_01_REGISTER_VIEW = "/SA/SA001/register-view";
     public static final String SA001_LOGIN = "/SA/SA001/login";

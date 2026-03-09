@@ -221,7 +221,8 @@ CREATE TABLE IF NOT EXISTS province
     name           varchar(255),
     name_with_type varchar(255),
     slug           varchar(255),
-    type           varchar(255)
+    type           varchar(255),
+    deleted        boolean default false
 );
 
 alter table province

@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.w3.org/1999/xhtml" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security" layout:decorate="~{template/baseManage.html}">
+<div class="container-fluid" layout:fragment="main-content">
+    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+
+    <div class="row">
+        <div th:replace = "~{template/sidebar :: sidebar}"></div>
+
+        <main class="main-content col-lg-10 col-md-9 col-sm-12 p-0 offset-lg-2 offset-md-3">
+            <div th:replace = "~{template/navbar :: navbar}"></div>
+
+            <div class="main-content-container container-fluid">
+                <div class="page-header text-center no-gutters py-4">
+                    <h3 class="page-title font-weight-bold">Quản Lý Tỉnh/Thành Phố</h3>
+                    <p class="text-muted">Bật/Tắt để cho phép hoặc không cho phép đặt hàng đến tỉnh/thành phố</p>
+                </div>
+
+                <div class="d-flex justify-content-end mb-3">
+                    <button type="button" id="toggleAllBtn" class="btn btn-primary mr-2">
+                        <i class="fas fa-toggle-on"></i> Bật Tất Cả
+                    </button>
+                    <button type="button" id="offAllBtn" class="btn btn-danger">
+                        <i class="fas fa-toggle-off"></i> Tắt Tất Cả
+                    </button>
+                </div>
+
+                <div class="box-table">
+                    <div class="card card-small mb-4">
+                        <div class="card-body p-0 text-center">
+                            <div class="table-responsive card-border">
+                                <table class="table mb-0 table-bordered table-hover">
+                                    <thead class="bg-light">
+                                    <tr>
+                                        <th scope="col" class="border-1 font-weight-bold">Mã</th>
+                                        <th scope="col" class="border-1 font-weight-bold">Tên Tỉnh/Thành Phố</th>
+                                        <th scope="col" class="border-1 font-weight-bold">Trạng Thái</th>
+                                        <!-- <th scope="col" class="border-1 font-weight-bold">Bật/Tắt</th> -->
+                                        <th scope="col" class="border-1 font-weight-bold">Bật/Tắt</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    <tr th:each="province : ${provinces}">
+                                        <td th:text="${province.code}"></td>
+                                        <td th:text="${province.nameWithType}"></td>
+                                        <td>
+                                            <span th:if="${province.deleted != true}" 
+                                                  class="badge badge-success">Hoạt động</span>
+                                            <span th:if="${province.deleted == true}" 
+                                                  class="badge badge-danger">Đã tắt</span>
+                                        </td>
+                                        <!-- <td>
+                                            <label class="switch">
+                                                <input type="checkbox" 
+                                                       class="province-toggle" 
+                                                       th:data-province-id="${province.id}"
+                                                       th:checked="${province.deleted != true}">
+                                                <span class="switch-toggle"></span>
+                                            </label>
+                                        </td> -->
+                                        <td>
+                                            <button type="button" 
+                                                    class="btn btn-sm province-action-btn"
+                                                    th:classappend="${province.deleted == true} ? 'btn-success' : 'btn-danger'"
+                                                    th:data-province-id="${province.id}"
+                                                    th:data-province-deleted="${province.deleted == true}">
+                                                <span th:if="${province.deleted == true}">
+                                                    <i class="fas fa-toggle-on"></i> Bật
+                                                </span>
+                                                <span th:if="${province.deleted != true}">
+                                                    <i class="fas fa-toggle-off"></i> Tắt
+                                                </span>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    <tr th:if="${#lists.isEmpty(provinces)}">
+                                        <td colspan="5" class="text-center">
+                                            <span>Không có dữ liệu</span>
+                                        </td>
+                                    </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script th:src="@{/js/common.js}"></script>
+    <script th:src="@{/js/AM009/AM009.js}"></script>
+</div>
+</html>
