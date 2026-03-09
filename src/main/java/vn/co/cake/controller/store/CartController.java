@@ -126,6 +126,11 @@ public class CartController extends BaseController {
         model.addAttribute("totalPrice", this.getTotalPrice(orderItems, 0));
         model.addAttribute("totalPriceDisplay", BigDecimalUtil.formatMoney(this.getTotalPrice(orderItems, 0)));
 
+        // Check if there are any active provinces
+        List<Province> activeProvinces = provinceRepository.findAllByDeletedFalse();
+        boolean hasActiveProvinces = !CollectionUtils.isEmpty(activeProvinces);
+        model.addAttribute("hasActiveProvinces", hasActiveProvinces);
+
         FunctionUtil.updateCartQuantity(model, cartForm);
         ObjectMapper objectMapper = new ObjectMapper();
         String orderItemsJson = objectMapper.writeValueAsString(orderItems);
@@ -183,7 +188,7 @@ public class CartController extends BaseController {
         
         model.addAttribute("orderDetail", this.init(account));
         
-        List<Province> provinces = provinceRepository.findAll();
+        List<Province> provinces = provinceRepository.findAllByDeletedFalse();
         model.addAttribute("provinces", provinces);
 
         List<OrderItem> orderItems = new ArrayList<>();

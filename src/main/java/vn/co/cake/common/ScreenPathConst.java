@@ -38,6 +38,8 @@ public class ScreenPathConst {
     
     public static final String AM008_SCREEN = "AM008/AM008";
     
+    public static final String AM009_SCREEN = "AM009/AM009";
+    
     public static final String INDEX_SCREEN = "index";
     public static final String PRIVATE_POLICY_SCREEN = "privacy-policy";
 }

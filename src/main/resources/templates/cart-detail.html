@@ -7,6 +7,7 @@
 
   <div class="main main--pageCart">
     <div hidden ><input id="orderItems-default" th:value="${orderItems}"></div>
+    <input type="hidden" id="hasActiveProvinces" th:value="${hasActiveProvinces}">
     <div class="wrap wrap--mw900">
       <div id="cart-info">
       </div>
@@ -30,7 +31,7 @@
               <span class="">ORDER</span>Nhập Thông Tin Thanh Toán
             </div>
             <div class="npay-btn">
-              <a class="btn btn-success" onclick="order()" >ORDER DETAIL</a>
+              <a class="btn btn-success" id="orderDetailBtn" onclick="handleOrderClick()" >ORDER DETAIL</a>
             </div>
           </div>
           <div class="slider slider-news">
@@ -45,6 +46,16 @@
     <div class="popup-content">
       <h2>Đã có lỗi sảy ra vui lòng th lại!</h2>
       <button class="close-btn fail" onclick="closePopup('removeToCardFail')">Đóng</button>
+    </div>
+  </div>
+
+  <div class="popup" id="orderDisabledPopup">
+    <div class="popup-content">
+      <h2>XIN THÔNG BÁO</h2>
+      <p>Hiện tại Cửa hàng đang tạm dừng ORDER</p>
+      <p>Vui lòng quay lại ORDER vào ngày 24/02/2026</p>
+      <p>Xin lỗi vì sự bất tiện này!</p>
+      <button class="close-btn" onclick="closePopup('orderDisabledPopup')">Đóng</button>
     </div>
   </div>
 

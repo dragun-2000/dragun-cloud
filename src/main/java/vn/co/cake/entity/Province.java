@@ -21,4 +21,6 @@ public class Province implements Serializable {
     private String slug;
     @Column(name = "name_with_type")
     private String nameWithType;
+    
+    private Boolean deleted = false;
 }
