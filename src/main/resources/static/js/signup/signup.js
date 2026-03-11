@@ -76,6 +76,7 @@ $(function () {
 
     // --- API: Send OTP ---
     function sendOtp(accountData) {
+        console.log('sendOtp called with data:', accountData);
         $.ajax({
             type: 'POST',
             contentType: 'application/json',
@@ -83,8 +84,11 @@ $(function () {
             data: JSON.stringify(accountData),
             headers: getCsrfHeader(),
             success: function (response) {
+                console.log('OTP API success response:', response);
                 const res = parseJsonResponse(response);
+                console.log('Parsed response:', res);
                 if (!res || res.status !== 'success') {
+                    console.error('OTP API returned error:', res);
                     showErrorModal(res && res.message ? res.message : 'Không thể gửi OTP');
                     return;
                 }
@@ -95,12 +99,14 @@ $(function () {
                 $('#resend-otp-link').addClass('disabled').css('cursor', 'not-allowed');
                 $('#otp-timer').removeClass('text-danger');
                 startOtpTimer();
+                console.log('Showing OTP modal');
                 $('#register-otp-modal').modal('show');
                 setTimeout(function () {
                     $('.otp-box[data-otp-index="0"]').focus();
                 }, 500);
             },
             error: function (xhr) {
+                console.error('OTP API error:', xhr);
                 showErrorModal(getApiErrorMessage(xhr, 'Không thể gửi OTP. Vui lòng thử lại.'));
             }
         });
@@ -228,18 +234,32 @@ $(function () {
     });
 
     // --- Event: register form submit ---
-    $('#register_account_form').on('submit', function (event) {
-        event.preventDefault();
-        event.stopPropagation();
+    // Attach directly to form element to ensure it runs before validation.js
+    const $registerForm = $('#register_account_form');
+    if ($registerForm.length > 0) {
+        // Remove any existing handlers and attach with highest priority
+        $registerForm.off('submit').on('submit', function (event) {
+            console.log('Register form submit triggered');
+            event.preventDefault();
+            event.stopPropagation();
+            event.stopImmediatePropagation(); // Prevent other handlers from running
 
-        if (!validateRegisterForm()) {
+            if (!validateRegisterForm()) {
+                console.log('Form validation failed');
+                this.classList.add('was-validated');
+                return false;
+            }
+
+            console.log('Form validation passed, calling sendOtp');
+            const formData = getRegisterFormData();
+            console.log('Form data:', formData);
+            sendOtp(formData);
             this.classList.add('was-validated');
-            return;
-        }
-
-        sendOtp(getRegisterFormData());
-        this.classList.add('was-validated');
-    });
+            return false;
+        });
+    } else {
+        console.error('Register form not found!');
+    }
 
     // --- OTP Box helpers ---
     function collectOtpValue() {
@@ -406,27 +426,56 @@ $(function () {
     });
 
     // --- Province / District / Ward ---
-    $('#provinceSelect').on('change', function () {
-        const code = $(this).val();
+    function loadDistricts(provinceCode, selectedDistrictCode) {
         $('#districtSelect').empty().append('<option value="">-- Select District --</option>');
-        if (code) {
-            $.get('/districts/' + code, function (districts) {
+        if (provinceCode) {
+            $.get('/districts/' + provinceCode, function (districts) {
                 $.each(districts, function (i, d) {
-                    $('#districtSelect').append('<option value="' + d.code + '">' + d.name + '</option>');
+                    const selected = selectedDistrictCode && d.code === selectedDistrictCode ? ' selected' : '';
+                    $('#districtSelect').append('<option value="' + d.code + '"' + selected + '>' + d.name + '</option>');
+                });
+                // If district is selected, load wards
+                if (selectedDistrictCode) {
+                    loadWards(selectedDistrictCode, $('#wardSelect').data('selected-ward'));
+                }
+            });
+        }
+    }
+
+    function loadWards(districtCode, selectedWardCode) {
+        $('#wardSelect').empty().append('<option value="">-- Select Ward --</option>');
+        if (districtCode) {
+            $.get('/wards/' + districtCode, function (wards) {
+                $.each(wards, function (i, w) {
+                    const selected = selectedWardCode && w.code === selectedWardCode ? ' selected' : '';
+                    $('#wardSelect').append('<option value="' + w.code + '"' + selected + '>' + w.name + '</option>');
                 });
             });
         }
+    }
+
+    $('#provinceSelect').on('change', function () {
+        const code = $(this).val();
+        loadDistricts(code, null);
+        $('#wardSelect').empty().append('<option value="">-- Select Ward --</option>');
     });
 
     $('#districtSelect').on('change', function () {
         const code = $(this).val();
-        $('#wardSelect').empty().append('<option value="">-- Select Ward --</option>');
-        if (code) {
-            $.get('/wards/' + code, function (wards) {
-                $.each(wards, function (i, w) {
-                    $('#wardSelect').append('<option value="' + w.code + '">' + w.name + '</option>');
-                });
-            });
+        loadWards(code, null);
+    });
+
+    // Load districts and wards on page load if values exist (for profile page)
+    $(document).ready(function() {
+        const provinceCode = $('#provinceSelect').val();
+        if (provinceCode) {
+            const districtCode = $('#districtSelect').attr('data-selected-district');
+            const wardCode = $('#wardSelect').attr('data-selected-ward');
+            if (districtCode) {
+                loadDistricts(provinceCode, districtCode);
+            } else {
+                loadDistricts(provinceCode, null);
+            }
         }
     });
 });

@@ -58,7 +58,7 @@
                   <div class="formGroup-control">
                     <div class="row">
                       <div class="col-6">
-                        <div class="input-group">
+                        <div class="input-group-append">
                           <input id="height" type="number" name="height" class="form-control" min="120" max="250" step="1" placeholder="120 ~ 250" th:value="${account.height}">
                           <div class="input-group-append">
                             <span class="input-group-text">cm</span>
@@ -66,7 +66,7 @@
                         </div>
                       </div>
                       <div class="col-6">
-                        <div class="input-group">
+                        <div class="input-group-append">
                           <input id="weight" type="number" name="weight" class="form-control" min="30" max="150" step="1" placeholder="30 ~ 150" th:value="${account.weight}">
                           <div class="input-group-append">
                             <span class="input-group-text">kg</span>
@@ -84,25 +84,25 @@
                     <div class="bank">
                       <p class="bank-text">Province</p>
                       <select class="form-control" id="provinceSelect" name="province" required>
-                        <option value="" selected="selected">- District -</option>
-                        <option th:each="province : ${provinces}" th:value="${province.code}" th:text="${province.name}"></option>
+                        <option value="">- District -</option>
+                        <option th:each="province : ${provinces}" th:value="${province.code}" th:text="${province.name}" th:selected="${account.province != null and account.province == province.code}"></option>
                       </select>
                     </div>
                     <div class="bank">
                       <p class="bank-text">District</p>
-                      <select class="form-control" id="districtSelect" name="district" required>
-                        <option value="" selected="selected">- Select District -</option>
+                      <select class="form-control" id="districtSelect" name="district" required th:attr="data-selected-district=${account.district}">
+                        <option value="">- Select District -</option>
                       </select>
                     </div>
                     <div class="bank">
                       <p class="bank-text">Ward</p>
-                      <select class="form-control" id="wardSelect" name="ward" required>
-                        <option value="" selected="selected">- Select Ward -</option>
+                      <select class="form-control" id="wardSelect" name="ward" required th:attr="data-selected-ward=${account.ward}">
+                        <option value="">- Select Ward -</option>
                       </select>
                     </div>
                     <div class="bank">
                       <p class="bank-text">Floor</p>
-                      <input class="form-control" type="text" placeholder="Floor / house number ..." name="address" id="address">
+                      <input class="form-control" type="text" placeholder="Floor / house number ..." name="address" id="address" th:value="${account.floor}">
                     </div>
                   </div>
                 </div>

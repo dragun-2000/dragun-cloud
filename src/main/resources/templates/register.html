@@ -20,7 +20,7 @@
               </ul>
             </div>
             
-          <form id="register_account_form" name="f" th:object="${account}" class="needs-validation ml-3" novalidate>
+          <form id="register_account_form" name="f" th:object="${account}" class="ml-3" novalidate action="javascript:void(0)">
             <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
             <div class="formGroup">
               <h3 class="register-title">BASIC INFO</h3>
@@ -126,20 +126,20 @@
                   <div class="formGroup-control">
                     <div class="bank">
                       <p class="bank-text">Province</p>
-                      <select class="form-control" id="provinceSelect" name="province" >
+                      <select class="form-control" id="provinceSelect" name="province" required>
                         <option value="" selected="selected">- District -</option>
                         <option th:each="province : ${provinces}" th:value="${province.code}" th:text="${province.name}"></option>
                       </select>
                     </div>
                     <div class="bank">
                       <p class="bank-text">District</p>
-                      <select class="form-control" id="districtSelect" name="district" >
+                      <select class="form-control" id="districtSelect" name="district" required>
                         <option value="" selected="selected">- Select District -</option>
                       </select>
                     </div>
                     <div class="bank">
                       <p class="bank-text">Ward</p>
-                      <select class="form-control" id="wardSelect" name="ward" >
+                      <select class="form-control" id="wardSelect" name="ward" required>
                         <option value="" selected="selected">- Select Ward -</option>
                       </select>
                     </div>
