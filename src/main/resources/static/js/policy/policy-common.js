@@ -17,5 +17,10 @@ function showTab(tabName) {
 }
 
 window.onload = () => {
-    showTab('privacy-policy'); 
+    var hash = window.location.hash.slice(1); // e.g. "payment-policy"
+    if (hash && document.getElementById(hash)) {
+        showTab(hash);
+    } else {
+        showTab('privacy-policy');
+    }
 };

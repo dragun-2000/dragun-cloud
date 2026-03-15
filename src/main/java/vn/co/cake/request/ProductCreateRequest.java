@@ -14,6 +14,7 @@ public class ProductCreateRequest implements Serializable {
     private String subCode;
     private String description;
     private String descriptionSize;
+    private String productInformation;
     private String imageUrl;
     private String image1Url;
     private String image2Url;

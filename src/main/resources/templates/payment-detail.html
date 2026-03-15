@@ -161,7 +161,13 @@ H sau khi Online Sale xác nhận thanh toán.</div>
               </div>
             </div>
             <div class="delivery-order">
-              <button id="order-btn" type="submit" class="btn btn-dark">Đặt Hàng</button>
+              <div class="terms-checkbox-wrap">
+                <label class="terms-checkbox-label">
+                  <input type="checkbox" id="terms-accept" name="termsAccept" class="terms-checkbox-input" required>
+                  <span class="terms-checkbox-text">Tôi đã đọc và đồng ý với các chính sách và điều kiện quy định tại website</span>
+                </label>
+              </div>
+              <button id="order-btn" type="submit" class="btn btn-dark" disabled>Đặt Hàng</button>
             </div>
           </div>
         </div>
@@ -200,6 +206,19 @@ H sau khi Online Sale xác nhận thanh toán.</div>
 </div><!--/wrapper -->
 
   <script th:src="@{/js/payment-detail/payment-detail.js}"></script>
+  <script>
+    (function() {
+      var checkbox = document.getElementById('terms-accept');
+      var orderBtn = document.getElementById('order-btn');
+      if (checkbox && orderBtn) {
+        function updateButtonState() {
+          orderBtn.disabled = !checkbox.checked;
+        }
+        checkbox.addEventListener('change', updateButtonState);
+        updateButtonState();
+      }
+    })();
+  </script>
   
   <style>
         body {
@@ -207,6 +226,43 @@ H sau khi Online Sale xác nhận thanh toán.</div>
             margin: 0;
             padding: 0;
             background-color: #f4f4f4;
+        }
+        .terms-checkbox-wrap {
+            margin-bottom: 1rem;
+        }
+        .terms-checkbox-label {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            cursor: pointer;
+            font-size: 14px;
+            color: #333;
+            line-height: 1.4;
+        }
+        .terms-checkbox-input {
+            flex-shrink: 0;
+            width: 20px;
+            height: 20px;
+            min-width: 20px;
+            min-height: 20px;
+            cursor: pointer;
+            appearance: none;
+            -webkit-appearance: none;
+            border: 2px solid #333;
+            border-radius: 3px;
+            background: #fff;
+            vertical-align: middle;
+        }
+        .terms-checkbox-input:checked {
+            background: #fff url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="%23000" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>') center/14px 14px no-repeat;
+            border-color: #333;
+        }
+        .terms-checkbox-input:focus {
+            outline: 1px solid #333;
+            outline-offset: 1px;
+        }
+        .terms-checkbox-text {
+            user-select: none;
         }
         
         /* Pop-up sẽ được đặt cố định, không ảnh hưởng đến layout của các phần tử khác */

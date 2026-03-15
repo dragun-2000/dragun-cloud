@@ -11,6 +11,8 @@ services:
       SPRING_DATASOURCE_PASSWORD: Picachu@123
       SPRING_JPA_HIBERNATE_DDL_AUTO: none
       JAVA_TOOL_OPTIONS: "-XX:-UseContainerSupport"
+      # Brevo: API key từ tab "API keys & MCP" (đặt trong .env: BREVO_API_KEY=...)
+      BREVO_API_KEY: ${BREVO_API_KEY:-}
 
       # MinIO configuration (thay cho AWS S3)
       # MINIO_ENDPOINT: http://debase-minio:9000

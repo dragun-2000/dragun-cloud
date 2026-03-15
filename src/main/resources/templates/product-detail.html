@@ -25,13 +25,13 @@
               
               <div class="pt-3 pb-2">
                 <div class="xans-product">
-                  <span class="xans-label">COLOR</span>
+                  <span class="xans-label" th:text="#{productDetail.color}">COLOR</span>
                   <ul class="xans-color">
                     <li th:each="color : ${colors}" class="color-button" th:id="'color-pc-' + ${color}" th:text="${color}" th:classappend="${product.outStock ? 'disabled' : ''}"></li>
                   </ul>
                 </div>
                 <div class="xans-product">
-                  <span class="xans-label">SIZE</span>
+                  <span class="xans-label" th:text="#{productDetail.size}">SIZE</span>
                   <ul class="xans-size">
                     <li th:each="size : ${sizes}" class="size-button" th:id="'size-pc-' + ${size}" th:text="${size}" th:classappend="${product.outStock ? 'disabled' : ''}"></li>
                   </ul>
@@ -42,7 +42,7 @@
                   </div> -->
                 </div>
                 <div class="xans-product" th:if="${types != null and !types.isEmpty()}">
-                  <span class="xans-label">KIỂU</span>
+                  <span class="xans-label" th:text="#{productDetail.type}">KIỂU</span>
                   <ul class="xans-type">
                     <li th:each="type : ${types}" class="type-button" th:id="'type-pc-' + ${type}" th:text="${type}" th:classappend="${product.outStock ? 'disabled' : ''}"></li>
                   </ul>
@@ -50,14 +50,14 @@
               </div>
 
               <div class="buyButton">
-                <button type="button" class="btn btn-dark" onclick="buyNow()">BUY NOW</button>
-                <button type="button" class="btn btn-outline-dark" data-toggle="modal" onclick="addToCart()">ADD TO BAG</button>
+                <button type="button" class="btn btn-dark" onclick="buyNow()" th:text="#{productDetail.buyNow}">BUY NOW</button>
+                <button type="button" class="btn btn-outline-dark" data-toggle="modal" onclick="addToCart()" th:text="#{productDetail.addToBag}">ADD TO BAG</button>
               </div>
 
               <div class="pro-accordion" id="accordion">
                 <div class="pro-card">
                   <div class="pro-header" data-toggle="collapse" data-target="#collapseOne">
-                    <span class="pro-item"><img class="svg" src="/images/common/icon-arrow-nav.svg"></span>Details and compositoin
+                    <span class="pro-item"><img class="svg" src="/images/common/icon-arrow-nav.svg"></span><span th:text="#{productDetail.detailsAndComposition}">Details and composition</span>
                   </div>
                   <div id="collapseOne" class="collapse" data-parent="#accordion">
                     <div class="pro-body">
@@ -67,7 +67,7 @@
                 </div>
                 <div class="pro-card">
                   <div class="pro-header" data-toggle="collapse" data-target="#collapseTwo">
-                    <span class="pro-item"><img class="svg" src="/images/common/icon-arrow-nav.svg"></span>Size information
+                    <span class="pro-item"><img class="svg" src="/images/common/icon-arrow-nav.svg"></span><span th:text="#{productDetail.sizeInformation}">Size information</span>
                   </div>
                   <div id="collapseTwo" class="collapse" data-parent="#accordion">
                     <div class="pro-body">
@@ -77,7 +77,7 @@
                 </div>
                 <div class="pro-card">
                   <div class="pro-header" data-toggle="collapse" data-target="#collapseThree">
-                    <span class="pro-item"><img class="svg" src="/images/common/icon-arrow-nav.svg"></span>Shipping and return
+                    <span class="pro-item"><img class="svg" src="/images/common/icon-arrow-nav.svg"></span><span th:text="#{productDetail.shippingAndReturn}">Shipping and return</span>
                   </div>
                   <div id="collapseThree" class="collapse" data-parent="#accordion">
                     <div class="pro-body">
@@ -92,6 +92,16 @@
                       <p class="pro-text mb-2">3. Thời gian đổi hàng sẽ dao động từ 1-2 ngày ( Nội thành Hà Nội) và từ 2-4 ngày (ngoại thành và các tỉnh khác)</p>
                       <p class="pro-text mb-1 text-shadow-bold">LƯU Ý</p>
                       <p class="pro-text mb-1">De Basé xin phép không chịu trách nhiệm với trường hợp NHÂN VIÊN TƯ VẤN SAI, việc tư vấn chỉ mang tính chất tham khảo không thể chính xác tuyệt đối vì còn phụ thuộc vào sở thích, thói quen của mỗi người. Vậy nên bạn vui lòng tham khảo thêm số đo sản phẩm để chọn được size đúng ý nhất nhé ❤</p>
+                    </div>
+                  </div>
+                </div>
+                <div class="pro-card">
+                  <div class="pro-header" data-toggle="collapse" data-target="#collapseFour-sp">
+                    <span class="pro-item"><img class="svg" src="/images/common/icon-arrow-nav.svg"></span><span th:text="#{productDetail.productInformation}">Product information</span>
+                  </div>
+                  <div id="collapseFour-sp" class="collapse" data-parent="#accordion-sp">
+                    <div class="pro-body">
+                      <p class="pro-text" th:utext="${productInformation}"></p>
                     </div>
                   </div>
                 </div>
@@ -178,13 +188,13 @@
                   </div>
                   <div class="pt-3 pb-2">
                     <div class="xans-product">
-                      <span class="xans-label">COLOR</span>
+                      <span class="xans-label" th:text="#{productDetail.color}">COLOR</span>
                       <ul class="xans-color">
                         <li th:each="color : ${colors}" class="color-button-mobile" th:id="'color-' + ${color}" th:text="${color}" th:classappend="${product.outStock ? 'disabled' : ''}"></li>
                       </ul>
                     </div>
                     <div class="xans-product">
-                      <span class="xans-label">SIZE</span>
+                      <span class="xans-label" th:text="#{productDetail.size}">SIZE</span>
                       <ul class="xans-size">
                         <li th:each="size : ${sizes}" class="size-button-mobile" th:id="'size-' + ${size}" th:text="${size}" th:classappend="${product.outStock ? 'disabled' : ''}"></li>
                       </ul>
@@ -195,7 +205,7 @@
                       </div> -->
                     </div>
                     <div class="xans-product" th:if="${types != null and !types.isEmpty()}">
-                      <span class="xans-label">KIỂU</span>
+                      <span class="xans-label" th:text="#{productDetail.type}">KIỂU</span>
                       <ul class="xans-type">
                         <li th:each="type : ${types}" class="type-button-mobile" th:id="'type-' + ${type}" th:text="${type}" th:classappend="${product.outStock ? 'disabled' : ''}"></li>
                       </ul>
@@ -203,14 +213,14 @@
                   </div>
 
                   <div class="buyButton">
-                    <button type="button" class="btn btn-dark" onclick="buyNowMobile()">BUY NOW</button>
-                    <button type="button" class="btn btn-outline-dark" data-toggle="modal" onclick="addToCartMobile()">ADD TO BAG</button>
+                    <button type="button" class="btn btn-dark" onclick="buyNowMobile()" th:text="#{productDetail.buyNow}">BUY NOW</button>
+                    <button type="button" class="btn btn-outline-dark" data-toggle="modal" onclick="addToCartMobile()" th:text="#{productDetail.addToBag}">ADD TO BAG</button>
                   </div>
                   
                   <div class="pro-accordion" id="accordion-sp">
                     <div class="pro-card">
                       <div class="pro-header" data-toggle="collapse" data-target="#collapseOne-sp">
-                        <span class="pro-item"><img class="svg" src="/images/common/icon-arrow-nav.svg"></span>Details and compositoin
+                        <span class="pro-item"><img class="svg" src="/images/common/icon-arrow-nav.svg"></span><span th:text="#{productDetail.detailsAndComposition}">Details and composition</span>
                       </div>
                       <div id="collapseOne-sp" class="collapse" data-parent="#accordion-sp">
                         <div class="pro-body">
@@ -220,7 +230,7 @@
                     </div>
                     <div class="pro-card">
                       <div class="pro-header" data-toggle="collapse" data-target="#collapseTwo-sp">
-                        <span class="pro-item"><img class="svg" src="/images/common/icon-arrow-nav.svg"></span>Size information
+                        <span class="pro-item"><img class="svg" src="/images/common/icon-arrow-nav.svg"></span><span th:text="#{productDetail.sizeInformation}">Size information</span>
                       </div>
                       <div id="collapseTwo-sp" class="collapse" data-parent="#accordion-sp">
                         <div class="pro-body">
@@ -230,7 +240,7 @@
                     </div>
                     <div class="pro-card">
                       <div class="pro-header" data-toggle="collapse" data-target="#collapseThree-sp">
-                        <span class="pro-item"><img class="svg" src="/images/common/icon-arrow-nav.svg"></span>Shipping and return
+                        <span class="pro-item"><img class="svg" src="/images/common/icon-arrow-nav.svg"></span><span th:text="#{productDetail.shippingAndReturn}">Shipping and return</span>
                       </div>
                       <div id="collapseThree-sp" class="collapse" data-parent="#accordion-sp">
                         <div class="pro-body">
@@ -245,6 +255,16 @@
                           <p class="pro-text mb-2">3. Thời gian đổi hàng sẽ dao động từ 1-2 ngày ( Nội thành Hà Nội) và từ 2-4 ngày (ngoại thành và các tỉnh khác)</p>
                           <p class="pro-text mb-1 text-shadow-bold">LƯU Ý</p>
                           <p class="pro-text mb-1">De Basé xin phép không chịu trách nhiệm với trường hợp NHÂN VIÊN TƯ VẤN SAI, việc tư vấn chỉ mang tính chất tham khảo không thể chính xác tuyệt đối vì còn phụ thuộc vào sở thích, thói quen của mỗi người. Vậy nên bạn vui lòng tham khảo thêm số đo sản phẩm để chọn được size đúng ý nhất nhé ❤</p>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="pro-card">
+                      <div class="pro-header" data-toggle="collapse" data-target="#collapseFour-sp">
+                        <span class="pro-item"><img class="svg" src="/images/common/icon-arrow-nav.svg"></span><span th:text="#{productDetail.productInformation}">Product information</span>
+                      </div>
+                      <div id="collapseFour-sp" class="collapse" data-parent="#accordion-sp">
+                        <div class="pro-body">
+                          <p class="pro-text" th:utext="${productInformation}"></p>
                         </div>
                       </div>
                     </div>

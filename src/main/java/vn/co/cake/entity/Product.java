@@ -35,6 +35,10 @@ public class Product extends BaseEntity {
     private String name;
     private String description;
     private String descriptionSize;
+
+    @Column(name = "product_information", columnDefinition = "TEXT")
+    private String productInformation;
+
     private String image;
     private String image1;
     private String image2;
@@ -74,6 +78,7 @@ public class Product extends BaseEntity {
         this.subCode = product.getSubCode();
         this.description = product.getDescription();
         this.descriptionSize = product.getDescriptionSize();
+        this.productInformation = product.getProductInformation();
         if (StringUtils.isNotEmpty(product.getImageUrl())) {
             this.image = product.getImageUrl();
         }
@@ -132,6 +137,7 @@ public class Product extends BaseEntity {
         this.subCode = product.getSubCode();
         this.description = product.getDescription();
         this.descriptionSize = product.getDescriptionSize();
+        this.productInformation = product.getProductInformation();
         if (StringUtils.isNotEmpty(product.getImageUrl())) {
             this.image = product.getImageUrl();
         }

@@ -254,6 +254,12 @@ public class HomeController extends BaseController {
         }
 		model.addAttribute("descriptionSizes", descriptionSizes);
 
+        String productInformation = "";
+        if (StringUtils.isNotBlank(response.getProductInformation())) {
+            productInformation = response.getProductInformation().replace("\n", "<br>").replace("\\n", "<br>");
+        }
+        model.addAttribute("productInformation", productInformation);
+
         // Thêm thông tin account để fill form size advice
         Integer userHeight = null;
         Integer userWeight = null;

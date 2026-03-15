@@ -168,6 +168,7 @@ public class AM003Controller extends BaseController {
                                                 @RequestParam(required = false) String subCode,
                                                 @RequestParam(required = false) String description,
                                                 @RequestParam(required = false) String descriptionSize,
+                                                @RequestParam(required = false) String productInformation,
                                                 @RequestParam(required = false) String colorBase,
                                                 @RequestParam(required = false) String sizeBase,
                                                 @RequestParam String price,
@@ -218,6 +219,7 @@ public class AM003Controller extends BaseController {
             request.setSubCode(subCode);
             request.setDescription(description);
             request.setDescriptionSize(descriptionSize);
+            request.setProductInformation(productInformation);
             request.setColor(colorBase);
             request.setSizes(sizeBase);
             request.setPrice(BigDecimal.valueOf(Long.parseLong(priceCustom)));
@@ -334,6 +336,7 @@ public class AM003Controller extends BaseController {
                                                 @RequestParam(required = false) String subCode,
                                                 @RequestParam(required = false) String description,
                                                 @RequestParam(required = false) String descriptionSize,
+                                                @RequestParam(required = false) String productInformation,
                                                 @RequestParam(required = false) String colorBase,
                                                 @RequestParam(required = false) String sizeBase,
                                                 @RequestParam String price,
@@ -386,6 +389,7 @@ public class AM003Controller extends BaseController {
             request.setName(name);
             request.setDescription(description);
             request.setDescriptionSize(descriptionSize);
+            request.setProductInformation(productInformation);
             request.setColor(colorBase);
             request.setSizes(sizeBase);
             request.setPrice(BigDecimal.valueOf(Long.parseLong(priceCustom)));

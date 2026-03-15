@@ -60,6 +60,13 @@
                     </div>
 
                     <div class="form-group row">
+                        <label for="productInformation" class="col-sm-12 col-md-3 col-lg-2 col-form-label font-weight-bold" style="margin: 8px; max-width: 180px;">Thông Tin Sản Phẩm (Product information)</label>
+                        <div class="col-sm-12 col-md-9 col-lg-7 col-xl-6 col-form-label font-weight-bold">
+                            <textarea style="min-height: 200px;" id="productInformation" name="productInformation" class="form-control form-ctrl" th:value="*{productInformation}" th:field="*{productInformation}" placeholder="Nội dung hiển thị tại mục Product information trên trang chi tiết sản phẩm"></textarea>
+                        </div>
+                    </div>
+
+                    <div class="form-group row">
                         <label for="price" class="col-sm-12 col-md-3 col-lg-2 col-form-label font-weight-bold" style="margin: 8px; max-width: 180px;">Giá Sản Phẩm (VND)<span class="red">※</span></label>
                         <div class="col-sm-12 col-md-9 col-lg-7 col-xl-6 col-form-label font-weight-bold">
                             <input min="1000" max="999999999" id="price" type="number" name="price" class="form-control form-ctrl" maxlength="9" th:value="*{price}" th:field="*{price}" required>

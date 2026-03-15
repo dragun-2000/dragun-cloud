@@ -54,7 +54,7 @@
     <img src="/images/bannerPC.jpg">
   </div>
 
-  <header class="header" th:fragment="header">
+  <header class="header" th:fragment="header" th:attr="data-lang=${#locale.language}">
 <!--    <div class="exampleSlider">-->
 <!--      <div class="slider slider&#45;&#45;marquee">-->
 <!--        <div class="sliderItem">-->
@@ -82,28 +82,28 @@
             <div class="gNav">
               <ul>
                 <li>
-                  <a th:href="@{/products/group/SALE}">SALE</a>
+                  <a th:href="@{/products/group/SALE}" th:text="#{header.sale}">SALE</a>
                 </li>
                 <li>
-                  <a th:href="@{/products/group/NEW IN}">NEW IN</a>
+                  <a th:href="@{/products/group/NEW IN}" th:text="#{header.newIn}">NEW IN</a>
                 </li>
                 <li>
-                  <a th:href="@{/products/group/BEST SELLER}">BEST SELLER</a>
+                  <a th:href="@{/products/group/BEST SELLER}" th:text="#{header.bestSeller}">BEST SELLER</a>
                 </li>
                 <li>
-                  <a href="#">SHOP<span class="icon-nav"><img class="svg" src="/images/common/icon-arrow-nav.svg" alt=""></span></a>
+                  <a href="#"><span th:text="#{header.shop}">SHOP</span><span class="icon-nav"><img class="svg" src="/images/common/icon-arrow-nav.svg" alt=""></span></a>
                   <div class="gNav-sub">
                     <ul>
-                      <li><a th:href="@{/products/group/OUTWEAR}">OUTWEAR</a></li>
-                      <li><a th:href="@{/products/group/TOP}">TOP</a></li>
-                      <li><a th:href="@{/products/group/BOTTOM}">BOTTOM</a></li>
-                      <li><a th:href="@{/products/group/SHOES_BAG}">SHOES / BAGS</a></li>
-                      <li><a th:href="@{/products/group/ACC}">ACC</a></li>
+                      <li><a th:href="@{/products/group/OUTWEAR}" th:text="#{header.outwear}">OUTWEAR</a></li>
+                      <li><a th:href="@{/products/group/TOP}" th:text="#{header.top}">TOP</a></li>
+                      <li><a th:href="@{/products/group/BOTTOM}" th:text="#{header.bottom}">BOTTOM</a></li>
+                      <li><a th:href="@{/products/group/SHOES_BAG}" th:text="#{header.shoesBags}">SHOES / BAGS</a></li>
+                      <li><a th:href="@{/products/group/ACC}" th:text="#{header.acc}">ACC</a></li>
                     </ul>
                   </div>
                 </li>
                 <li>
-                  <a href="https://www.facebook.com/groups/macgicungduoc" target="_blank">COMMUNITY</a>
+                  <a href="https://www.facebook.com/groups/macgicungduoc" target="_blank" th:text="#{header.community}">COMMUNITY</a>
                 </li>
               </ul>
             </div>
@@ -112,7 +112,7 @@
             <ul>
               <li>
                 <a href="javascript:" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                  Search<span class="icon-nav"><img class="svg" src="/images/common/icon-arrow-nav.svg" alt="image"></span>
+                  <span th:text="#{header.search}">Search</span><span class="icon-nav"><img class="svg" src="/images/common/icon-arrow-nav.svg" alt="image"></span>
                 </a>
 
                 <form th:action="@{/products/search}" method="GET" novalidate>
@@ -121,30 +121,13 @@
                       <input class="form-control" type="text" placeholder="Search" id="name" name="name">
                       <button type="submit" class="btn btn-search"><img class="svg" src="/images/common/icon-search.svg" alt=""></button>
                     </div>
-<!--                    <div class="keyword">-->
-<!--                      <p class="keyword-label">Hot keyword#</p>-->
-<!--                      <ul>-->
-<!--                        <li>-->
-<!--                          <a th:href="@{/products/group/OUTWEAR}">반팔티</a>-->
-<!--                        </li>-->
-<!--                        <li>-->
-<!--                          <a th:href="@{/products/group/OUTWEAR}">theore와이드</a>-->
-<!--                        </li>-->
-<!--                        <li>-->
-<!--                          <a th:href="@{/products/group/OUTWEAR}">데님루즈핏</a>-->
-<!--                        </li>-->
-<!--                        <li>-->
-<!--                          <a th:href="@{/products/group/OUTWEAR}">셔츠오프숄더</a>-->
-<!--                        </li>-->
-<!--                      </ul>-->
-<!--                    </div>-->
                   </div>
                 </form>
 
               </li>
               <li th:if="${isLogin == false or isLogin == null}">
                 <a href="javascript:" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                  Account
+                  <span th:text="#{header.account}">Account</span>
                   <span class="icon-nav">
                     <img class="svg" src="/images/common/icon-arrow-nav.svg" alt="image">
                   </span>
@@ -152,17 +135,17 @@
                 <div class="dropdown-menu dropdown-menu-account">
                   <ul>
                     <li>
-                      <a th:href="@{/SA/SA001/login}">Login</a>
+                      <a th:href="@{/SA/SA001/login}" th:text="#{header.login}">Login</a>
                     </li>
                     <li>
-                      <a th:href="@{/SA/SA001/register-view}">Join us</a>
+                      <a th:href="@{/SA/SA001/register-view}" th:text="#{header.joinUs}">Join us</a>
                     </li>
                   </ul>
                 </div>
               </li>
               <li th:if="${isLogin}">
                 <a href="javascript:" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                  Account
+                  <span th:text="#{header.account}">Account</span>
                   <span class="icon-nav">
                     <img class="svg" src="/images/common/icon-arrow-nav.svg" alt="image">
                   </span>
@@ -170,19 +153,26 @@
                 <div class="dropdown-menu dropdown-menu-account">
                   <ul>
                     <li>
-                      <a th:href="@{/SA/SA001/logout}">Logout</a>
+                      <a th:href="@{/SA/SA001/logout}" th:text="#{header.logout}">Logout</a>
                     </li>
                     <li>
-                      <a th:href="@{/SA/SA001/profile}">Profile</a>
+                      <a th:href="@{/SA/SA001/profile}" th:text="#{header.profile}">Profile</a>
                     </li>
                     <li>
-                      <a th:href="@{/order-history}">Order History</a>
+                      <a th:href="@{/order-history}" th:text="#{header.orderHistory}">Order History</a>
                     </li>
                   </ul>
                 </div>
               </li>
               <li>
-                <a th:href="@{/cart-detail}"><span id="bag-total" class="bag-text">My bag:</span> <span th:text="${totalCartItems == null ? 0 : totalCartItems}"></span></a>
+                <a th:href="@{/cart-detail}"><span id="bag-total" class="bag-text" th:text="#{header.myBag}">My bag:</span> <span th:text="${totalCartItems == null ? 0 : totalCartItems}"></span></a>
+              </li>
+              <li>
+                <button type="button" id="btn-lang-toggle" class="btn-lang-toggle" title="Chuyển ngôn ngữ / Switch language" aria-label="Chuyển ngôn ngữ">
+                  <span class="lang-flag lang-flag-us" data-lang="en" title="English">🇺🇸</span>
+                  <span class="lang-sep">/</span>
+                  <span class="lang-flag lang-flag-vn" data-lang="vi" title="Tiếng Việt">🇻🇳</span>
+                </button>
               </li>
             </ul>
           </div>
@@ -204,28 +194,28 @@
               <div class="hamber-content">
                 <ul class="navigation">
                   <li>
-                    <a th:href="@{/products/group/SALE}">SALE</a>
+                    <a th:href="@{/products/group/SALE}" th:text="#{header.sale}">SALE</a>
                   </li>
                   <li>
-                    <a th:href="@{/products/group/NEW IN}">NEW IN</a>
+                    <a th:href="@{/products/group/NEW IN}" th:text="#{header.newIn}">NEW IN</a>
                   </li>
                   <li>
-                    <a th:href="@{/products/group/BEST SELLER}">BEST SELLER</a>
+                    <a th:href="@{/products/group/BEST SELLER}" th:text="#{header.bestSeller}">BEST SELLER</a>
                   </li>
                   <li>
-                    <a href="#">SHOP<span class="icon-nav"><img class="svg" src="/images/common/icon-arrow-nav.svg" alt="image"></span></a>
+                    <a href="#"><span th:text="#{header.shop}">SHOP</span><span class="icon-nav"><img class="svg" src="/images/common/icon-arrow-nav.svg" alt="image"></span></a>
                     <div class="navigation-sub">
                       <ul>
-                        <li><a th:href="@{/products/group/OUTWEAR}">OUTWEAR</a></li>
-                        <li><a th:href="@{/products/group/TOP}">TOP</a></li>
-                        <li><a th:href="@{/products/group/BOTTOM}">BOTTOM</a></li>
-                        <li><a th:href="@{/products/group/SHOES_BAG}">SHOES / BAGS</a></li>
-                        <li><a th:href="@{/products/group/ACC}">ACC</a></li>
+                        <li><a th:href="@{/products/group/OUTWEAR}" th:text="#{header.outwear}">OUTWEAR</a></li>
+                        <li><a th:href="@{/products/group/TOP}" th:text="#{header.top}">TOP</a></li>
+                        <li><a th:href="@{/products/group/BOTTOM}" th:text="#{header.bottom}">BOTTOM</a></li>
+                        <li><a th:href="@{/products/group/SHOES_BAG}" th:text="#{header.shoesBags}">SHOES / BAGS</a></li>
+                        <li><a th:href="@{/products/group/ACC}" th:text="#{header.acc}">ACC</a></li>
                       </ul>
                     </div>
                   </li>
                   <li>
-                    <a href="https://www.facebook.com/groups/macgicungduoc" target="_blank">COMMUNITY</a>
+                    <a href="https://www.facebook.com/groups/macgicungduoc" target="_blank" th:text="#{header.community}">COMMUNITY</a>
                   </li>
                 </ul>
               </div>
@@ -238,28 +228,28 @@
                 </form>
                 <ul th:if="${isLogin}">
                   <li>
-                    <a th:href="@{/SA/SA001/logout}">Logout</a>
+                    <a th:href="@{/SA/SA001/logout}" th:text="#{header.logout}">Logout</a>
                   </li>
                   <li>
-                    <a th:href="@{/SA/SA001/profile}">Profile</a>
+                    <a th:href="@{/SA/SA001/profile}" th:text="#{header.profile}">Profile</a>
                   </li>
                   <li>
-                    <a th:href="@{/order-history}">Order History</a>
+                    <a th:href="@{/order-history}" th:text="#{header.orderHistory}">Order History</a>
                   </li>
                   <li>
-                    <a href="/">Order</a>
+                    <a href="/" th:text="#{header.order}">Order</a>
                   </li>
                 </ul>
                 
                 <ul th:if="${isLogin == false or isLogin == null}">
                   <li>
-                    <a th:href="@{/SA/SA001/login}">Login</a>
+                    <a th:href="@{/SA/SA001/login}" th:text="#{header.login}">Login</a>
                   </li>
                   <li>
-                    <a th:href="@{/SA/SA001/register-view}">Join us</a>
+                    <a th:href="@{/SA/SA001/register-view}" th:text="#{header.joinUs}">Join us</a>
                   </li>
                   <li>
-                    <a href="/">Order</a>
+                    <a href="/" th:text="#{header.order}">Order</a>
                   </li>
                 </ul>
               </div>
@@ -272,6 +262,11 @@
               </a>
             </h1>
           </div>
+          <button type="button" id="btn-lang-toggle-sp" class="btn-lang-toggle btn-lang-toggle-sp" title="Chuyển ngôn ngữ / Switch language" aria-label="Chuyển ngôn ngữ">
+            <span class="lang-flag" data-lang="en">🇺🇸</span>
+            <span class="lang-sep">/</span>
+            <span class="lang-flag" data-lang="vi">🇻🇳</span>
+          </button>
           <div class="cart">
             <a class="btn btn-cart" th:href="@{/cart-detail}">
               <img class="svg" src="/images/common/icon-cart.svg" alt="">
@@ -281,6 +276,127 @@
         </div>
       </div>
     </div><!--/headerTop-->
+    <style>
+      .account-area > ul {
+        align-items: center;
+        flex-wrap: nowrap;
+        min-height: 70px;
+        height: 70px;
+      }
+      .account-area > ul > li {
+        display: flex;
+        align-items: center;
+        min-height: 70px;
+        flex-shrink: 0;
+      }
+      .account-area > ul > li > a {
+        white-space: nowrap;
+        flex-shrink: 0;
+      }
+      .account-area > ul > li .btn-lang-toggle {
+        flex-shrink: 0;
+      }
+      .header .header-wrap .account-area {
+        min-width: 280px;
+        width: 280px;
+      }
+      .header .header-wrap .info-area {
+        width: calc(100% - 280px);
+      }
+      .btn-lang-toggle {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 4px;
+        padding: 6px 10px;
+        margin: 0;
+        height: 36px;
+        min-height: 36px;
+        line-height: 1;
+        background: transparent;
+        border: 1px solid rgba(0,0,0,0.2);
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 1.1rem;
+        transition: border-color 0.2s, background 0.2s;
+        vertical-align: middle;
+      }
+      .btn-lang-toggle:hover {
+        border-color: rgba(0,0,0,0.4);
+        background: rgba(0,0,0,0.04);
+      }
+      .btn-lang-toggle .lang-flag {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 1.25em;
+        height: 1em;
+        line-height: 1;
+        font-size: 1em;
+        cursor: pointer;
+        opacity: 0.85;
+        vertical-align: middle;
+        box-sizing: content-box;
+      }
+      .btn-lang-toggle .lang-flag:hover,
+      .btn-lang-toggle .lang-flag.active {
+        opacity: 1;
+      }
+      .btn-lang-toggle .lang-sep {
+        display: inline-flex;
+        align-items: center;
+        color: #999;
+        font-size: 0.85em;
+        user-select: none;
+        padding: 0 2px;
+      }
+      .btn-lang-toggle-sp {
+        padding: 8px 12px;
+        margin-right: 8px;
+      }
+    </style>
+    <script>
+      (function() {
+        function initLangToggle() {
+          var STORAGE_KEY = 'debase_lang';
+          var header = document.querySelector('.header[data-lang]');
+          var serverLang = header ? header.getAttribute('data-lang') : null;
+          var currentLang = serverLang || localStorage.getItem(STORAGE_KEY) || 'en';
+          if (serverLang) { localStorage.setItem(STORAGE_KEY, serverLang); }
+          function setActiveFlag(container) {
+            if (!container) return;
+            container.querySelectorAll('.lang-flag').forEach(function(el) {
+              el.classList.toggle('active', el.getAttribute('data-lang') === currentLang);
+            });
+          }
+          function applyLang(lang) {
+            currentLang = lang;
+            localStorage.setItem(STORAGE_KEY, lang);
+            var url = new URL(window.location.href);
+            url.searchParams.set('lang', lang);
+            window.location.href = url.toString();
+          }
+          var btns = document.querySelectorAll('#btn-lang-toggle, #btn-lang-toggle-sp');
+          if (!btns.length) return;
+          btns.forEach(function(btn) {
+            setActiveFlag(btn);
+            btn.querySelectorAll('.lang-flag').forEach(function(flag) {
+              flag.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                var lang = flag.getAttribute('data-lang');
+                if (lang && lang !== currentLang) applyLang(lang);
+              });
+            });
+          });
+        }
+        if (document.readyState === 'loading') {
+          document.addEventListener('DOMContentLoaded', initLangToggle);
+        } else {
+          initLangToggle();
+        }
+      })();
+    </script>
   </header><!--/header -->
 
   <div th:fragment="footer">
@@ -293,10 +409,13 @@
                   <li class="text-shadow-bold">CONTACT US</li>
                 </ul>
                 <ul>
-                  <li>De Basé Công ty TNHH De Basé</li>
+                  <li>HỘ KINH DOANH NGUYỄN TRUNG HIẾU 01</li>
                 </ul>
                 <ul>
-                  <li>MST: 0110043207</li>
+                  <li>Giấy phép Đăng ký kinh doanh số 8454557597-001 do Phòng Tài chính – Kế hoạch UBND huyện Mộc Châu cấp ngày 27/05/2024.</li>
+                </ul>
+                <ul>
+                  <li>Địa chỉ: Số nhà 11, đường Phan Đình Giót, tiểu khu 1, phường Mộc Sơn, tỉnh Sơn La, Việt Nam</li>
                 </ul>
                 <ul>
                   <li>HOTLINE: +84 877 037 817</li>
@@ -320,22 +439,25 @@
                   <li class="text-shadow-bold">POLICY US</li>
                 </ul>
                 <ul>
-                  <a th:href="@{/privacy-policy}">Xem chính sách bảo mật</a>
-                </ul>
-                <ul>
-                  <a th:href="@{/privacy-policy}">Xem chính sách giao hàng</a>
+                  <a th:href="@{/privacy-policy}">Xem chính sách kiểm hàng</a>
                 </ul>
                 <ul>
                   <a th:href="@{/privacy-policy}">Xem chính sách đổi trả</a>
                 </ul>
                 <ul>
-                  <a th:href="@{/privacy-policy}">Xem chính sách kiểm hàng</a>
-                </ul>
-                <ul>
                   <a th:href="@{/privacy-policy}">Xem chính sách bảo hành&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</a>
                 </ul>
                 <ul>
-                  <a th:href="@{/privacy-policy}">Phân định trách nhiệm của đơn vị vận chuyển</a>
+                  <a th:href="@{/privacy-policy}">Điều kiện giao dịch chung</a>
+                </ul>
+                <ul>
+                  <a th:href="@{/privacy-policy}">Chính sách vận chuyển</a>
+                </ul>
+                <ul>
+                  <a th:href="@{/privacy-policy}#payment-policy">Chính sách thanh toán</a>
+                </ul>
+                <ul>
+                  <a th:href="@{/privacy-policy}">Xem chính sách bảo mật</a>
                 </ul>
               </div>
           </div>

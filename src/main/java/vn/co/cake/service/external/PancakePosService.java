@@ -24,6 +24,10 @@ import vn.co.cake.entity.*;
 import vn.co.cake.enums.OrderStatus;
 import vn.co.cake.repository.*;
 
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -176,6 +180,9 @@ public class PancakePosService {
             MainOrderRequest body =
                     new MainOrderRequest(order, pancake, warehouse, orderItems);
 
+            // Ghi file txt curl + body để copy test Postman/terminal
+            // logCurlForPancakeOrder(url, headers, body, order.getCode());
+
             log.info("Pancake createOrder 5 {}", order.getCode());
 
             HttpEntity<MainOrderRequest> request =
@@ -261,6 +268,39 @@ public class PancakePosService {
             return throwable;
         }
         return getRootCause(cause);
+    }
+
+    /**
+     * Ghi file .txt chứa URL, curl và body JSON để copy test Postman/terminal.
+     * File lưu tại: log/pancake-curl-{orderCode}-{timestamp}.txt
+     */
+    private void logCurlForPancakeOrder(String url, HttpHeaders headers, MainOrderRequest body, String orderCode) {
+        try {
+            ObjectMapper mapper = new ObjectMapper();
+            String bodyJson = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(body);
+            // Escape single quote cho bash: ' -> '\''
+            String bodyEscaped = bodyJson.replace("'", "'\\''");
+            String curl = "curl -X POST '" + url + "'"
+                    + " -H 'Content-Type: application/json'"
+                    + " -H 'Connection: close'"
+                    + " -d '" + bodyEscaped + "'";
+
+            String safeCode = (orderCode != null ? orderCode : "unknown").replaceAll("[^a-zA-Z0-9_-]", "_");
+            String fileName = "pancake-curl-" + safeCode + "-" + System.currentTimeMillis() + ".txt";
+            Path logDir = Paths.get("log");
+            Files.createDirectories(logDir);
+            Path file = logDir.resolve(fileName);
+
+            String content = "# Pancake POS request - Order: " + orderCode + "\n\n"
+                    + "URL:\n" + url + "\n\n"
+                    + "--- Curl (copy to terminal) ---\n" + curl + "\n\n"
+                    + "--- Body JSON (for Postman) ---\n" + bodyJson + "\n";
+            Files.writeString(file, content, StandardCharsets.UTF_8);
+
+            log.info("Pancake POS request saved to file: {}", file.toAbsolutePath());
+        } catch (Exception e) {
+            log.warn("Could not save Pancake curl to file: {}", e.getMessage());
+        }
     }
     
     public List<VariationResponse> getAllProductPancake(int pageNumber, int pageSize) {

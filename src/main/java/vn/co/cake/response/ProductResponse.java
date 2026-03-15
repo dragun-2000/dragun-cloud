@@ -21,6 +21,7 @@ public class ProductResponse {
     private String name;
     private String description;
     private String descriptionSize;
+    private String productInformation;
     private String image;
     private String image1;
     private String image2;
@@ -60,6 +61,7 @@ public class ProductResponse {
         this.name = product.getName();
         this.description = product.getDescription();
         this.descriptionSize = product.getDescriptionSize();
+        this.productInformation = product.getProductInformation();
         this.image = product.getImage();
         this.image1 = product.getImage1();
         this.image2 = product.getImage2();

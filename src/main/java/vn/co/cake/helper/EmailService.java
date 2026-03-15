@@ -6,6 +6,7 @@ import sendinblue.ApiClient;
 import sendinblue.ApiException;
 import sendinblue.Configuration;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import vn.co.cake.dto.GenericMailForm;
 import vn.co.cake.enums.MailType;
@@ -17,15 +18,19 @@ import java.util.Collections;
 public class EmailService {
 
     private static final String FROM_EMAIL = "reply@debase.vn"; // phải là email đã xác minh trong Brevo
+
+    /**
+     * PHẢI dùng API key (tab "API keys & MCP" trong Brevo), KHÔNG dùng SMTP key (tab SMTP).
+     * SMTP key (xsmtpsib-...) chỉ dùng cho kết nối SMTP → gọi REST API với SMTP key sẽ bị 401.
+     */
     private final String brevoApiKey;
 
-    public EmailService() {
-        // Lấy API Key từ biến môi trường hoặc hardcode (tạm thời)
-        // if (apiKey == null || apiKey.isEmpty()) {
-        //     // Fallback: có thể thêm vào application.properties sau
-        //     // apiKey = apiKey; // Thay thế bằng API key thực tế
-        // }
-        this.brevoApiKey = "";
+    public EmailService(
+            @Value("${brevo.api.key:}") String brevoApiKey) {
+        this.brevoApiKey = brevoApiKey != null ? brevoApiKey.trim() : "";
+        if (this.brevoApiKey.isEmpty()) {
+            log.warn("brevo.api.key is empty - email sending will fail. Set in config or env BREVO_API_KEY. Use API key from Brevo: Settings > SMTP & API > API keys & MCP");
+        }
     }
 
     /**
@@ -57,9 +62,14 @@ public class EmailService {
     }
 
     /**
-     * Hàm xử lý gửi email qua Brevo API
+     * Hàm xử lý gửi email qua Brevo REST API.
+     * Yêu cầu: brevo.api.key phải là API key (lấy từ Brevo > Settings > SMTP & API > tab "API keys & MCP"), không phải SMTP key.
      */
     private void send(String emailTo, String subject, String textContent) {
+        if (brevoApiKey == null || brevoApiKey.isEmpty()) {
+            log.error("Cannot send email: brevo.api.key not set. Use API key from Brevo > API keys & MCP (not SMTP key).");
+            return;
+        }
         ApiClient defaultClient = Configuration.getDefaultApiClient();
         defaultClient.setApiKey(brevoApiKey);
 

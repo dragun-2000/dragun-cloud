@@ -1,0 +1,192 @@
+# Pancake POS request - Order: 26031200007
+
+URL:
+https://pos.pages.fm/api/v1/shops/2447703/orders?api_key=4a3571cda51746cabae871dd8813b720
+
+--- Curl (copy to terminal) ---
+curl -X POST 'https://pos.pages.fm/api/v1/shops/2447703/orders?api_key=4a3571cda51746cabae871dd8813b720' -H 'Content-Type: application/json' -H 'Connection: close' -d '{
+  "bill_full_name" : "Quynh Dang",
+  "bill_phone_number" : "0936479798",
+  "received_at_shop" : false,
+  "page_id" : "1003674396443774",
+  "account" : 1,
+  "account_name" : "Quynh Dang",
+  "assigning_seller_id" : "861d03d6-6e08-48dc-b4f8-5034e738ab1b",
+  "items" : [ {
+    "discount_each_product" : 0,
+    "one_time_product" : false,
+    "quantity" : 1,
+    "variation_id" : "8afd6bd1-1b37-4473-a4f9-bf39b52e0694",
+    "product_id" : "64cafb16-4335-4c24-b53a-380d461d8004",
+    "variation_info" : {
+      "detail" : null,
+      "fields" : null,
+      "display_id" : "AN2610DENXL",
+      "name" : "basé SWEATSHIRT 01 - ÁO NỈ 2 Da Tay Raglan Thêu Logo Ngực",
+      "product_display_id" : "AN2610DENXL",
+      "retail_price" : 480000,
+      "weight" : 200
+    },
+    "_bonus_product" : false,
+    "_discount_percent" : false,
+    "_wholesale" : false
+  }, {
+    "discount_each_product" : 0,
+    "one_time_product" : false,
+    "quantity" : 1,
+    "variation_id" : "229873c0-7079-4f65-8626-2a11ed1991bd",
+    "product_id" : "36bc13ad-7a7c-49f1-95ea-eb0794fb1694",
+    "variation_info" : {
+      "detail" : null,
+      "fields" : null,
+      "display_id" : "AKB2505XL",
+      "name" : "Áo Khoác Denim - IVAN Cropped Denim Jacket",
+      "product_display_id" : "AKB2505XL",
+      "retail_price" : 680000,
+      "weight" : 200
+    },
+    "_bonus_product" : false,
+    "_discount_percent" : false,
+    "_wholesale" : false
+  }, {
+    "discount_each_product" : 0,
+    "one_time_product" : false,
+    "quantity" : 1,
+    "variation_id" : "9640869a-e5b2-4c60-a026-e8386184b867",
+    "product_id" : "cadce95e-7923-42f8-902f-111655ca5f54",
+    "variation_info" : {
+      "detail" : null,
+      "fields" : null,
+      "display_id" : "QS2203NAVYXL",
+      "name" : "basé SHORTS 03  - Quần Short Vải Khóa Sườn Xếp Li Trước Sau",
+      "product_display_id" : "QS2203NAVYXL",
+      "retail_price" : 450000,
+      "weight" : 200
+    },
+    "_bonus_product" : false,
+    "_discount_percent" : false,
+    "_wholesale" : false
+  } ],
+  "note" : "WEB + 35000 tiền phí ship setting trên web Debase",
+  "note_print" : "",
+  "returned_reason" : 0,
+  "warehouse_id" : "17596481-f7db-4981-ba1d-38e91dcb0ee7",
+  "shipping_address" : {
+    "address" : "61/13/7, Đường Số 2, Khu Phố 5,Bình Hưng Hoà B, Bình Tân ( Đối Diện Nhà Trọ Đoàn Tú 61/14 Đường Số2) Dãy Nhà Lầu Phường Bình Hưng Hoà B, Quận Bình Tân, Thành phố Hồ Chí Minh",
+    "commune_id" : null,
+    "country_code" : null,
+    "district_id" : null,
+    "full_address" : "61/13/7, Đường Số 2, Khu Phố 5,Bình Hưng Hoà B, Bình Tân ( Đối Diện Nhà Trọ Đoàn Tú 61/14 Đường Số2) Dãy Nhà Lầu Phường Bình Hưng Hoà B, Quận Bình Tân, Thành phố Hồ Chí Minh",
+    "full_name" : "Quynh Dang",
+    "phone_number" : "0936479798",
+    "post_code" : null,
+    "province_id" : null
+  },
+  "shipping_fee" : 35000,
+  "shop_id" : 2447703,
+  "discount" : 324000,
+  "custom_id" : "26031200007",
+  "warehouse_info" : {
+    "districtId" : "10121",
+    "fullAddress" : "nhà 08-BT5, đường Foresa 6B, Phường Xuân Phương, Quận Nam Từ Liêm, Hà Nội",
+    "name" : "Kho Debase",
+    "phoneNumber" : "0877037817",
+    "provinceId" : "101"
+  },
+  "activatedPromotionAdvances" : null,
+  "_free_shipping" : true
+}'
+
+--- Body JSON (for Postman) ---
+{
+  "bill_full_name" : "Quynh Dang",
+  "bill_phone_number" : "0936479798",
+  "received_at_shop" : false,
+  "page_id" : "1003674396443774",
+  "account" : 1,
+  "account_name" : "Quynh Dang",
+  "assigning_seller_id" : "861d03d6-6e08-48dc-b4f8-5034e738ab1b",
+  "items" : [ {
+    "discount_each_product" : 0,
+    "one_time_product" : false,
+    "quantity" : 1,
+    "variation_id" : "8afd6bd1-1b37-4473-a4f9-bf39b52e0694",
+    "product_id" : "64cafb16-4335-4c24-b53a-380d461d8004",
+    "variation_info" : {
+      "detail" : null,
+      "fields" : null,
+      "display_id" : "AN2610DENXL",
+      "name" : "basé SWEATSHIRT 01 - ÁO NỈ 2 Da Tay Raglan Thêu Logo Ngực",
+      "product_display_id" : "AN2610DENXL",
+      "retail_price" : 480000,
+      "weight" : 200
+    },
+    "_bonus_product" : false,
+    "_discount_percent" : false,
+    "_wholesale" : false
+  }, {
+    "discount_each_product" : 0,
+    "one_time_product" : false,
+    "quantity" : 1,
+    "variation_id" : "229873c0-7079-4f65-8626-2a11ed1991bd",
+    "product_id" : "36bc13ad-7a7c-49f1-95ea-eb0794fb1694",
+    "variation_info" : {
+      "detail" : null,
+      "fields" : null,
+      "display_id" : "AKB2505XL",
+      "name" : "Áo Khoác Denim - IVAN Cropped Denim Jacket",
+      "product_display_id" : "AKB2505XL",
+      "retail_price" : 680000,
+      "weight" : 200
+    },
+    "_bonus_product" : false,
+    "_discount_percent" : false,
+    "_wholesale" : false
+  }, {
+    "discount_each_product" : 0,
+    "one_time_product" : false,
+    "quantity" : 1,
+    "variation_id" : "9640869a-e5b2-4c60-a026-e8386184b867",
+    "product_id" : "cadce95e-7923-42f8-902f-111655ca5f54",
+    "variation_info" : {
+      "detail" : null,
+      "fields" : null,
+      "display_id" : "QS2203NAVYXL",
+      "name" : "basé SHORTS 03  - Quần Short Vải Khóa Sườn Xếp Li Trước Sau",
+      "product_display_id" : "QS2203NAVYXL",
+      "retail_price" : 450000,
+      "weight" : 200
+    },
+    "_bonus_product" : false,
+    "_discount_percent" : false,
+    "_wholesale" : false
+  } ],
+  "note" : "WEB + 35000 tiền phí ship setting trên web Debase",
+  "note_print" : "",
+  "returned_reason" : 0,
+  "warehouse_id" : "17596481-f7db-4981-ba1d-38e91dcb0ee7",
+  "shipping_address" : {
+    "address" : "61/13/7, Đường Số 2, Khu Phố 5,Bình Hưng Hoà B, Bình Tân ( Đối Diện Nhà Trọ Đoàn Tú 61/14 Đường Số2) Dãy Nhà Lầu Phường Bình Hưng Hoà B, Quận Bình Tân, Thành phố Hồ Chí Minh",
+    "commune_id" : null,
+    "country_code" : null,
+    "district_id" : null,
+    "full_address" : "61/13/7, Đường Số 2, Khu Phố 5,Bình Hưng Hoà B, Bình Tân ( Đối Diện Nhà Trọ Đoàn Tú 61/14 Đường Số2) Dãy Nhà Lầu Phường Bình Hưng Hoà B, Quận Bình Tân, Thành phố Hồ Chí Minh",
+    "full_name" : "Quynh Dang",
+    "phone_number" : "0936479798",
+    "post_code" : null,
+    "province_id" : null
+  },
+  "shipping_fee" : 35000,
+  "shop_id" : 2447703,
+  "discount" : 324000,
+  "custom_id" : "26031200007",
+  "warehouse_info" : {
+    "districtId" : "10121",
+    "fullAddress" : "nhà 08-BT5, đường Foresa 6B, Phường Xuân Phương, Quận Nam Từ Liêm, Hà Nội",
+    "name" : "Kho Debase",
+    "phoneNumber" : "0877037817",
+    "provinceId" : "101"
+  },
+  "activatedPromotionAdvances" : null,
+  "_free_shipping" : true
+}
