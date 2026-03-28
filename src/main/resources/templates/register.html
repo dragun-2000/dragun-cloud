@@ -2,6 +2,21 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head th:replace="header :: common-header"></head>
 <body>
+  <style>
+    /* Trang chỉ load bootstrap index (không có .btn-black). Hai nút: nền đen, chữ trắng. */
+    #register-submit-btn,
+    #verify-otp-btn {
+      background-color: #000 !important;
+      color: #fff !important;
+      border: 1px solid #000 !important;
+    }
+    #register-submit-btn:hover, #register-submit-btn:focus,
+    #verify-otp-btn:hover, #verify-otp-btn:focus {
+      background-color: #1a1a1a !important;
+      color: #fff !important;
+      border-color: #000 !important;
+    }
+  </style>
   <div class="wrapper">
     <div th:replace="header :: header"></div>
 
@@ -152,7 +167,7 @@
               
                 </div>
                 <div class="btnRegister">
-                  <button class="btn btn-info" type="submit">SIGN IN</button>
+                  <button type="submit" class="btn btn-120" id="register-submit-btn">SIGN IN</button>
                 </div>
             </form>
           </div>
@@ -216,7 +231,7 @@
                         <form id="otp-verification-form">
                             <div class="form-group">
                                 <label class="d-block text-center mb-3">Nhập mã OTP (6 số)</label>
-                                <label class="d-block text-center mb-3" style="color: #dc3545;">Nhập 999999 để bypass OTP Hoàn thành đăng kí</label>
+                                <label class="d-block text-center mb-3" style="color: #dc3545;">Nhập OTP từ SMS để  Hoàn thành đăng kí</label>
                                 <div class="otp-inputs d-flex justify-content-center mb-2" id="otp-inputs-wrap">
                                     <input type="text" inputmode="numeric" maxlength="1" class="otp-box" data-otp-index="0" autocomplete="off" aria-label="OTP số 1">
                                     <input type="text" inputmode="numeric" maxlength="1" class="otp-box" data-otp-index="1" autocomplete="off" aria-label="OTP số 2">
@@ -226,9 +241,9 @@
                                     <input type="text" inputmode="numeric" maxlength="1" class="otp-box" data-otp-index="5" autocomplete="off" aria-label="OTP số 6">
                                 </div>
                                 <input type="hidden" id="otp-code" name="otpCode" value="">
-                                <div class="invalid-feedback d-block text-center" id="otp-error" style="display:none !important;">
+                                <!-- <div class="invalid-feedback d-block text-center" id="otp-error" style="display:none !important;">
                                     Vui lòng nhập mã OTP 6 số
-                                </div>
+                                </div> -->
                             </div>
                             <style>
                                 .otp-inputs {
@@ -274,7 +289,7 @@
                     </div>
                     <div class="modal-footer justify-content-center border-top-0">
                         <button type="button" class="btn btn-secondary btn-120 mr-2" id="cancel-otp-btn" data-dismiss="modal">Hủy</button>
-                        <button type="button" class="btn btn-info btn-120" id="verify-otp-btn">Xác thực</button>
+                        <button type="button" class="btn btn-120" id="verify-otp-btn">Xác thực</button>
                     </div>
                 </div>
             </div>

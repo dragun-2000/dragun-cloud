@@ -27,7 +27,7 @@ public class Job002 {
     public void retryFailedOrders() {
         log.info("Job002: Starting retry failed orders sync to Pancake POS");
 
-        List<Order> failedOrders = orderRepository.findByStatusAndCountErrorLessThan(
+        List<Order> failedOrders = orderRepository.findByStatusAndCountErrorLessThanAndDeletedFalse(
                 OrderStatus.SYNC_FAIL.getValue(),
                 OrderConstants.MAX_PANCAKE_SYNC_RETRIES
         );

@@ -2121,14 +2121,28 @@ textarea.form-control::-webkit-scrollbar-thumb {
 .main--pageRegister .register-nav ul li {
   padding-right: 24px;
 }
+/* Tab không chọn: chữ đen, nền trắng */
 .main--pageRegister .register-nav ul li a {
   padding: 10px;
   display: block;
   font-size: 12px;
-  color: #c4c4c4;
-}
-.main--pageRegister .register-nav ul li a.active {
   color: #000;
+  background-color: #fff;
+  border-radius: 4px;
+  text-decoration: none;
+}
+.main--pageRegister .register-nav ul li a:hover:not(.active) {
+  color: #000;
+  background-color: #f0f0f0;
+}
+/* Tab đang chọn: chữ trắng, nền đen (ghi đè .active toàn cục #4CAF50) */
+.main--pageRegister .register-nav ul li a.active {
+  color: #fff !important;
+  background-color: #000 !important;
+}
+.main--pageRegister .register-nav ul li a.active:hover {
+  color: #fff !important;
+  background-color: #1a1a1a !important;
 }
 .main--pageRegister .register-title {
   font-weight: 700;
@@ -3470,6 +3484,32 @@ textarea.form-control::-webkit-scrollbar-thumb {
 }
 .inner-share ul li a img {
   max-width: 18px;
+}
+
+.footer-bct-badge-row {
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-pack: end;
+  -ms-flex-pack: end;
+  justify-content: flex-end;
+  margin-top: 12px;
+  padding-top: 8px;
+}
+.footer-bct-badge-row a {
+  display: inline-block;
+  line-height: 0;
+}
+.footer-bct-badge-row img {
+  width: auto;
+  max-width: 200px;
+  height: auto;
+  max-height: 72px;
+}
+.footer .footer-inner .inner .footer-bct-badge-row {
+  margin-top: 0;
+  padding-top: 0;
+  margin-bottom: 14px;
 }
 
 body {

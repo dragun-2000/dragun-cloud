@@ -146,20 +146,19 @@ public class SA001Controller extends BaseController {
             }
 
             String otpCode = otpVerificationService.generateOtp();
-            otpCode = "999999";
 
-            // boolean smsSent = true;
-            // try {
-            //     smsSent = smsService.sendOtp(accountRequest.getPhone(), otpCode);
-            // } catch (Exception e) {
-            //     log.warn("SMS send failed: {}", e.getMessage());
-            //     return new ResponseEntity<>("Không thể gửi SMS. Vui lòng thử lại sau.", HttpStatus.INTERNAL_SERVER_ERROR);
-            // }
+            boolean smsSent = true;
+            try {
+                smsSent = smsService.sendOtp(accountRequest.getPhone(), otpCode);
+            } catch (Exception e) {
+                log.warn("SMS send failed: {}", e.getMessage());
+                return new ResponseEntity<>("Không thể gửi SMS. Vui lòng thử lại sau.", HttpStatus.INTERNAL_SERVER_ERROR);
+            }
 
-//            if (!smsSent) {
-//                log.warn("SMS not sent for phone: {}", accountRequest.getPhone());
-//                return new ResponseEntity<>("Không thể gửi SMS. Vui lòng kiểm tra số điện thoại và thử lại.", HttpStatus.INTERNAL_SERVER_ERROR);
-//            }
+           if (!smsSent) {
+               log.warn("SMS not sent for phone: {}", accountRequest.getPhone());
+               return new ResponseEntity<>("Không thể gửi SMS. Vui lòng kiểm tra số điện thoại và thử lại.", HttpStatus.INTERNAL_SERVER_ERROR);
+           }
 
             boolean stored = otpVerificationService.storeRegistrationData(accountRequest.getPhone(), accountRequest, otpCode);
             if (!stored) {

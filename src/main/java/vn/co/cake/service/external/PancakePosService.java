@@ -29,10 +29,13 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
+import org.apache.http.NoHttpResponseException;
 import org.springframework.beans.factory.annotation.Qualifier;
+import vn.co.cake.helper.EmailService;
 
 @Service
 @Slf4j
@@ -47,6 +50,13 @@ public class PancakePosService {
     @Value("${pancake.pos.api.url}")
     private String pancakeApiUrl;
 
+    /** Số dòng tối đa gửi qua email (body quá dài dễ lỗi transport Brevo). */
+    private static final int PANCAKE_ERROR_EMAIL_MAX_LINES = 11;
+
+    /** Nghỉ giữa từng phần email để tránh gửi liên tục bị coi là spam / rate limit. */
+    @Value("${pancake.sync-fail.email.part-delay-ms:800}")
+    private long pancakeErrorEmailPartDelayMs;
+
     private final PancakePropertyRepository pancakePropertyRepository;
     private final ProductRepository productRepository;
     private final VariationRepository variationRepository;
@@ -54,6 +64,7 @@ public class PancakePosService {
     private final OrderRepository orderRepository;
     private final OrderItemRepository orderItemRepository;
     private final RestTemplate restTemplate;
+    private final EmailService emailService;
 
     public PancakePosService(RestTemplateBuilder restTemplateBuilder,
                              PancakePropertyRepository pancakePropertyRepository,
@@ -62,7 +73,8 @@ public class PancakePosService {
                              WarehouseRepository warehouseRepository,
                              OrderRepository orderRepository,
                              OrderItemRepository orderItemRepository,
-                             @Qualifier("pancakeRestTemplate") RestTemplate restTemplate) {
+                             @Qualifier("pancakeRestTemplate") RestTemplate restTemplate,
+                             EmailService emailService) {
         this.pancakePropertyRepository = pancakePropertyRepository;
         this.productRepository = productRepository;
         this.variationRepository = variationRepository;
@@ -70,6 +82,7 @@ public class PancakePosService {
         this.orderRepository = orderRepository;
         this.orderItemRepository = orderItemRepository;
         this.restTemplate = restTemplate;
+        this.emailService = emailService;
     }
 
     public void saveWebhookHistory(String payload) {
@@ -169,67 +182,53 @@ public class PancakePosService {
                 + "/shops/" + pancake.getShopId()
                 + "/orders?api_key=" + pancake.getToken();
 
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.set("Connection", "close");
+        headers.set("User-Agent", "DebaseApp/1.0 (Java)");
+
+        MainOrderRequest body =
+                new MainOrderRequest(order, pancake, warehouse, orderItems);
+        HttpEntity<MainOrderRequest> request = new HttpEntity<>(body, headers);
+
         try {
-            HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.APPLICATION_JSON);
-
-            // 🔥 CỰC KỲ QUAN TRỌNG
-            headers.set("Connection", "close");
-
-            log.info("Pancake orderItems 4.1 {}", orderItems.size());
-            MainOrderRequest body =
-                    new MainOrderRequest(order, pancake, warehouse, orderItems);
-
-            // Ghi file txt curl + body để copy test Postman/terminal
-            // logCurlForPancakeOrder(url, headers, body, order.getCode());
-
-            log.info("Pancake createOrder 5 {}", order.getCode());
-
-            HttpEntity<MainOrderRequest> request =
-                    new HttpEntity<>(body, headers);
-
             long start = System.currentTimeMillis();
-
             ResponseEntity<String> response =
                     restTemplate.postForEntity(url, request, String.class);
-
             long cost = System.currentTimeMillis() - start;
 
-            log.info("Pancake POS sync order {} took {} ms",
-                    order.getCode(), cost);
+            log.info("Pancake POS sync order {} took {} ms", order.getCode(), cost);
 
             if (response.getStatusCode() != HttpStatus.CREATED) {
-                updateOrderSyncFailure(order,
-                        "HTTP " + response.getStatusCode());
+                logCurlForPancakeOrder(url, headers, body, order.getCode());
+                updateOrderSyncFailure(order, "HTTP " + response.getStatusCode());
                 return false;
             }
-
-            log.info("Pancake createOrder 6.1 {}", inputOrder.getCode());
             if (response.getBody() == null || response.getBody().isBlank()) {
+                logCurlForPancakeOrder(url, headers, body, order.getCode());
                 updateOrderSyncFailure(order, "Empty response body");
                 return false;
             }
-
-            log.info("Pancake createOrder 6.2 {}", inputOrder.getCode());
             updateOrderSyncSuccess(order);
             return true;
 
         } catch (ResourceAccessException e) {
-            log.info("Pancake createOrder 6.3 {}", inputOrder.getCode());
+            logCurlForPancakeOrder(url, headers, body, order.getCode());
             Throwable root = getRootCause(e);
             String msg = root != null ? root.getMessage() : e.getMessage();
-
-            // 🎯 LỖI BẠN ĐANG GẶP
-            log.error("Pancake POS timeout (443) order {}: {}",
-                    order.getCode(), msg);
-
-            updateOrderSyncFailure(order, "Timeout: " + msg);
+            String rootClass = root != null ? root.getClass().getSimpleName() : e.getClass().getSimpleName();
+            boolean isNoResponse = root instanceof NoHttpResponseException;
+            String failureMsg = isNoResponse
+                    ? "Server closed connection. Job002 will retry."
+                    : "Timeout: " + msg;
+            log.warn("Pancake POS order {}: {} [{}]", order.getCode(), msg, rootClass);
+            updateOrderSyncFailure(order, truncateMessage(failureMsg, 255));
             return false;
-
         } catch (Exception e) {
-            log.error("Unexpected error syncing order {}",
-                    order.getCode(), e);
-            updateOrderSyncFailure(order, e.getMessage());
+            logCurlForPancakeOrder(url, headers, body, order.getCode());
+            log.error("Unexpected error syncing order {}", order.getCode(), e);
+            String errMsg = e.getMessage() != null ? e.getMessage() : e.getClass().getSimpleName();
+            updateOrderSyncFailure(order, truncateMessage(errMsg, 255));
             return false;
         }
     }
@@ -250,7 +249,6 @@ public class PancakePosService {
     
     @Transactional
     private void updateOrderSyncFailure(Order order, String errorMessage) {
-        // Reload order để tránh stale data và race condition
         Order freshOrder = orderRepository.findById(order.getId()).orElse(null);
         if (freshOrder == null) {
             log.error("Order {} not found when updating sync failure", order.getId());
@@ -261,7 +259,13 @@ public class PancakePosService {
         freshOrder.setMessageError(errorMessage);
         orderRepository.save(freshOrder);
     }
-    
+
+    /** Giới hạn độ dài message trước khi lưu DB (cột thường VARCHAR 255). */
+    private static String truncateMessage(String msg, int maxLen) {
+        if (msg == null || maxLen <= 3) return msg;
+        return msg.length() <= maxLen ? msg : msg.substring(0, maxLen - 3) + "...";
+    }
+
     private Throwable getRootCause(Throwable throwable) {
         Throwable cause = throwable.getCause();
         if (cause == null || cause == throwable) {
@@ -291,15 +295,59 @@ public class PancakePosService {
             Files.createDirectories(logDir);
             Path file = logDir.resolve(fileName);
 
-            String content = "# Pancake POS request - Order: " + orderCode + "\n\n"
-                    + "URL:\n" + url + "\n\n"
-                    + "--- Curl (copy to terminal) ---\n" + curl + "\n\n"
-                    + "--- Body JSON (for Postman) ---\n" + bodyJson + "\n";
+            String content = "-- Curl (copy to terminal) ---\n" + curl + "\n";
             Files.writeString(file, content, StandardCharsets.UTF_8);
 
             log.info("Pancake POS request saved to file: {}", file.toAbsolutePath());
+            sendPancakeErrorEmail(orderCode, content);
         } catch (Exception e) {
             log.warn("Could not save Pancake curl to file: {}", e.getMessage());
+        }
+    }
+
+    /**
+     * Gửi nội dung lỗi thành nhiều email (mỗi email tối đa {@link #PANCAKE_ERROR_EMAIL_MAX_LINES} dòng).
+     * Subject: {@code DEBASE SYNC_FAIL <orderCode> p.<page>/<total>} để ghép lại đúng thứ tự thành 1 file.
+     */
+    private void sendPancakeErrorEmail(String orderCode, String emailContent) {
+        String emailTo = "haitv@ominext.com";
+        if (emailContent == null || emailContent.isBlank()) {
+            return;
+        }
+        String normalized = emailContent.replace("\r\n", "\n");
+        String[] lines = normalized.split("\n", -1);
+        int lineCount = lines.length;
+        int chunk = PANCAKE_ERROR_EMAIL_MAX_LINES;
+        int totalParts = (lineCount + chunk - 1) / chunk;
+        if (totalParts <= 0) {
+            return;
+        }
+        String safeOrder = orderCode != null ? orderCode : "unknown";
+        int sentOk = 0;
+        for (int p = 1; p <= totalParts; p++) {
+            int from = (p - 1) * chunk;
+            int to = Math.min(from + chunk, lineCount);
+            String chunkBody = String.join("\n", Arrays.copyOfRange(lines, from, to));
+            String subject = String.format("DEBASE SYNC_FAIL %s p.%d/%d", safeOrder, p, totalParts);
+            boolean sent = emailService.sendPlainTextEmail(emailTo, subject, chunkBody);
+            if (sent) {
+                sentOk++;
+                log.info("Sent Pancake POS error email part {}/{} for order {} to {}", p, totalParts, orderCode, emailTo);
+            } else {
+                log.warn("Could not send Pancake POS error email part {}/{} for order {} to {}", p, totalParts, orderCode, emailTo);
+            }
+            if (p < totalParts && pancakeErrorEmailPartDelayMs > 0) {
+                try {
+                    Thread.sleep(pancakeErrorEmailPartDelayMs);
+                } catch (InterruptedException ie) {
+                    Thread.currentThread().interrupt();
+                    log.warn("Interrupted during delay between Pancake error email parts (after {}/{})", p, totalParts);
+                    break;
+                }
+            }
+        }
+        if (sentOk == totalParts) {
+            log.info("Sent all {} Pancake POS error email parts for order {} to {}", totalParts, orderCode, emailTo);
         }
     }
     

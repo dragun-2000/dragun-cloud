@@ -152,12 +152,21 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public Order detail(String code) {
-        return orderRepository.findFirstByCode(code);
+        Order order = orderRepository.findFirstByCode(code);
+        if (order != null) {
+            // Tải orderItems trong session (tránh LazyInitializationException khi build OrderDetailResponse ở controller).
+            order.getOrderItems().size();
+        }
+        return order;
     }
 
     @Override
     public Order detail(Long accountId) {
-        return orderRepository.findFirstByAccountIdOrderByCreatedDesc(accountId);
+        Order order = orderRepository.findFirstByAccountIdOrderByCreatedDesc(accountId);
+        if (order != null) {
+            order.getOrderItems().size();
+        }
+        return order;
     }
 
     @Override

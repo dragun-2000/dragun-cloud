@@ -1,0 +1,93 @@
+-- Curl (copy to terminal) ---
+curl -X POST 'https://pos.pages.fm/api/v1/shops/2447703/orders?api_key=4a3571cda51746cabae871dd8813b720' -H 'Content-Type: application/json' -H 'Connection: close' -d '{
+  "bill_full_name" : "Lê Trung Hiếu ",
+  "bill_phone_number" : "0968258585",
+  "received_at_shop" : false,
+  "page_id" : "1003674396443774",
+  "account" : 1,
+  "account_name" : "Lê Trung Hiếu ",
+  "assigning_seller_id" : "861d03d6-6e08-48dc-b4f8-5034e738ab1b",
+  "items" : [ {
+    "discount_each_product" : 0,
+    "one_time_product" : false,
+    "quantity" : 1,
+    "variation_id" : "6b7225c6-7b29-4172-b76c-1819285e8f52",
+    "product_id" : "5eef79fb-0ec1-4155-932a-9522b9cd4b92",
+    "variation_info" : {
+      "detail" : null,
+      "fields" : null,
+      "display_id" : "KP2210XAMM",
+      "name" : "basé KNIT POLO 01 - Áo Len Polo Tay Ngắn",
+      "product_display_id" : "KP2210XAMM",
+      "retail_price" : 550000,
+      "weight" : 200
+    },
+    "_bonus_product" : false,
+    "_discount_percent" : false,
+    "_wholesale" : false
+  }, {
+    "discount_each_product" : 0,
+    "one_time_product" : false,
+    "quantity" : 1,
+    "variation_id" : "c6baf753-632e-4d9e-9b19-cef61e7c1fc6",
+    "product_id" : "883bd849-8294-41bf-a980-b90619f7df29",
+    "variation_info" : {
+      "detail" : null,
+      "fields" : null,
+      "display_id" : "LS002M",
+      "name" : "basé LONG SLEEVE 02 - Áo Dài Tay 2 Cổ Tròn Cài Cúc \"HENLEY HENLEY\"",
+      "product_display_id" : "LS002M",
+      "retail_price" : 460000,
+      "weight" : 200
+    },
+    "_bonus_product" : false,
+    "_discount_percent" : false,
+    "_wholesale" : false
+  }, {
+    "discount_each_product" : 0,
+    "one_time_product" : false,
+    "quantity" : 1,
+    "variation_id" : "e50cafef-b423-4bd3-aff0-bfdbb05aa011",
+    "product_id" : "58f0cbf7-4bae-4591-8446-84e0de3a68b8",
+    "variation_info" : {
+      "detail" : null,
+      "fields" : null,
+      "display_id" : "Q1309TRANGM",
+      "name" : "basé PANTS 03 - Quần Ống Rộng Form Barrel Chất COTTON",
+      "product_display_id" : "Q1309TRANGM",
+      "retail_price" : 490000,
+      "weight" : 200
+    },
+    "_bonus_product" : false,
+    "_discount_percent" : false,
+    "_wholesale" : false
+  } ],
+  "note" : "WEB + 35000 tiền phí ship setting trên web Debase",
+  "note_print" : "",
+  "returned_reason" : 0,
+  "warehouse_id" : "17596481-f7db-4981-ba1d-38e91dcb0ee7",
+  "shipping_address" : {
+    "address" : "258/25 Bông Sao Phường 05, Quận 8, Thành phố Hồ Chí Minh",
+    "commune_id" : null,
+    "country_code" : null,
+    "district_id" : null,
+    "full_address" : "258/25 Bông Sao Phường 05, Quận 8, Thành phố Hồ Chí Minh",
+    "full_name" : "Lê Trung Hiếu ",
+    "phone_number" : "0968258585",
+    "post_code" : null,
+    "province_id" : null
+  },
+  "shipping_fee" : 35000,
+  "shop_id" : 2447703,
+  "discount" : 225000,
+  "custom_id" : "26032700001",
+  "warehouse_info" : {
+    "districtId" : "10121",
+    "fullAddress" : "nhà 08-BT5, đường Foresa 6B, Phường Xuân Phương, Quận Nam Từ Liêm, Hà Nội",
+    "name" : "Kho Debase",
+    "phoneNumber" : "0877037817",
+    "provinceId" : "101"
+  },
+  "activatedPromotionAdvances" : null,
+  "_free_shipping" : true
+}'

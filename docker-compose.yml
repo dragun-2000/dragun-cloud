@@ -10,7 +10,8 @@ services:
       SPRING_DATASOURCE_USERNAME: dragun
       SPRING_DATASOURCE_PASSWORD: Picachu@123
       SPRING_JPA_HIBERNATE_DDL_AUTO: none
-      JAVA_TOOL_OPTIONS: "-XX:-UseContainerSupport"
+      # Ép JVM dùng IPv4 (curl trong container dùng IPv4 → OK; Java mặc định có thể thử IPv6 → timeout 443)
+      JAVA_TOOL_OPTIONS: "-XX:-UseContainerSupport -Djava.net.preferIPv4Stack=true"
       # Brevo: API key từ tab "API keys & MCP" (đặt trong .env: BREVO_API_KEY=...)
       BREVO_API_KEY: ${BREVO_API_KEY:-}
 

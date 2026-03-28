@@ -11,7 +11,7 @@ import java.util.List;
 public interface OrderRepository extends JpaRepository<Order, Long>, CustomOrderRepository {
     Order findFirstByCode(String code);
     Order findFirstByAccountIdOrderByCreatedDesc(Long accountId);
-    List<Order> findByStatusAndCountErrorLessThan(String status, int maxCountError);
+    List<Order> findByStatusAndCountErrorLessThanAndDeletedFalse(String status, int maxCountError);
     List<Order> findByPhoneAndDeletedFalseOrderByCreatedDesc(String phone);
 
     @Query(

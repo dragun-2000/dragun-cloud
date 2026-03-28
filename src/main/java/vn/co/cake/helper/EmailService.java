@@ -1,17 +1,26 @@
 package vn.co.cake.helper;
 
-import sibApi.TransactionalEmailsApi;
-import sibModel.*;
-import sendinblue.ApiClient;
-import sendinblue.ApiException;
-import sendinblue.Configuration;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.http.NoHttpResponseException;
+import org.apache.http.impl.NoConnectionReuseStrategy;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClientBuilder;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.web.client.RestTemplateBuilder;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestClientException;
+import org.springframework.web.client.RestTemplate;
 import vn.co.cake.dto.GenericMailForm;
 import vn.co.cake.enums.MailType;
-
-import java.util.Collections;
 
 @Slf4j
 @Service
@@ -24,19 +33,49 @@ public class EmailService {
      * SMTP key (xsmtpsib-...) chỉ dùng cho kết nối SMTP → gọi REST API với SMTP key sẽ bị 401.
      */
     private final String brevoApiKey;
+    private final String brevoApiBaseUrl;
+    private final String brevoEmailEndpoint;
+    private final RestTemplate restTemplate;
+    private final ObjectMapper objectMapper;
 
     public EmailService(
-            @Value("${brevo.api.key:}") String brevoApiKey) {
+            @Value("${brevo.api.key:}") String brevoApiKey,
+            @Value("${brevo.api.base-url:https://api.brevo.com}") String brevoApiBaseUrl,
+            @Value("${brevo.api.connect-timeout-ms:10000}") int connectTimeoutMs,
+            @Value("${brevo.api.read-timeout-ms:60000}") int readTimeoutMs,
+            RestTemplateBuilder restTemplateBuilder) {
         this.brevoApiKey = brevoApiKey != null ? brevoApiKey.trim() : "";
+        this.brevoApiBaseUrl = brevoApiBaseUrl != null ? brevoApiBaseUrl.trim() : "https://api.brevo.com";
+        this.brevoEmailEndpoint = this.brevoApiBaseUrl + "/v3/smtp/email";
+
+        CloseableHttpClient apacheHttpClient = HttpClientBuilder.create()
+                // Retry đúng 1 lần nếu server đóng socket trước khi phản hồi.
+                .setRetryHandler((exception, executionCount, context) ->
+                        executionCount <= 2 && exception instanceof NoHttpResponseException)
+                // Tránh reuse stale keep-alive connection gây NoHttpResponseException.
+                .setConnectionReuseStrategy(NoConnectionReuseStrategy.INSTANCE)
+                .build();
+
+        HttpComponentsClientHttpRequestFactory requestFactory = new HttpComponentsClientHttpRequestFactory(apacheHttpClient);
+        requestFactory.setConnectTimeout(connectTimeoutMs);
+        requestFactory.setReadTimeout(readTimeoutMs);
+
+        this.restTemplate = restTemplateBuilder
+                .requestFactory(() -> requestFactory)
+                .build();
+        this.objectMapper = new ObjectMapper();
         if (this.brevoApiKey.isEmpty()) {
             log.warn("brevo.api.key is empty - email sending will fail. Set in config or env BREVO_API_KEY. Use API key from Brevo: Settings > SMTP & API > API keys & MCP");
+        } else {
+            log.info("Brevo RestTemplate initialized: endpoint={}, connect={}ms, read={}ms",
+                    this.brevoEmailEndpoint, connectTimeoutMs, readTimeoutMs);
         }
     }
 
     /**
      * Gửi email xác minh tài khoản / đặt lại mật khẩu
      */
-    public void sendEmail(String emailTo, GenericMailForm genericMailForm, MailType mailType) {
+    public boolean sendEmail(String emailTo, GenericMailForm genericMailForm, MailType mailType) {
         String subject = mailType.getSubject();
 
         String username = String.format("Tên người dùng: %s", genericMailForm.getAccountName());
@@ -46,51 +85,95 @@ public class EmailService {
 
         String textContent = String.format("%s \n %s \n Vui lòng truy cập từ URL bên dưới và đặt lại mật khẩu của bạn: %s", username, phone, url);
 
-        send(emailTo, subject, textContent);
+        return send(emailTo, subject, textContent);
     }
 
     /**
      * Gửi email thông báo đơn hàng mới
      */
-    public void sendEmail(String emailTo, GenericMailForm genericMailForm) {
+    public boolean sendEmail(String emailTo, GenericMailForm genericMailForm) {
         String subject = "[ORDER] Có đơn hàng mới";
         String url = String.format("%s/admin/orders", genericMailForm.getUrl());
 
         String textContent = String.format("Vui lòng truy cập từ URL bên dưới để xem chi tiết đơn hàng:%s", url);
 
-        send(emailTo, subject, textContent);
+        return send(emailTo, subject, textContent);
+    }
+
+    /**
+     * Gửi email text tùy biến (dùng cho cảnh báo kỹ thuật).
+     */
+    public boolean sendPlainTextEmail(String emailTo, String subject, String textContent) {
+        String safeSubject = subject != null && !subject.isBlank() ? subject : "System notification";
+        // String safeContent = buildSafePlainTextContent(textContent);
+        return send(emailTo, safeSubject, textContent);
     }
 
     /**
      * Hàm xử lý gửi email qua Brevo REST API.
      * Yêu cầu: brevo.api.key phải là API key (lấy từ Brevo > Settings > SMTP & API > tab "API keys & MCP"), không phải SMTP key.
      */
-    private void send(String emailTo, String subject, String textContent) {
+    private boolean send(String emailTo, String subject, String textContent) {
         if (brevoApiKey == null || brevoApiKey.isEmpty()) {
             log.error("Cannot send email: brevo.api.key not set. Use API key from Brevo > API keys & MCP (not SMTP key).");
-            return;
+            return false;
         }
-        ApiClient defaultClient = Configuration.getDefaultApiClient();
-        defaultClient.setApiKey(brevoApiKey);
-
-        TransactionalEmailsApi apiInstance = new TransactionalEmailsApi(defaultClient);
-        SendSmtpEmail sendSmtpEmail = new SendSmtpEmail();
-
-        sendSmtpEmail.setSubject(subject);
-        sendSmtpEmail.setTextContent(textContent);
-        sendSmtpEmail.setSender(new SendSmtpEmailSender()
-                .name("Debase")
-                .email(FROM_EMAIL));
-        sendSmtpEmail.setTo(Collections.singletonList(
-                new SendSmtpEmailTo().email(emailTo)));
 
         try {
-            CreateSmtpEmail response = apiInstance.sendTransacEmail(sendSmtpEmail);
-            log.info("Email sent successfully to {} with subject '{}'. Message ID: {}", 
-                    emailTo, subject, response.getMessageId());
-        } catch (ApiException e) {
-            log.error("Failed to send email to {} - Status: {}, Body: {}", 
-                    emailTo, e.getCode(), e.getResponseBody(), e);
+            ObjectNode payload = objectMapper.createObjectNode();
+            payload.put("subject", subject);
+            payload.put("textContent", textContent);
+            ObjectNode sender = payload.putObject("sender");
+            sender.put("name", "Debase");
+            sender.put("email", FROM_EMAIL);
+            ArrayNode to = payload.putArray("to");
+            ObjectNode toItem = to.addObject();
+            toItem.put("email", emailTo);
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            headers.set("api-key", brevoApiKey);
+            HttpEntity<String> entity = new HttpEntity<>(objectMapper.writeValueAsString(payload), headers);
+
+            ResponseEntity<String> response = restTemplate.postForEntity(brevoEmailEndpoint, entity, String.class);
+            HttpStatus status = response.getStatusCode();
+            if (status.is2xxSuccessful()) {
+                log.info("Email sent successfully to {} with subject '{}'. Status={}",
+                        emailTo, subject, status.value());
+                return true;
+            }
+            log.error("Failed to send email to {} - Status: {}, Body: {}",
+                    emailTo, status.value(), response.getBody());
+            return false;
+        } catch (RestClientException e) {
+            Throwable root = getRootCause(e);
+            log.error("Transport error sending email to {} - RootCause: {}",
+                    emailTo, root != null ? root.toString() : "n/a", e);
+            return false;
+        } catch (Exception e) {
+            Throwable root = getRootCause(e);
+            log.error("Unexpected error when sending email to {} - RootCause: {}",
+                    emailTo, root != null ? root.toString() : "n/a", e);
+            return false;
         }
+    }
+
+    private Throwable getRootCause(Throwable throwable) {
+        Throwable current = throwable;
+        while (current != null && current.getCause() != null && current.getCause() != current) {
+            current = current.getCause();
+        }
+        return current;
+    }
+
+    private String buildSafePlainTextContent(String rawContent) {
+        if (rawContent == null || rawContent.isBlank()) {
+            return "No content.";
+        }
+        String normalized = rawContent.replace("\r\n", "\n").trim();
+        int maxLen = 3500;
+        if (normalized.length() <= maxLen) {
+            return normalized;
+        }
+        return normalized.substring(0, maxLen) + "\n\n...[truncated]";
     }
 }
