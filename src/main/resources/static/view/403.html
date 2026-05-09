@@ -15,15 +15,26 @@
         <link rel="stylesheet" href="/css/style.css" />
     </head>
     <body class="h-100">
-        <div class="container-fluid">
-            <div class="error">
-                <div class="error__content">
-                    <h2>403</h2>
-                    <h3>Something went wrong!</h3>
-                    <p>There was a problem on our end. Please try again later.</p>
-                    <button type="button" class="btn btn-accent btn-pill" onclick="window.history.go(-1); return false;">&larr; 戻る</button>
+        <div class="container-fluid h-100 d-flex align-items-center justify-content-center">
+            <div class="card shadow-sm" style="max-width: 500px; width: 100%; border-top: 4px solid #ffc107;">
+                <div class="card-body text-center py-5 px-4">
+                    <i class="fa fa-lock text-warning mb-3" style="font-size: 3rem;"></i>
+                    <h2 class="font-weight-bold text-warning">403</h2>
+                    <h4 class="mb-3">Truy cập bị từ chối!</h4>
+                    <p class="text-muted mb-4">Bạn không có quyền truy cập trang này.</p>
+                    <hr class="my-4"/>
+                    <div class="d-flex justify-content-center align-items-center flex-wrap" style="gap: 12px;">
+                        <button type="button" class="btn btn-accent btn-pill" onclick="window.history.go(-1); return false;">
+                            <i class="fa fa-arrow-left"></i> Quay lại
+                        </button>
+                        <a href="https://www.facebook.com/debase.95" target="_blank" class="btn btn-outline-primary btn-pill">
+                            <i class="fa fa-facebook"></i> Liên hệ hỗ trợ
+                        </a>
+                    </div>
+                    <p class="text-muted mt-3 mb-0" style="font-size: 0.85rem;">
+                        Nếu lỗi vẫn tiếp tục, vui lòng liên hệ với chúng tôi để được hỗ trợ.
+                    </p>
                 </div>
-                <!-- / .error_content -->
             </div>
         </div>
         <script src="/js/font-icon.js"></script>

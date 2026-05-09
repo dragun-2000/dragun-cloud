@@ -128,7 +128,7 @@ public class ProductServiceImpl implements ProductService {
     private Product findFirstById(Long id) throws CommonServletException {
         Product product = productRepository.findFirstByIdAndDeletedIsFalse(id);
         if (Objects.isNull(product)) {
-            throw new CommonServletException(String.format("Mã Sản Phẩm = %s đã xóa khỏi cửa hàng. Hãy restock để có thể chỉnh sửa tiếp!", id));
+            throw new CommonServletException(String.format("Mã Sản Phẩm = %s không còn tồn tại. vui lòng kiểm tra lại!", id));
         }
         return product;
     }

@@ -2,6 +2,7 @@ package vn.co.cake.service.impl;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 import vn.co.cake.dto.CartForm;
 import vn.co.cake.dto.OrderItem;
@@ -24,6 +25,7 @@ import java.util.stream.Collectors;
 
 @Slf4j
 @Service
+@Transactional(readOnly = true)
 public class CartServiceImpl implements CartService {
     private final CartRepository cartRepository;
     private final AccountRepository accountRepository;
@@ -61,6 +63,7 @@ public class CartServiceImpl implements CartService {
     }
 
     @Override
+    @Transactional
     public void create(CartForm cartForm, Long accountId, String variationId) throws CommonServletException {
         Account account = accountRepository.findFirstByIdAndDeletedIsFalse(accountId);
         if (Objects.isNull(account)) return;
@@ -186,6 +189,7 @@ public class CartServiceImpl implements CartService {
     }
 
     @Override
+    @Transactional
     public void deletedCartByAccount(Long accountId) {
         Cart cart = cartRepository.findFirstCartByAccountId(accountId);
         if (Objects.isNull(cart)) return;
