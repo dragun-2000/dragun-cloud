@@ -5,32 +5,93 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="a5e999e8-a3db-4f03-91f7-fa5e14c40d35" name="Changes" comment="refactor code">
+      <change afterPath="$PROJECT_DIR$/docs/comparison-old-new.html" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/docs/comparison-old-new.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/docs/new.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/docs/old.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/init/migration_add_order_pancake_sync_fields.sql" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/vn/co/cake/config/MailTemplateConfig.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/vn/co/cake/dto/OrderConfirmationMailModel.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/vn/co/cake/dto/PasswordResetMailModel.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/vn/co/cake/job/Job003.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/vn/co/cake/payment/dto/PaymentCheckoutStatusResponse.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/vn/co/cake/payment/dto/PaymentOrderLogSummary.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/vn/co/cake/payment/support/OrderConfirmationMailScheduler.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/vn/co/cake/payment/support/PancakeSyncScheduler.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/vn/co/cake/payment/support/PaymentCheckoutFlowLog.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/vn/co/cake/payment/support/VietQrPaymentUrlResolver.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/vn/co/cake/service/mail/OrderConfirmationMailService.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/vn/co/cake/utils/OrderPricingUtil.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/resources/static/images/common/flag-us.svg" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/resources/static/images/common/flag-vn.svg" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/resources/templates/template/mail/order_confirmation_template.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/CODE_CHANGES_REVIEW.md" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/CODE_REVIEW_FIXES.md" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/ORDER_LOGIC_ANALYSIS.md" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/ORDER_STATUS_ANALYSIS.md" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/vn/co/cake/ai/controller/SizeAdviceController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/vn/co/cake/ai/controller/SizeAdviceController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/vn/co/cake/ai/service/SizeAdviceService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/vn/co/cake/ai/service/SizeAdviceService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/vn/co/cake/ai/service/impl/SizeAdviceServiceImpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/vn/co/cake/ai/service/impl/SizeAdviceServiceImpl.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/vn/co/cake/ai/service/openai/OpenAIService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/vn/co/cake/ai/service/openai/OpenAIService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/vn/co/cake/ai/service/openai/OpenAIServiceImpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/vn/co/cake/ai/service/openai/OpenAIServiceImpl.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Dockerfile" beforeDir="false" afterPath="$PROJECT_DIR$/Dockerfile" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docker-compose.yml" beforeDir="false" afterPath="$PROJECT_DIR$/docker-compose.yml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/init/init.sql" beforeDir="false" afterPath="$PROJECT_DIR$/init/init.sql" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/pom.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/redis.conf" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/vn/co/cake/common/RequestPathConst.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/vn/co/cake/common/RequestPathConst.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/vn/co/cake/common/ScreenPathConst.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/vn/co/cake/common/ScreenPathConst.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/vn/co/cake/common/StringConst.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/vn/co/cake/common/StringConst.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/vn/co/cake/config/SessionConfig.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/vn/co/cake/constants/OrderConstants.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/vn/co/cake/constants/OrderConstants.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/vn/co/cake/controller/AM002/AM002Controller.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/vn/co/cake/controller/AM002/AM002Controller.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/vn/co/cake/controller/AM006/AM006Controller.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/vn/co/cake/controller/AM006/AM006Controller.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/vn/co/cake/controller/SA001/SA001Controller.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/vn/co/cake/controller/SA001/SA001Controller.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/vn/co/cake/controller/external/MoMoCallbackController.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/vn/co/cake/controller/external/MomoController.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/vn/co/cake/controller/external/dto/MainOrderRequest.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/vn/co/cake/controller/external/dto/MainOrderRequest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/vn/co/cake/controller/external/dto/OrderPancakeResponse.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/vn/co/cake/controller/external/dto/OrderPancakeResponse.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/vn/co/cake/controller/external/dto/response/OrderDetailResponse.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/vn/co/cake/controller/external/dto/response/OrderDetailResponse.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/vn/co/cake/controller/store/CartController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/vn/co/cake/controller/store/CartController.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/vn/co/cake/controller/store/HomeController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/vn/co/cake/controller/store/HomeController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/vn/co/cake/entity/Account.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/vn/co/cake/entity/Account.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/vn/co/cake/request/AccountRequest.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/vn/co/cake/request/AccountRequest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/vn/co/cake/entity/CartItem.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/vn/co/cake/entity/CartItem.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/vn/co/cake/entity/Order.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/vn/co/cake/entity/Order.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/vn/co/cake/enums/MailType.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/vn/co/cake/enums/MailType.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/vn/co/cake/enums/OrderStatus.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/vn/co/cake/enums/OrderStatus.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/vn/co/cake/enums/PaymentMethods.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/vn/co/cake/enums/PaymentMethods.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/vn/co/cake/helper/EmailService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/vn/co/cake/helper/EmailService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/vn/co/cake/job/Job002.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/vn/co/cake/job/Job002.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/vn/co/cake/queue/MessagePublisher.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/vn/co/cake/queue/RedisMessagePublisher.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/vn/co/cake/queue/RedisMessageSubscriber.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/vn/co/cake/repository/OrderRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/vn/co/cake/repository/OrderRepository.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/vn/co/cake/repository/impl/CustomOrderRepositoryImpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/vn/co/cake/repository/impl/CustomOrderRepositoryImpl.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/vn/co/cake/request/PaymentRequest.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/vn/co/cake/security/admin/AdminSecurityConfiguration.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/vn/co/cake/security/admin/AdminSecurityConfiguration.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/vn/co/cake/security/repository/ContextRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/vn/co/cake/security/repository/ContextRepository.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/vn/co/cake/security/service/ContextService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/vn/co/cake/security/service/ContextService.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/vn/co/cake/security/user/UserSecurityConfiguration.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/vn/co/cake/security/user/UserSecurityConfiguration.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/vn/co/cake/service/impl/AccountServiceImpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/vn/co/cake/service/impl/AccountServiceImpl.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/vn/co/cake/utils/DateUtil.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/vn/co/cake/utils/DateUtil.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/vn/co/cake/utils/PhoneValidator.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/vn/co/cake/utils/PhoneValidator.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/vn/co/cake/service/MoMoPaymentService.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/vn/co/cake/service/OrderService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/vn/co/cake/service/OrderService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/vn/co/cake/service/OtpVerificationService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/vn/co/cake/service/OtpVerificationService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/vn/co/cake/service/external/PancakePosService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/vn/co/cake/service/external/PancakePosService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/vn/co/cake/service/impl/CartServiceImpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/vn/co/cake/service/impl/CartServiceImpl.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/vn/co/cake/service/impl/MoMoPaymentServiceImpl.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/vn/co/cake/service/impl/OrderServiceImpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/vn/co/cake/service/impl/OrderServiceImpl.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/vn/co/cake/utils/MasterUtil.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/vn/co/cake/utils/MasterUtil.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/resources/application-development.properties" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/application-development.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/application-production.properties" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/application-production.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/application-staging.properties" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/application-staging.properties" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/resources/application.properties" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/application.properties" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/resources/static/css/index/styles.css" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/static/css/index/styles.css" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/static/js/signup/signup.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/static/js/signup/signup.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/templates/product-detail.html" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/templates/product-detail.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/templates/profile.html" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/templates/profile.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/templates/register.html" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/templates/register.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/static/js/index/common.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/static/js/index/common.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/static/js/payment-detail/order-history.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/static/js/payment-detail/order-history.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/static/js/payment-detail/payment-detail.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/static/js/payment-detail/payment-detail.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/templates/AM002/AM002.html" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/templates/AM002/AM002.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/templates/AM008/AM008.html" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/templates/AM008/AM008.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/templates/header.html" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/templates/header.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/templates/order-status.html" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/templates/order-status.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/templates/payment-detail.html" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/templates/payment-detail.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/templates/template/mail/approve_request_template.html" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/templates/template/mail/change_password_template.html" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/templates/template/mail/create_account_template.html" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/templates/template/mail/forget_password_template.html" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/templates/template/mail/sa-create_account_template.html" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/templates/template/mail/sa-forget_password_template.html" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/templates/template/mail/sa-forget_password_template.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/templates/template/sidebar.html" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/templates/template/sidebar.html" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -45,16 +106,24 @@
     </option>
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
+  <component name="GitHubPullRequestSearchHistory"><![CDATA[{
+  "lastFilter": {
+    "state": "OPEN",
+    "assignee": "trinhvanhai1994"
+  }
+}]]></component>
+  <component name="GithubPullRequestsUISettings"><![CDATA[{
+  "selectedUrlAndAccountId": {
+    "url": "https://github.com/dragun-2000/dragun-cloud.git",
+    "accountId": "21964ce3-c49f-4eb8-bfcd-e2a2c372dbb5"
+  }
+}]]></component>
   <component name="MarkdownSettingsMigration">
     <option name="stateVersion" value="1" />
   </component>
-  <component name="MavenImportPreferences">
-    <option name="generalSettings">
-      <MavenGeneralSettings>
-        <option name="useMavenConfig" value="true" />
-      </MavenGeneralSettings>
-    </option>
-  </component>
+  <component name="ProjectColorInfo"><![CDATA[{
+  "associatedIndex": 2
+}]]></component>
   <component name="ProjectId" id="349UdsA3OMdfdxydy4qbXXqur8x" />
   <component name="ProjectLevelVcsManager">
     <ConfirmationsSetting value="2" id="Add" />
@@ -63,26 +132,32 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;ASKED_ADD_EXTERNAL_FILES&quot;: &quot;true&quot;,
-    &quot;RequestMappingsPanelOrder0&quot;: &quot;0&quot;,
-    &quot;RequestMappingsPanelOrder1&quot;: &quot;1&quot;,
-    &quot;RequestMappingsPanelWidth0&quot;: &quot;75&quot;,
-    &quot;RequestMappingsPanelWidth1&quot;: &quot;75&quot;,
-    &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
-    &quot;WebServerToolWindowFactoryState&quot;: &quot;false&quot;,
-    &quot;last_opened_file_path&quot;: &quot;D:/e-commerce/service-api/pom.xml&quot;,
-    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
-    &quot;project.structure.last.edited&quot;: &quot;SDKs&quot;,
-    &quot;project.structure.proportion&quot;: &quot;0.0&quot;,
-    &quot;project.structure.side.proportion&quot;: &quot;0.2&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;MavenSettings&quot;,
-    &quot;spring.configuration.checksum&quot;: &quot;a1b8585122e1ad60623d6a74d3eb3b6a&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "ASKED_ADD_EXTERNAL_FILES": "true",
+    "Application.Application.executor": "Debug",
+    "Maven.cake [clean].executor": "Run",
+    "Maven.cake [install].executor": "Run",
+    "RequestMappingsPanelOrder0": "0",
+    "RequestMappingsPanelOrder1": "1",
+    "RequestMappingsPanelWidth0": "75",
+    "RequestMappingsPanelWidth1": "75",
+    "RunOnceActivity.OpenProjectViewOnStart": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "SHARE_PROJECT_CONFIGURATION_FILES": "true",
+    "WebServerToolWindowFactoryState": "false",
+    "git-widget-placeholder": "dev/chatbot",
+    "kotlin-language-version-configured": "true",
+    "last_opened_file_path": "D:/project-common/dragun-cloud",
+    "nodejs_package_manager_path": "npm",
+    "project.structure.last.edited": "Modules",
+    "project.structure.proportion": "0.0",
+    "project.structure.side.proportion": "0.2",
+    "settings.editor.selected.configurable": "promo.profiler",
+    "spring.configuration.checksum": "a1b8585122e1ad60623d6a74d3eb3b6a"
   }
-}</component>
+}]]></component>
   <component name="ReactorSettings">
     <option name="notificationShown" value="true" />
   </component>
@@ -185,9 +260,9 @@
           <option name="timeStamp" value="2" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="java-line">
-          <url>file://$PROJECT_DIR$/src/main/java/vn/co/cake/controller/SA001/SA001Controller.java</url>
-          <line>151</line>
-          <option name="timeStamp" value="3" />
+          <url>file://$PROJECT_DIR$/src/main/java/vn/co/cake/payment/api/VietQrPartnerTokenController.java</url>
+          <line>33</line>
+          <option name="timeStamp" value="4" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>

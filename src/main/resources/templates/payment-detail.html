@@ -17,20 +17,6 @@
             <ul>
               <li>
                 <label class="custom-control custom-radio">
-                  <input class="custom-control-input" type="radio" name="radio" checked="" id="payment-momo" value="MOMO" disabled>
-                  <span class="custom-control-indicator"></span>
-                  <span class="custom-control-description">
-                    <span class="custom-icon">
-                      <img src="/images/data/momo.png" alt="">
-                    </span>
-                    <div class="custom-content">
-                      <span class="name">Ví MoMo (Tạm dừng)</span>
-                    </div>
-                  </span>
-                </label>
-              </li>
-              <li>
-                <label class="custom-control custom-radio">
                   <input class="custom-control-input" type="radio" name="radio" checked="checked" id="payment-cod" value="COD">
                   <span class="custom-control-indicator"></span>
                   <span class="custom-control-description">
@@ -45,29 +31,21 @@
               </li>
               <li>
                 <label class="custom-control custom-radio">
-                  <input class="custom-control-input" type="radio" name="radio" checked="checked" id="payment-transfer" value="TRANSFER">
+                  <input class="custom-control-input" type="radio" name="radio" id="payment-vietqr" value="VIETQR">
                   <span class="custom-control-indicator"></span>
                   <span class="custom-control-description">
                     <span class="custom-icon">
                       <img src="/images/data/cod.png" alt="">
                     </span>
                     <div class="custom-content">
-                      <span class="name">Thanh toán qua chuyển khoản ngân hàng</span>
+                      <span class="name">Thanh toán VietQR (chuyển khoản)</span>
                     </div>
                   </span>
                 </label>
                 <div class="boxInformation">
                   <ul class="priceInformation">
                     <li>
-                      <div class="text-left">1. Sau khi đặt hàng, bạn vui lòng chuyển khoản qua tài khoản ngân hàng trong 24h theo tổng giá trị hóa đơn: </div>
-                      <div class="text-center">VIETCOMBANK - 0451000476999 - NGUYỄN TRUNG HIẾU</div>
-                      <div class="text-left">2, Sau khi chuyển khoản bạn vui lòng gửi thông tin gồm: </div>
-                      <div class="text-center">Hoá đơn chuyển khoản + Mã đơn hàng hoặc sđt qua Facebook, Insragram để được xác nhận. Đơn hàng sẽ được giao cho đơn vị vận chuyển trong 24
-H sau khi Online Sale xác nhận thanh toán.</div>
-                      <!-- Thêm hình ảnh ở đây -->
-                      <div class="text-center" style="margin-top: 15px;">
-                        <img id="thumbnail" src="/images/QR_2.jpg" alt="Hướng dẫn chuyển khoản" style="max-width: 200px; cursor: pointer;">
-                      </div>
+                      <div class="text-left">Quét mã VietQR sau khi đặt hàng. Hệ thống tự xác nhận thanh toán trong vài phút.</div>
                     </li>
                   </ul>
                 </div>
@@ -198,6 +176,31 @@ H sau khi Online Sale xác nhận thanh toán.</div>
       </div>
   </div>
 
+  <!-- VietQR: chờ thanh toán / thành công (cùng trang payment-detail) -->
+  <div class="popup" id="vietqrPaymentPopup">
+      <div class="popup-content vietqr-popup-content">
+          <div id="vietqr-wait-view">
+              <h2>Đang chờ thanh toán</h2>
+              <p class="vietqr-popup-lead">Tab thanh toán VietQR đã được mở. Vui lòng quét mã và hoàn tất thanh toán.</p>
+              <p><strong>Mã đơn:</strong> <span id="vietqr-popup-order-id"></span></p>
+              <p><strong>Số tiền:</strong> <span id="vietqr-popup-amount"></span> VND</p>
+              <p><strong>Nội dung CK:</strong> <span id="vietqr-popup-content"></span></p>
+              <p id="vietqr-popup-status" class="vietqr-popup-status">Đang chờ xác nhận thanh toán...</p>
+              <button type="button" id="vietqr-reopen-btn" class="close-btn vietqr-secondary-btn">Mở lại trang thanh toán VietQR</button>
+              <button type="button" id="vietqr-sandbox-btn" class="close-btn vietqr-secondary-btn"
+                      th:if="${sandboxSimulateEnabled}" style="display:none; background-color:#6c757d;">
+                  Đã chuyển khoản — xác nhận thử (sandbox)
+              </button>
+          </div>
+          <div id="vietqr-success-view" style="display:none;">
+              <h2 class="vietqr-success-title">Thanh toán thành công!</h2>
+              <p id="vietqr-success-message">Đơn hàng đã được tạo và đang đồng bộ lên Pancake POS. Cảm ơn bạn đã mua hàng.</p>
+              <button type="button" class="close-btn" onclick="closeVietQrSuccessPopup()">Xem đơn hàng</button>
+          </div>
+      </div>
+  </div>
+  <input type="hidden" id="vietqr-sandbox-enabled" th:if="${sandboxSimulateEnabled}" value="true"/>
+
   <div id="notification" class="notification">
     <span id="notification-message"></span>
   </div>
@@ -286,6 +289,48 @@ H sau khi Online Sale xác nhận thanh toán.</div>
             text-align: center;
             width: 300px;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .vietqr-popup-content {
+            width: 360px;
+            max-width: 92vw;
+        }
+
+        .vietqr-popup-content p {
+            margin: 8px 0;
+            font-size: 14px;
+        }
+
+        .vietqr-popup-lead {
+            color: #555;
+        }
+
+        .vietqr-popup-status {
+            font-weight: 600;
+            color: #856404;
+            margin-top: 12px !important;
+        }
+
+        .vietqr-popup-status.is-success {
+            color: #155724;
+        }
+
+        .vietqr-popup-status.is-error {
+            color: #721c24;
+        }
+
+        .vietqr-success-title {
+            color: #28a745;
+        }
+
+        .vietqr-secondary-btn {
+            background-color: #007bff;
+            margin-top: 10px;
+            width: 100%;
+        }
+
+        .vietqr-secondary-btn:hover {
+            background-color: #0069d9;
         }
 
         .popup-content h2 {

@@ -162,8 +162,8 @@ public class SA001Controller extends BaseController {
 
             boolean stored = otpVerificationService.storeRegistrationData(accountRequest.getPhone(), accountRequest, otpCode);
             if (!stored) {
-                log.error("Failed to store OTP data for phone: {} (check Redis)", accountRequest.getPhone());
-                return new ResponseEntity<>("Không thể lưu OTP. Kiểm tra kết nối Redis và thử lại.", HttpStatus.INTERNAL_SERVER_ERROR);
+                log.error("Failed to store OTP data for phone: {}", accountRequest.getPhone());
+                return new ResponseEntity<>("Không thể lưu OTP. Vui lòng thử lại sau.", HttpStatus.INTERNAL_SERVER_ERROR);
             }
 
             log.info("OTP sent for phone: {}", accountRequest.getPhone());

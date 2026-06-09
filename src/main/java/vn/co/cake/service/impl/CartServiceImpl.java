@@ -18,6 +18,7 @@ import vn.co.cake.repository.CartRepository;
 import vn.co.cake.repository.ProductRepository;
 import vn.co.cake.repository.VariationRepository;
 import vn.co.cake.service.CartService;
+import vn.co.cake.utils.OrderPricingUtil;
 
 import java.math.BigDecimal;
 import java.util.*;
@@ -204,7 +205,7 @@ public class CartServiceImpl implements CartService {
         orderItem.setVariationId(cartItem.getVariation().getVariationId());
         orderItem.setName(cartItem.getVariation().getName());
         orderItem.setQuantity(cartItem.getQuantity());
-        orderItem.setPrice(BigDecimal.valueOf(cartItem.getVariation().getRetailPrice()));
+        orderItem.setPrice(OrderPricingUtil.resolveSellingUnitPrice(product, cartItem.getVariation()));
         // Guard against null product (e.g., product deleted or not found)
         String image = null;
         if (product != null) {

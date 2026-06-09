@@ -79,7 +79,7 @@ public class AM006Controller extends BaseController {
         PageUtil pageUtil = getPageSize(session);
         searchForm = getSessionOrderForm(session, homePage);
         Page<Order> orders = orderService.findAllSyncFailOrders(searchForm, pageUtil);
-        List<OrderDetailResponse> responses = orders.stream().map(OrderDetailResponse::new).collect(Collectors.toList());
+        List<OrderDetailResponse> responses = orders.stream().map(OrderDetailResponse::forList).collect(Collectors.toList());
         model.addAttribute("orders", responses);
         setPaginationAttribute(pageUtil, orders.getTotalElements(), RequestPathConst.AM006, model, settingCondition(searchForm));
         model.addAttribute(SEARCH_CONDITION, searchForm);

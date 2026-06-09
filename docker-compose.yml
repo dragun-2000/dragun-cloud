@@ -4,8 +4,6 @@ services:
   debase-app:
     build: .
     environment:
-      SPRING_REDIS_HOST: debase-redis
-      SPRING_REDIS_PORT: 6379
       SPRING_DATASOURCE_URL: jdbc:postgresql://debase-db:5432/postgres
       SPRING_DATASOURCE_USERNAME: dragun
       SPRING_DATASOURCE_PASSWORD: Picachu@123
@@ -26,7 +24,6 @@ services:
       - "8085:8085"
     depends_on:
       - debase-db
-      - debase-redis
       # - debase-minio
     volumes:
       - /var/www/html/external-images:/var/www/html/external-images
@@ -44,11 +41,6 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./init:/docker-entrypoint-initdb.d
-
-  debase-redis:
-    image: redis:7
-    ports:
-      - "6379:6379"
 
   # debase-pgadmin:
   #   image: dpage/pgadmin4:latest

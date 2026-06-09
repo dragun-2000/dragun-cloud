@@ -8,8 +8,14 @@ import org.apache.http.NoHttpResponseException;
 import org.apache.http.impl.NoConnectionReuseStrategy;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
+import java.util.Locale;
+
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.web.client.RestTemplateBuilder;
+import org.thymeleaf.TemplateEngine;
+import org.thymeleaf.context.Context;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -20,6 +26,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 import vn.co.cake.dto.GenericMailForm;
+import vn.co.cake.dto.PasswordResetMailModel;
 import vn.co.cake.enums.MailType;
 
 @Slf4j
@@ -27,6 +34,7 @@ import vn.co.cake.enums.MailType;
 public class EmailService {
 
     private static final String FROM_EMAIL = "reply@debase.vn"; // phải là email đã xác minh trong Brevo
+    private static final String DEFAULT_STORE_URL = "https://debase.vn";
 
     /**
      * PHẢI dùng API key (tab "API keys & MCP" trong Brevo), KHÔNG dùng SMTP key (tab SMTP).
@@ -37,13 +45,15 @@ public class EmailService {
     private final String brevoEmailEndpoint;
     private final RestTemplate restTemplate;
     private final ObjectMapper objectMapper;
+    private final TemplateEngine mailTemplateEngine;
 
     public EmailService(
             @Value("${brevo.api.key:}") String brevoApiKey,
             @Value("${brevo.api.base-url:https://api.brevo.com}") String brevoApiBaseUrl,
             @Value("${brevo.api.connect-timeout-ms:10000}") int connectTimeoutMs,
             @Value("${brevo.api.read-timeout-ms:60000}") int readTimeoutMs,
-            RestTemplateBuilder restTemplateBuilder) {
+            RestTemplateBuilder restTemplateBuilder,
+            @Qualifier("mailTemplateEngine") TemplateEngine mailTemplateEngine) {
         this.brevoApiKey = brevoApiKey != null ? brevoApiKey.trim() : "";
         this.brevoApiBaseUrl = brevoApiBaseUrl != null ? brevoApiBaseUrl.trim() : "https://api.brevo.com";
         this.brevoEmailEndpoint = this.brevoApiBaseUrl + "/v3/smtp/email";
@@ -64,6 +74,7 @@ public class EmailService {
                 .requestFactory(() -> requestFactory)
                 .build();
         this.objectMapper = new ObjectMapper();
+        this.mailTemplateEngine = mailTemplateEngine;
         if (this.brevoApiKey.isEmpty()) {
             log.warn("brevo.api.key is empty - email sending will fail. Set in config or env BREVO_API_KEY. Use API key from Brevo: Settings > SMTP & API > API keys & MCP");
         } else {
@@ -77,19 +88,56 @@ public class EmailService {
      */
     public boolean sendEmail(String emailTo, GenericMailForm genericMailForm, MailType mailType) {
         String subject = mailType.getSubject();
-
+        String resetUrl = buildPasswordResetUrl(genericMailForm);
         String username = String.format("Tên người dùng: %s", genericMailForm.getAccountName());
         String phone = String.format("Số điện thoại: %s", genericMailForm.getPhone());
-        String url = String.format("%s/SA/SA002/verify_user?accountId=%s&hash=%s",
-                genericMailForm.getUrl(), genericMailForm.getKey(), genericMailForm.getHash());
+        String textContent = String.format(
+                "%s \n %s \n Vui lòng truy cập từ URL bên dưới và đặt lại mật khẩu của bạn: %s",
+                username, phone, resetUrl);
 
-        String textContent = String.format("%s \n %s \n Vui lòng truy cập từ URL bên dưới và đặt lại mật khẩu của bạn: %s", username, phone, url);
+        if (mailType == MailType.SA_FORGET_PASSWORD) {
+            try {
+                String storeUrl = normalizeStoreUrl(genericMailForm.getUrl());
+                PasswordResetMailModel model = PasswordResetMailModel.builder()
+                        .accountName(StringUtils.defaultIfBlank(genericMailForm.getAccountName(), "Quý khách"))
+                        .phone(StringUtils.defaultIfBlank(genericMailForm.getPhone(), "—"))
+                        .resetUrl(resetUrl)
+                        .storeUrl(storeUrl)
+                        .storeDisplayUrl("debase.vn")
+                        .build();
+                Context context = new Context(Locale.forLanguageTag("vi"));
+                context.setVariable("mail", model);
+                String html = mailTemplateEngine.process(mailType.getFileName(), context);
+                return send(emailTo, subject, textContent, html);
+            } catch (Exception ex) {
+                log.warn("Render password reset HTML failed, fallback to plain text: {}", ex.getMessage());
+            }
+        }
+        return send(emailTo, subject, textContent, null);
+    }
 
-        return send(emailTo, subject, textContent);
+    private static String buildPasswordResetUrl(GenericMailForm genericMailForm) {
+        String base = StringUtils.trimToEmpty(genericMailForm.getUrl());
+        while (base.endsWith("/")) {
+            base = base.substring(0, base.length() - 1);
+        }
+        return String.format("%s/SA/SA002/verify_user?accountId=%s&hash=%s",
+                base, genericMailForm.getKey(), genericMailForm.getHash());
+    }
+
+    private static String normalizeStoreUrl(String url) {
+        String base = StringUtils.isNotBlank(url) ? url.trim() : DEFAULT_STORE_URL;
+        while (base.endsWith("/")) {
+            base = base.substring(0, base.length() - 1);
+        }
+        if (!base.startsWith("http://") && !base.startsWith("https://")) {
+            base = "https://" + base;
+        }
+        return base;
     }
 
     /**
-     * Gửi email thông báo đơn hàng mới
+     * Gửi email thông báo đơn hàng mới (admin).
      */
     public boolean sendEmail(String emailTo, GenericMailForm genericMailForm) {
         String subject = "[ORDER] Có đơn hàng mới";
@@ -97,7 +145,7 @@ public class EmailService {
 
         String textContent = String.format("Vui lòng truy cập từ URL bên dưới để xem chi tiết đơn hàng:%s", url);
 
-        return send(emailTo, subject, textContent);
+        return send(emailTo, subject, textContent, null);
     }
 
     /**
@@ -105,15 +153,26 @@ public class EmailService {
      */
     public boolean sendPlainTextEmail(String emailTo, String subject, String textContent) {
         String safeSubject = subject != null && !subject.isBlank() ? subject : "System notification";
-        // String safeContent = buildSafePlainTextContent(textContent);
-        return send(emailTo, safeSubject, textContent);
+        return send(emailTo, safeSubject, textContent, null);
+    }
+
+    /**
+     * Gửi email HTML (có bản text dự phòng cho client không hỗ trợ HTML).
+     */
+    public boolean sendHtmlEmail(String emailTo, String subject, String htmlContent, String textContent) {
+        String safeSubject = subject != null && !subject.isBlank() ? subject : "Debase notification";
+        String safeHtml = htmlContent != null && !htmlContent.isBlank() ? htmlContent : "<p></p>";
+        String safeText = textContent != null && !textContent.isBlank()
+                ? textContent
+                : buildSafePlainTextContent(htmlContent);
+        return send(emailTo, safeSubject, safeText, safeHtml);
     }
 
     /**
      * Hàm xử lý gửi email qua Brevo REST API.
      * Yêu cầu: brevo.api.key phải là API key (lấy từ Brevo > Settings > SMTP & API > tab "API keys & MCP"), không phải SMTP key.
      */
-    private boolean send(String emailTo, String subject, String textContent) {
+    private boolean send(String emailTo, String subject, String textContent, String htmlContent) {
         if (brevoApiKey == null || brevoApiKey.isEmpty()) {
             log.error("Cannot send email: brevo.api.key not set. Use API key from Brevo > API keys & MCP (not SMTP key).");
             return false;
@@ -123,6 +182,9 @@ public class EmailService {
             ObjectNode payload = objectMapper.createObjectNode();
             payload.put("subject", subject);
             payload.put("textContent", textContent);
+            if (htmlContent != null && !htmlContent.isBlank()) {
+                payload.put("htmlContent", htmlContent);
+            }
             ObjectNode sender = payload.putObject("sender");
             sender.put("name", "Debase");
             sender.put("email", FROM_EMAIL);

@@ -1,0 +1,33 @@
+<!doctype html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="header :: common-header"></head>
+<body>
+<div class="wrapper">
+  <div th:replace="header :: header"></div>
+  <div class="main">
+    <div class="wrap wrap--mw900 text-center py-5">
+      <h2 class="delivery-title">Thanh toán VietQR</h2>
+      <p>Mã đơn: <strong id="vietqr-order-id" th:text="${orderId}"></strong></p>
+      <p>Số tiền: <strong id="vietqr-amount"></strong> VND</p>
+      <p>Nội dung CK: <strong id="vietqr-content"></strong></p>
+
+      <div id="qr-container" class="my-4" style="display:none;">
+        <img id="vietqr-image" alt="Mã QR VietQR" class="img-fluid" style="max-width:280px;border:1px solid #eee;padding:8px;">
+        <p class="mt-2">
+          <a href="#" id="qr-link" target="_blank" rel="noopener">Mở mã QR trên trang VietQR</a>
+        </p>
+      </div>
+
+      <p id="payment-status-msg" class="text-muted">Đang tải thông tin thanh toán...</p>
+      <p id="payment-status-hint" class="small text-muted"></p>
+
+      <button type="button" id="sandbox-simulate-btn" class="btn btn-outline-secondary mt-3"
+              th:if="${sandboxSimulateEnabled}" style="display:none;">
+        Đã chuyển khoản — xác nhận thử (sandbox)
+      </button>
+    </div>
+  </div>
+</div>
+<script th:src="@{/js/payment-detail/vietqr-checkout.js}"></script>
+</body>
+</html>

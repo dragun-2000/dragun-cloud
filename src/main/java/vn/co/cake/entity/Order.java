@@ -5,6 +5,7 @@ import javax.persistence.*;
 import lombok.Data;
 
 import java.math.BigDecimal;
+import java.util.Date;
 import java.util.List;
 
 @Data
@@ -26,6 +27,16 @@ public class Order extends BaseEntity {
     private BigDecimal shippingFee;
     private BigDecimal prepaid;
     private String status;
+    @Column(name = "pancake_status_name", length = 255)
+    private String pancakeStatusName;
+    @Column(name = "shipping_partner", length = 64)
+    private String shippingPartner;
+    @Column(name = "pancake_order_id", length = 64)
+    private String pancakeOrderId;
+    @Column(name = "tracking_link", length = 512)
+    private String trackingLink;
+    @Column(name = "pancake_synced_at")
+    private Date pancakeSyncedAt;
     private String shippingAddress;
     private String paymentMethod;
     

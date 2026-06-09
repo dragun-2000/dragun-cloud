@@ -127,8 +127,13 @@ CREATE TABLE IF NOT EXISTS orders
     code             varchar(255),
     payment_method   varchar(255),
     shipping_address varchar(255),
-    status           varchar(255),
-    total_amount     double precision not null,
+    status               varchar(255),
+    pancake_status_name  varchar(255),
+    shipping_partner     varchar(64),
+    pancake_order_id     varchar(64),
+    tracking_link        varchar(512),
+    pancake_synced_at    timestamp,
+    total_amount         double precision not null,
     account_id       bigint           not null
         constraint fk3c7gbsfawn58r27cf5b2km72f
             references account,
@@ -564,3 +569,54 @@ CREATE TABLE IF NOT EXISTS product_variants
 
 alter table product_variants
     owner to dragun;
+
+CREATE TABLE IF NOT EXISTS checkout_pending
+(
+    id              bigserial PRIMARY KEY,
+    created         timestamp,
+    creator         varchar(100),
+    updated         timestamp,
+    updater         varchar(100),
+    vietqr_order_id varchar(13)  NOT NULL UNIQUE,
+    account_id      bigint       NOT NULL,
+    amount          numeric(19, 2) NOT NULL,
+    content         varchar(23)  NOT NULL,
+    status          varchar(16)  NOT NULL,
+    request_json    text         NOT NULL,
+    qr_link         varchar(512),
+    qr_code         text,
+    expires_at      timestamp    NOT NULL
+);
+
+alter table checkout_pending owner to dragun;
+
+CREATE TABLE IF NOT EXISTS payment_transaction_log
+(
+    id                bigserial PRIMARY KEY,
+    created           timestamp,
+    creator           varchar(100),
+    updated           timestamp,
+    updater           varchar(100),
+    payment_method    varchar(32)  NOT NULL,
+    event_type        varchar(64)  NOT NULL,
+    status            varchar(16)  NOT NULL,
+    vietqr_order_id   varchar(13),
+    order_id          bigint,
+    order_code        varchar(32),
+    account_id        bigint,
+    external_txn_id   varchar(64),
+    reference_number  varchar(64),
+    amount            numeric(19, 2),
+    error_code        varchar(64),
+    error_message     varchar(500),
+    request_payload   text,
+    response_payload  text,
+    http_status       integer,
+    duration_ms       bigint
+);
+
+CREATE INDEX IF NOT EXISTS idx_payment_log_vietqr_order_id ON payment_transaction_log (vietqr_order_id);
+CREATE INDEX IF NOT EXISTS idx_payment_log_order_code ON payment_transaction_log (order_code);
+CREATE INDEX IF NOT EXISTS idx_payment_log_created ON payment_transaction_log (created DESC);
+
+alter table payment_transaction_log owner to dragun;

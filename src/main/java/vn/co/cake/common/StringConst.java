@@ -16,20 +16,12 @@ public class StringConst {
     // Three
     public static final String THREE = "3";
 
-    // AM Send mail
-    public static final String SEND_MAIL_CREATE_ACCOUNT_TEMPLATE = "create_account_template.html";
-    public static final String SEND_MAIL_CREATE_ACCOUNT_SUBJECT = " ≪シートスmail≫本社スタッフ新規登録完了のお知らせ";
-    public static final String SEND_MAIL_CREATE_ACCOUNT_SA_TEMPLATE = "sa-create_account_template.html";
-    public static final String SEND_MAIL_CREATE_ACCOUNT_SA_SUBJECT = "≪シートスmail≫対象顧客の営業員登録完了のお知らせ";
-
-    public static final String SEND_MAIL_CHANGE_PASSWORD_TEMPLATE = "change_password_template.html";
-    public static final String SEND_MAIL_CHANGE_PASSWORD_SUBJECT = "≪シートスmail≫パスワード変更のお知らせ";
-
-    public static final String SEND_MAIL_FORGET_PASSWORD_TEMPLATE = "forget_password_template.html";
-    public static final String SEND_MAIL_FORGET_PASSWORD_SUBJECT = "≪シートスmail≫パスワード変更のお知らせ";
-    
+    // Store email templates (HTML — templates/template/mail/)
     public static final String SEND_MAIL_SA_FORGET_PASSWORD_TEMPLATE = "sa-forget_password_template.html";
-    public static final String SEND_MAIL_SA_FORGET_PASSWORD_SUBJECT = "≪DEBASE.VN≫ĐỔI MẬT KHẨU";
+    public static final String SEND_MAIL_SA_FORGET_PASSWORD_SUBJECT = "≪DEBASE.VN≫ ĐỔI MẬT KHẨU";
+
+    public static final String SEND_MAIL_ORDER_CONFIRMATION_TEMPLATE = "order_confirmation_template.html";
+    public static final String SEND_MAIL_ORDER_CONFIRMATION_SUBJECT_PREFIX = "≪DEBASE.VN≫ Xác nhận đơn hàng #";
 
     // Authorities
     public static final String ROLE_ADMIN = "ROLE_ADMIN";

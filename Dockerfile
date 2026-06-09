@@ -41,5 +41,5 @@ ENV JAVA_OPTS="-Xms256m -Xmx512m"
 VOLUME $APP_HOME/log
 VOLUME $APP_HOME/config 
 
-# Entrypoint: wait for Redis & DB
-ENTRYPOINT ["/wait-for-it.sh", "debase-redis:6379", "--", "/wait-for-it.sh", "debase-db:5432", "--", "java", "-jar", "app.jar"]
+# Entrypoint: wait for DB
+ENTRYPOINT ["/wait-for-it.sh", "debase-db:5432", "--", "java", "-jar", "app.jar"]

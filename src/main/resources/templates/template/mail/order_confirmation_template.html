@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Xác nhận đơn hàng</title>
+</head>
+<body style="margin:0;padding:0;background-color:#f4f4f5;font-family:Arial,Helvetica,sans-serif;color:#1a1a1a;">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color:#f4f4f5;padding:24px 12px;">
+    <tr>
+      <td align="center">
+        <table role="presentation" width="600" cellspacing="0" cellpadding="0" style="max-width:600px;width:100%;background:#ffffff;border-radius:8px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.06);">
+          <tr>
+            <td style="padding:0;text-align:center;">
+              <a th:href="|${mail.storeUrl}/|" href="https://debase.vn/" style="text-decoration:none;display:block;">
+                <img th:src="|${mail.storeUrl}/images/bannerPC.jpg|"
+                     src="https://debase.vn/images/bannerPC.jpg"
+                     alt="debase.vn"
+                     style="display:block;width:100%;max-width:600px;height:auto;border:0;"/>
+              </a>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:32px;">
+              <p style="margin:0 0 16px;font-size:16px;line-height:1.5;">
+                Xin chào <strong th:text="${mail.customerName}">Quý khách</strong>,
+              </p>
+              <p style="margin:0 0 24px;font-size:15px;line-height:1.6;color:#444;">
+                Cảm ơn bạn đã tin tưởng và đặt hàng tại debase.vn. Đơn hàng của bạn đã được ghi nhận và đang được xử lý.
+              </p>
+
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:6px;margin-bottom:24px;">
+                <tr>
+                  <td style="padding:20px;">
+                    <p style="margin:0 0 8px;font-size:13px;color:#6b7280;text-transform:uppercase;letter-spacing:0.5px;">Thông tin đơn</p>
+                    <p style="margin:0 0 6px;font-size:15px;"><strong>Mã đơn:</strong> <span th:text="${mail.orderCode}">—</span></p>
+                    <p style="margin:0 0 6px;font-size:15px;"><strong>Ngày đặt:</strong> <span th:text="${mail.orderDate}">—</span></p>
+                    <p style="margin:0;font-size:15px;"><strong>Thanh toán:</strong> <span th:text="${mail.paymentMethodLabel}">—</span></p>
+                  </td>
+                </tr>
+              </table>
+
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#ffffff;border:1px solid #152238;border-radius:6px;margin-bottom:24px;">
+                <tr>
+                  <td style="padding:20px;">
+                    <p style="margin:0 0 12px;font-size:13px;color:#152238;text-transform:uppercase;letter-spacing:0.5px;font-weight:bold;">Thông tin khách hàng</p>
+                    <p style="margin:0 0 8px;font-size:15px;line-height:1.5;">
+                      <strong>Họ tên:</strong> <span th:text="${mail.customerName}">—</span>
+                    </p>
+                    <p style="margin:0 0 8px;font-size:15px;line-height:1.5;">
+                      <strong>Số điện thoại:</strong> <span th:text="${mail.phone}">—</span>
+                    </p>
+                    <p style="margin:0 0 8px;font-size:15px;line-height:1.5;">
+                      <strong>Địa chỉ nhận hàng:</strong><br/>
+                      <span th:text="${mail.shippingAddress}">—</span>
+                    </p>
+                    <p th:if="${mail.email != null and !#strings.isEmpty(mail.email)}" style="margin:0 0 8px;font-size:14px;line-height:1.5;color:#4b5563;">
+                      <strong>Email:</strong> <span th:text="${mail.email}">—</span>
+                    </p>
+                    <p th:if="${mail.note != null}" style="margin:8px 0 0;font-size:14px;line-height:1.5;color:#4b5563;">
+                      <strong>Ghi chú:</strong> <span th:text="${mail.note}"></span>
+                    </p>
+                  </td>
+                </tr>
+              </table>
+
+              <p style="margin:0 0 12px;font-size:15px;font-weight:bold;">Chi tiết sản phẩm</p>
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="border-collapse:collapse;margin-bottom:24px;font-size:14px;">
+                <thead>
+                  <tr style="background:#152238;color:#fff;">
+                    <th align="left" style="padding:10px 12px;">Sản phẩm</th>
+                    <th align="center" style="padding:10px 8px;width:48px;">SL</th>
+                    <th align="right" style="padding:10px 12px;width:100px;">Thành tiền</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr th:each="item, stat : ${mail.items}" th:style="${stat.odd} ? 'background:#fafafa;' : ''">
+                    <td style="padding:12px;border-bottom:1px solid #eee;">
+                      <span th:text="${item.productName}">Sản phẩm</span>
+                      <br th:if="${item.option != null}"/>
+                      <span th:if="${item.option != null}" style="font-size:12px;color:#6b7280;" th:text="${item.option}">Option</span>
+                      <br/>
+                      <span style="font-size:12px;color:#9ca3af;" th:text="|${item.unitPriceDisplay} VND|">Giá</span>
+                    </td>
+                    <td align="center" style="padding:12px 8px;border-bottom:1px solid #eee;" th:text="${item.quantity}">1</td>
+                    <td align="right" style="padding:12px;border-bottom:1px solid #eee;white-space:nowrap;">
+                      <span th:text="${item.lineTotalDisplay}">0</span> VND
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin-bottom:24px;font-size:15px;">
+                <tr>
+                  <td style="padding:6px 0;color:#6b7280;">Tạm tính</td>
+                  <td align="right" style="padding:6px 0;"><span th:text="${mail.subtotalDisplay}">0</span> VND</td>
+                </tr>
+                <tr>
+                  <td style="padding:6px 0;color:#6b7280;">Phí vận chuyển</td>
+                  <td align="right" style="padding:6px 0;"><span th:text="${mail.shippingFeeDisplay}">0</span> VND</td>
+                </tr>
+                <tr>
+                  <td style="padding:12px 0 0;font-size:17px;font-weight:bold;border-top:2px solid #152238;">Tổng cộng đơn hàng</td>
+                  <td align="right" style="padding:12px 0 0;font-size:17px;font-weight:bold;color:#152238;border-top:2px solid #152238;">
+                    <span th:text="${mail.grandTotalDisplay}">0</span> VND
+                  </td>
+                </tr>
+              </table>
+
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;margin-bottom:24px;">
+                <tr>
+                  <td style="padding:20px;">
+                    <p style="margin:0 0 12px;font-size:13px;color:#6b7280;text-transform:uppercase;letter-spacing:0.5px;">Thanh toán</p>
+                    <p style="margin:0 0 8px;font-size:15px;">
+                      <strong>Trạng thái:</strong>
+                      <span th:if="${mail.fullyPaid}" style="color:#152238;font-weight:bold;" th:text="${mail.paymentStatusLabel}">—</span>
+                      <span th:if="${!mail.fullyPaid}" style="color:#b45309;font-weight:bold;" th:text="${mail.paymentStatusLabel}">—</span>
+                    </p>
+                    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="font-size:15px;margin-bottom:12px;">
+                      <tr>
+                        <td style="padding:4px 0;color:#6b7280;">Đã thanh toán</td>
+                        <td align="right" style="padding:4px 0;font-weight:bold;color:#152238;">
+                          <span th:text="${mail.paidAmountDisplay}">0</span> VND
+                        </td>
+                      </tr>
+                      <tr th:if="${!mail.fullyPaid}">
+                        <td style="padding:4px 0;color:#6b7280;">Còn phải thanh toán</td>
+                        <td align="right" style="padding:4px 0;font-weight:bold;color:#b45309;">
+                          <span th:text="${mail.remainingAmountDisplay}">0</span> VND
+                        </td>
+                      </tr>
+                    </table>
+                    <p style="margin:0;font-size:14px;line-height:1.6;color:#374151;" th:text="${mail.paymentSummary}">—</p>
+                  </td>
+                </tr>
+              </table>
+
+              <table role="presentation" cellspacing="0" cellpadding="0" align="center" style="margin:0 auto 24px;">
+                <tr>
+                  <td style="border-radius:6px;background:#152238;">
+                    <a th:href="${mail.orderHistoryUrl}" href="#"
+                       style="display:inline-block;padding:14px 28px;font-size:15px;font-weight:bold;color:#ffffff;text-decoration:none;">
+                      Xem đơn hàng của tôi
+                    </a>
+                  </td>
+                </tr>
+              </table>
+
+              <p style="margin:0;font-size:13px;line-height:1.6;color:#9ca3af;text-align:center;">
+                Nếu bạn cần hỗ trợ, vui lòng phản hồi email này hoặc truy cập
+                <a th:href="|${mail.storeUrl}/|" href="https://debase.vn/" th:text="${mail.storeDisplayUrl}" style="color:#152238;">debase.vn</a>.
+              </p>
+            </td>
+          </tr>
+          <tr>
+            <td style="background:#f9fafb;padding:16px 32px;text-align:center;border-top:1px solid #e5e7eb;">
+              <p style="margin:0;font-size:12px;color:#9ca3af;">© debase.vn — Email tự động, vui lòng không trả lời trực tiếp nếu không cần thiết.</p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>

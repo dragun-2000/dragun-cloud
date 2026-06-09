@@ -135,6 +135,75 @@
     </main>
   </div>
 
+  <!-- Xác nhận cập nhật giảm giá -->
+  <div class="modal fade" id="am008-confirm-modal" tabindex="-1" role="dialog" data-backdrop="static" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered w-450" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h6 class="col-12 modal-title text-center font-weight-bold mb-0">Xác Nhận</h6>
+        </div>
+        <div class="modal-body">
+          <div class="col-12 modal-title text-center mb-4" id="am008-confirm-message"></div>
+          <div class="modal-footer justify-content-center border-top-0">
+            <button type="button" class="btn custom-btn-light btn-120 mr-4" data-dismiss="modal">Không</button>
+            <button type="button" class="btn custom-btn-info btn-120" id="am008-confirm-yes">Có</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Thông báo (validation, lỗi) -->
+  <div class="modal fade" id="am008-alert-modal" tabindex="-1" role="dialog" data-backdrop="static" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered w-450" role="document">
+      <div class="modal-content">
+        <div class="modal-body">
+          <div class="col-12 modal-title text-center mb-4">
+            <i class="fas fa-exclamation-circle text-warning" style="font-size: 2.5rem;"></i>
+          </div>
+          <div class="col-12 modal-title text-center mb-4" id="am008-alert-message"></div>
+          <div class="modal-footer justify-content-center border-top-0">
+            <button type="button" class="btn custom-btn-info btn-120" data-dismiss="modal">OK</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Thành công -->
+  <div class="modal fade" id="am008-success-modal" tabindex="-1" role="dialog" data-backdrop="static" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered w-450" role="document">
+      <div class="modal-content">
+        <div class="modal-body">
+          <div class="col-12 modal-title text-center mb-4">
+            <i class="fas fa-check-circle text-success" style="font-size: 2.5rem;"></i>
+          </div>
+          <div class="col-12 modal-title text-center mb-4" id="am008-success-message">Cập nhật giảm giá thành công!</div>
+          <div class="modal-footer justify-content-center border-top-0">
+            <button type="button" class="btn custom-btn-info btn-120" id="am008-success-ok">OK</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Lỗi từ server -->
+  <div class="modal fade" id="am008-error-modal" tabindex="-1" role="dialog" data-backdrop="static" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered w-450" role="document">
+      <div class="modal-content">
+        <div class="modal-body">
+          <div class="col-12 modal-title text-center mb-4">
+            <i class="fas fa-exclamation-triangle text-danger" style="font-size: 2.5rem;"></i>
+          </div>
+          <div class="col-12 modal-title text-center mb-4" id="am008-error-message"></div>
+          <div class="modal-footer justify-content-center border-top-0">
+            <button type="button" class="btn custom-btn-info btn-120" data-dismiss="modal">OK</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <script th:src="@{/js/common.js}"></script>
   <script>
     $(document).ready(function(){
@@ -164,27 +233,26 @@
         $('#updateDiscountBtn').prop('disabled', !(selectedCount > 0 && discountValue > 0 && discountValue < 100));
       }
 
-      $('#updateDiscountBtn').on('click', function() {
-        var selectedProducts = [];
-        $('.product-checkbox:checked').each(function() {
-          selectedProducts.push($(this).data('product-id'));
-        });
-        var discountValue = parseFloat($('#discountInput').val());
-        
-        if (selectedProducts.length === 0) {
-          alert('Vui lòng chọn ít nhất một sản phẩm!');
-          return;
-        }
-        if (!discountValue || discountValue <= 0 || discountValue >= 100) {
-          alert('Vui lòng nhập % giảm giá hợp lệ (lớn hơn 0 và nhỏ hơn 100)!');
-          return;
-        }
-        if (!confirm('Bạn có chắc chắn muốn cập nhật giảm giá ' + discountValue + '% cho ' + selectedProducts.length + ' sản phẩm đã chọn?')) {
-          return;
-        }
+      function showAm008Alert(message) {
+        $('#am008-alert-message').text(message);
+        $('#am008-alert-modal').modal('show');
+      }
 
-        var $btn = $(this);
-        var originalText = $btn.html();
+      function showAm008Error(message) {
+        $('#am008-error-message').text(message);
+        $('#am008-error-modal').modal('show');
+      }
+
+      function showAm008Confirm(message, onConfirm) {
+        $('#am008-confirm-message').text(message);
+        $('#am008-confirm-yes').off('click').on('click', function() {
+          $('#am008-confirm-modal').modal('hide');
+          onConfirm();
+        });
+        $('#am008-confirm-modal').modal('show');
+      }
+
+      function submitDiscountUpdate(selectedProducts, discountValue, $btn, originalText) {
         $btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Đang xử lý...');
 
         $.ajax({
@@ -195,11 +263,11 @@
           headers: {"X-CSRF-TOKEN": $("input[name='_csrf']").val()},
           success: function(response) {
             if (response.success) {
-              alert('Cập nhật giảm giá thành công!');
-              setTimeout(function() { location.reload(); }, 1000);
+              $('#am008-success-modal').modal('show');
             } else {
-              alert('Cập nhật thất bại: ' + (response.message || 'Lỗi không xác định'));
+              showAm008Error('Cập nhật thất bại: ' + (response.message || 'Lỗi không xác định'));
               $btn.prop('disabled', false).html(originalText);
+              updateButtonState();
             }
           },
           error: function(xhr) {
@@ -207,9 +275,41 @@
             if (xhr.responseJSON && xhr.responseJSON.message) {
               errorMessage = xhr.responseJSON.message;
             }
-            alert('Lỗi: ' + errorMessage);
+            showAm008Error('Lỗi: ' + errorMessage);
             $btn.prop('disabled', false).html(originalText);
+            updateButtonState();
           }
+        });
+      }
+
+      $('#am008-success-ok').on('click', function() {
+        $('#am008-success-modal').modal('hide');
+        location.reload();
+      });
+
+      $('#updateDiscountBtn').on('click', function() {
+        var selectedProducts = [];
+        $('.product-checkbox:checked').each(function() {
+          selectedProducts.push($(this).data('product-id'));
+        });
+        var discountValue = parseFloat($('#discountInput').val());
+
+        if (selectedProducts.length === 0) {
+          showAm008Alert('Vui lòng chọn ít nhất một sản phẩm!');
+          return;
+        }
+        if (!discountValue || discountValue <= 0 || discountValue >= 100) {
+          showAm008Alert('Vui lòng nhập % giảm giá hợp lệ (lớn hơn 0 và nhỏ hơn 100)!');
+          return;
+        }
+
+        var $btn = $(this);
+        var originalText = $btn.html();
+        var confirmMessage = 'Bạn có chắc chắn muốn cập nhật giảm giá ' + discountValue + '% cho '
+            + selectedProducts.length + ' sản phẩm đã chọn?';
+
+        showAm008Confirm(confirmMessage, function() {
+          submitDiscountUpdate(selectedProducts, discountValue, $btn, originalText);
         });
       });
     });

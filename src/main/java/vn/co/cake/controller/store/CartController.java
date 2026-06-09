@@ -19,6 +19,7 @@ import vn.co.cake.entity.Province;
 import vn.co.cake.entity.Voucher;
 import vn.co.cake.enums.OrderStatus;
 import vn.co.cake.exception.CommonServletException;
+import vn.co.cake.payment.config.VietQrProperties;
 import vn.co.cake.repository.OrderRepository;
 import vn.co.cake.repository.ProvinceRepository;
 import vn.co.cake.repository.VariationRepository;
@@ -29,11 +30,11 @@ import vn.co.cake.security.user.UserLoginInfo;
 import vn.co.cake.service.AccountService;
 import vn.co.cake.service.CartService;
 import vn.co.cake.service.OrderService;
-import vn.co.cake.service.external.PancakePosService;
 import vn.co.cake.utils.BigDecimalUtil;
 import vn.co.cake.utils.DateUtil;
 import vn.co.cake.utils.FunctionUtil;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 
 import javax.servlet.http.HttpSession;
 import java.math.BigDecimal;
@@ -51,26 +52,26 @@ public class CartController extends BaseController {
     private final ProvinceRepository provinceRepository;
     private final VoucherRepository voucherRepository;
     private final OrderService orderService;
-    private final PancakePosService pancakePosService;
     private final VariationRepository variationRepository;
     private final OrderRepository orderRepository;
+    private final VietQrProperties vietQrProperties;
 
     public CartController(CartService cartService,
                           AccountService accountService,
                           ProvinceRepository provinceRepository,
                           VoucherRepository voucherRepository,
                           OrderService orderService,
-                          PancakePosService pancakePosService,
                           VariationRepository variationRepository,
-                          OrderRepository orderRepository) {
+                          OrderRepository orderRepository,
+                          VietQrProperties vietQrProperties) {
         this.cartService = cartService;
         this.accountService = accountService;
         this.provinceRepository = provinceRepository;
         this.voucherRepository = voucherRepository;
         this.orderService = orderService;
-        this.pancakePosService = pancakePosService;
         this.variationRepository = variationRepository;
         this.orderRepository = orderRepository;
+        this.vietQrProperties = vietQrProperties;
     }
 
     @ModelAttribute("cartForm")
@@ -88,15 +89,8 @@ public class CartController extends BaseController {
         boolean isLogin = loginInfo != null;
         model.addAttribute("isLogin", isLogin);
         
-        if ((Objects.isNull(cartForm) || CollectionUtils.isEmpty(cartForm.getOrderItems())) && loginInfo != null) {
-            CartForm cartFormFromDb = cartService.findFirstByAccountId(loginInfo.getId());
-            if (cartFormFromDb != null) {
-                cartForm.setOrderItems(cartFormFromDb.getOrderItems());
-            } else {
-                cartForm.setOrderItems(new ArrayList<>());
-            }
-            Account account = accountService.getAccount(loginInfo.getId());
-            model.addAttribute("account", account);
+        if (loginInfo != null) {
+            syncCartFormWithDatabase(loginInfo, cartForm, true);
         }
 
         List<OrderItem> orderItems = new ArrayList<>();
@@ -152,9 +146,30 @@ public class CartController extends BaseController {
     
     @PostMapping("/update-to-cart")
     public ResponseEntity<Void> updateToCart(@ModelAttribute("cartForm") CartForm cartForm,
-                                          @RequestBody List<OrderItem> newOrderItems) {
+                                             @RequestBody List<OrderItem> newOrderItems) {
         cartForm.setOrderItems(newOrderItems);
         return ResponseEntity.ok().build();
+    }
+
+    /**
+     * Đồng bộ session {@code cartForm} với DB sau khi thanh toán (giỏ đã xóa trên server).
+     */
+    @PostMapping("/cart/sync-session")
+    public ResponseEntity<java.util.Map<String, Integer>> syncCartSession(
+            @ModelAttribute("cartForm") CartForm cartForm, HttpSession session) {
+        UserLoginInfo loginInfo = getLoginInfo(session);
+        if (loginInfo != null) {
+            syncCartFormWithDatabase(loginInfo, cartForm, false);
+        } else if (cartForm != null) {
+            cartForm.setOrderItems(new ArrayList<>());
+        }
+        int totalQuantity = 0;
+        if (cartForm != null && !CollectionUtils.isEmpty(cartForm.getOrderItems())) {
+            totalQuantity = cartForm.getOrderItems().stream().mapToInt(OrderItem::getQuantity).sum();
+        }
+        java.util.Map<String, Integer> body = new java.util.HashMap<>();
+        body.put("totalCartItems", totalQuantity);
+        return ResponseEntity.ok(body);
     }
 
     @GetMapping("/payment/voucher")
@@ -164,6 +179,14 @@ public class CartController extends BaseController {
             return ResponseEntity.badRequest().build();
         }
         return ResponseEntity.ok(voucher.getDiscountPercent());
+    }
+
+    @GetMapping("/payment/vietqr")
+    public String paymentVietQr(@RequestParam String orderId, HttpSession session) {
+        if (getLoginInfo(session) == null) {
+            return "login";
+        }
+        return "redirect:/order-history?vietqrPending=" + orderId;
     }
 
     @GetMapping("/payment-detail")
@@ -207,17 +230,22 @@ public class CartController extends BaseController {
         model.addAttribute("shippingFee", shippingFeeDefault);
         model.addAttribute("totalPriceDisplayFinal", BigDecimalUtil.formatMoney(this.getTotalPrice(orderItems, shippingFeeDefault)));
 
+        model.addAttribute("sandboxSimulateEnabled", vietQrProperties.getCheckout().isSandboxSimulateEnabled());
         FunctionUtil.updateCartQuantity(model, cartForm);
         return "payment-detail";
     }
     
     @GetMapping("/order-history")
-    public String orderDetail(Model model, @ModelAttribute("cartForm") CartForm cartForm, HttpSession session) {
+    public String orderDetail(Model model,
+                              @ModelAttribute("cartForm") CartForm cartForm,
+                              HttpSession session,
+                              @RequestParam(required = false) String vietqrPending) {
         try {
             UserLoginInfo loginInfo = getLoginInfo(session);
             if (Objects.isNull(loginInfo)) {
                 return "login";
             }
+            syncCartFormWithDatabase(loginInfo, cartForm, false);
             Account account = accountService.getAccount(loginInfo.getId());
             if (account == null) {
                 return "login";
@@ -228,6 +256,7 @@ public class CartController extends BaseController {
             if (phone == null || phone.trim().isEmpty()) {
                 log.warn("Account {} has no phone number", account.getId());
                 model.addAttribute("orderPancake", new ArrayList<>());
+                applyVietQrPendingModel(model, vietqrPending);
                 model.addAttribute("account", account);
                 model.addAttribute("isLogin", true);
                 FunctionUtil.updateCartQuantity(model, cartForm);
@@ -235,45 +264,20 @@ public class CartController extends BaseController {
             }
             
             log.info("Loading order history for account ID: {}, phone: {}", account.getId(), phone);
-            
-            List<OrderPancakeResponse> allOrders = new ArrayList<>();
-            
-            // 1. Query orders từ database theo phone
+
             List<Order> dbOrders = orderRepository.findByPhoneAndDeletedFalseOrderByCreatedDesc(phone);
             log.info("Found {} orders in database for phone: {}", dbOrders.size(), phone);
-            
-            // 2. Phân loại orders theo status
-            List<Order> syncFailOrders = dbOrders.stream()
-                .filter(order -> OrderStatus.SYNC_FAIL.getValue().equals(order.getStatus()))
-                .collect(Collectors.toList());
-            
-            List<Order> newOrders = dbOrders.stream()
-                .filter(order -> OrderStatus.NEW.getValue().equals(order.getStatus()))
-                .collect(Collectors.toList());
-            
-            log.info("Orders breakdown - SYNC_FAIL: {}, NEW: {}", syncFailOrders.size(), newOrders.size());
-            
-            // 3. Map SYNC_FAIL orders → OrderPancakeResponse
-            for (Order order : syncFailOrders) {
-                OrderPancakeResponse response = mapOrderToOrderPancakeResponse(order);
-                allOrders.add(response);
-            }
-            
-            // 4. Lấy NEW orders từ Pancake POS API
-            if (!newOrders.isEmpty()) {
-                List<OrderPancakeResponse> pancakeOrders = pancakePosService.getAllOrderPancake(phone, 0, 1000);
-                if (pancakeOrders != null && !pancakeOrders.isEmpty()) {
-                    allOrders.addAll(pancakeOrders);
-                    log.info("Retrieved {} orders from Pancake POS", pancakeOrders.size());
-                }
-            }
-            
-            // 5. Format và sort
+
+            List<OrderPancakeResponse> allOrders = dbOrders.stream()
+                    .map(this::mapOrderToOrderPancakeResponse)
+                    .collect(Collectors.toList());
+
             formatOrderPancakeResponses(allOrders);
             sortOrdersByDate(allOrders);
-            
+
             log.info("Total orders to display: {}", allOrders.size());
             model.addAttribute("orderPancake", allOrders);
+            applyVietQrPendingModel(model, vietqrPending);
             model.addAttribute("account", account);
             model.addAttribute("isLogin", true);
             FunctionUtil.updateCartQuantity(model, cartForm);
@@ -285,8 +289,20 @@ public class CartController extends BaseController {
         return "order-status";
     }
     
+    private void applyVietQrPendingModel(Model model, String vietqrPending) {
+        if (StringUtils.isNotBlank(vietqrPending)) {
+            model.addAttribute("vietqrPendingOrderId", vietqrPending.trim());
+            model.addAttribute("vietqrPendingActive", true);
+            model.addAttribute("sandboxSimulateEnabled",
+                    vietQrProperties.getCheckout().isSandboxSimulateEnabled());
+        } else {
+            model.addAttribute("vietqrPendingActive", false);
+        }
+    }
+
     private OrderPancakeResponse mapOrderToOrderPancakeResponse(Order order) {
         OrderPancakeResponse response = new OrderPancakeResponse();
+        response.setCustomId(order.getCode());
         response.setBill_full_name(order.getFullName() != null ? order.getFullName() : "N/A");
         
         // Format date
@@ -301,8 +317,17 @@ public class CartController extends BaseController {
             response.setMoney_to_collect(money);
         }
         
-        // Set status name
-        response.setStatus_name("Đang xử lý");
+        if (StringUtils.isNotBlank(order.getPancakeStatusName())) {
+            response.setStatus_name(order.getPancakeStatusName());
+        } else if (OrderStatus.SYNC_FAIL.getValue().equals(order.getStatus())) {
+            response.setStatus_name("Đồng bộ Pancake thất bại");
+        } else if (OrderStatus.PENDING_SYNC.getValue().equals(order.getStatus())) {
+            response.setStatus_name("Chờ đồng bộ Pancake");
+        } else if (OrderStatus.NEW.getValue().equals(order.getStatus())) {
+            response.setStatus_name("Đã đồng bộ Pancake");
+        } else {
+            response.setStatus_name("Đang xử lý");
+        }
         
         // Create ShippingAddress
         ShippingAddress shippingAddress = new ShippingAddress();
@@ -310,10 +335,8 @@ public class CartController extends BaseController {
         shippingAddress.setFull_address(order.getShippingAddress() != null ? order.getShippingAddress() : "N/A");
         shippingAddress.setFull_name(order.getFullName() != null ? order.getFullName() : "N/A");
         response.setShipping_address(shippingAddress);
-        
-        // tracking_link null cho SYNC_FAIL orders
-        response.setTracking_link(null);
-        
+        response.setTracking_link(order.getTrackingLink());
+
         return response;
     }
     
@@ -389,6 +412,44 @@ public class CartController extends BaseController {
         return request;
     }
     
+    /**
+     * Đồng bộ session {@code cartForm} với DB.
+     *
+     * @param persistSessionWhenDbEmpty {@code true} khi mở giỏ: giữ giỏ khách (session) và ghi DB nếu DB trống.
+     *                                  {@code false} sau thanh toán / sync-session: DB là nguồn, xóa session nếu DB trống.
+     */
+    private void syncCartFormWithDatabase(UserLoginInfo loginInfo, CartForm cartForm, boolean persistSessionWhenDbEmpty) {
+        if (loginInfo == null || cartForm == null) {
+            return;
+        }
+        CartForm fromDb = cartService.findFirstByAccountId(loginInfo.getId());
+        if (fromDb != null && !CollectionUtils.isEmpty(fromDb.getOrderItems())) {
+            cartForm.setOrderItems(new ArrayList<>(fromDb.getOrderItems()));
+            return;
+        }
+        if (persistSessionWhenDbEmpty && !CollectionUtils.isEmpty(cartForm.getOrderItems())) {
+            persistSessionCartToDatabase(loginInfo, cartForm);
+            return;
+        }
+        cartForm.setOrderItems(new ArrayList<>());
+    }
+
+    private void persistSessionCartToDatabase(UserLoginInfo loginInfo, CartForm cartForm) {
+        if (loginInfo == null || cartForm == null || CollectionUtils.isEmpty(cartForm.getOrderItems())) {
+            return;
+        }
+        try {
+            String variationId = cartForm.getOrderItems().stream()
+                    .map(OrderItem::getVariationId)
+                    .filter(Objects::nonNull)
+                    .findFirst()
+                    .orElse(null);
+            cartService.create(cartForm, loginInfo.getId(), variationId);
+        } catch (CommonServletException e) {
+            log.warn("Could not persist session cart for account {}: {}", loginInfo.getId(), e.getMessage());
+        }
+    }
+
     private void updateCartGuest(CartForm cartForm, List<OrderItem> newOrderItems) {
         if (CollectionUtils.isEmpty(newOrderItems)) return;
         if (cartForm == null) {
@@ -414,12 +475,10 @@ public class CartController extends BaseController {
     }
     
     private String getTotalPrice(List<OrderItem> orderItems, long feeShipping) {
-        if (CollectionUtils.isEmpty(orderItems)) return "0";
-        int sum = orderItems.stream().mapToInt(orderItem -> {
-            BigDecimal totalPrice = orderItem.getPrice().multiply(BigDecimal.valueOf(orderItem.getQuantity()));
-            return totalPrice.intValue();
-        }).sum();
-        sum += feeShipping;
+        if (CollectionUtils.isEmpty(orderItems)) {
+            return "0";
+        }
+        long sum = orderService.calculateItemsSubtotal(orderItems).longValue() + feeShipping;
         return BigDecimal.valueOf(sum).toString();
     }
 }

@@ -20,6 +20,7 @@
       <div class="main-content-container container-fluid">
         <div class="page-header text-center no-gutters py-4">
           <h3 class="page-title font-weight-bold">Đơn Hàng</h3>
+          <p class="text-muted small mb-0">Trạng thái / đơn vị vận chuyển Pancake cập nhật định kỳ (mỗi giờ).</p>
         </div>
 
         <div class="info-fr-1400 w-1200 mt-5">
@@ -123,12 +124,9 @@
                     <td class="text-center" th:text="${order.fullName}"></td>
                     <td class="text-center" th:text="${#dates.format(order.created, 'yyyy-MM-dd HH:mm:ss')}"></td>
                     <td class="text-center" th:text="${order.shippingAddress}"></td>
-                    <td th:switch="${order.status}">
-                      <span th:case="'PENDING'">Chờ Thanh Toán</span>
-                      <span th:case="'COMPLETED'">Thanh Toán Thành Công</span>
-                    </td>
+                    <td class="text-center" th:text="${order.statusDisplay}"></td>
                     <td class="text-center" th:text="${order.paymentMethod}"></td>
-                    <td class="text-center">GHN</td>
+                    <td class="text-center" th:text="${order.shippingPartner}"></td>
                     <td class="text-center" th:text="${order.voucher}"></td>
                     <td class="text-center" th:text="${order.totalAmount}"></td>
                   </tr>

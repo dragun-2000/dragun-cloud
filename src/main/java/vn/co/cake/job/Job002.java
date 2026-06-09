@@ -5,7 +5,6 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import vn.co.cake.constants.OrderConstants;
 import vn.co.cake.entity.Order;
-import vn.co.cake.enums.OrderStatus;
 import vn.co.cake.repository.OrderRepository;
 import vn.co.cake.service.external.PancakePosService;
 
@@ -28,7 +27,7 @@ public class Job002 {
         log.info("Job002: Starting retry failed orders sync to Pancake POS");
 
         List<Order> failedOrders = orderRepository.findByStatusAndCountErrorLessThanAndDeletedFalse(
-                OrderStatus.SYNC_FAIL.getValue(),
+                OrderConstants.STATUS_SYNC_FAIL,
                 OrderConstants.MAX_PANCAKE_SYNC_RETRIES
         );
 

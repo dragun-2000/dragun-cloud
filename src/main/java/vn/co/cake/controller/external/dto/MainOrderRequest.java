@@ -25,6 +25,7 @@ public class MainOrderRequest {
     private int shipping_fee;
     private int shop_id;
     private int discount;
+    private int prepaid;
     private String custom_id;
     private WarehouseInfo warehouse_info;
     private List<ActivatedPromotionAdvance> activatedPromotionAdvances;
@@ -47,6 +48,9 @@ public class MainOrderRequest {
         this.shipping_fee = order.getShippingFee().intValue();
         this.shop_id = Integer.parseInt(properties.getShopId());
         this.discount = this.discount(orderItems);
+        if (order.getPrepaid() != null && order.getPrepaid().signum() > 0) {
+            this.prepaid = order.getPrepaid().intValue();
+        }
         this.custom_id = order.getCode();
         this.items = orderItems.stream().map(Item::new).collect(Collectors.toList());
         this.shipping_address = new ShippingAddress(order);

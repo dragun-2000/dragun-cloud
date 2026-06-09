@@ -8,27 +8,41 @@
   <div class="main main--pageStatus">
     <div class="wrap wrap--mw900">
       <div class="wrapInformation">
+        <div th:if="${vietqrPendingActive}" class="boxInformation mb-3" style="text-align: center; padding: 24px;">
+          <p class="text-muted mb-0">Đang xử lý thanh toán VietQR. Vui lòng hoàn tất thanh toán trên tab VietQR đã mở.</p>
+        </div>
         <div th:if="${orderPancake == null or orderPancake.isEmpty()}" class="boxInformation" style="text-align: center; padding: 40px;">
-          <h3 style="color: #666;">Bạn chưa có đơn hàng nào</h3>
+          <h3 style="color: #666;" th:if="${!vietqrPendingActive}">Bạn chưa có đơn hàng nào</h3>
+          <h3 style="color: #666;" th:if="${vietqrPendingActive}">Đơn hàng sẽ hiển thị sau khi thanh toán thành công</h3>
           <p style="color: #999; margin-top: 10px;">Các đơn hàng của bạn sẽ hiển thị tại đây</p>
         </div>
         <div th:if="${orderPancake != null and !orderPancake.isEmpty()}">
-          <div class="boxInformation" th:each="order : ${orderPancake}">
+          <div class="boxInformation js-order-card" th:each="order, stat : ${orderPancake}"
+               th:attr="data-order-code=${order.customId != null ? order.customId : order.id},
+                        data-recipient=${order.bill_full_name},
+                        data-phone=${order.shipping_address != null ? order.shipping_address.phone_number : ''},
+                        data-address=${order.shipping_address != null ? order.shipping_address.full_address : ''},
+                        data-status=${order.status_name},
+                        data-date=${order.inserted_at},
+                        data-amount=${order.money_to_collect},
+                        data-tracking-link=${order.tracking_link}">
             <div class="titleInformation">
               <div class="title-tlt d-flex justify-content-between w-100">
                 <h2 class="tlt">
                   <span class="item">
-                    <span th:text="${orderPancake.indexOf(order) + 1} + '.'">1</span>
+                    <span th:text="${stat.count} + '.'">1</span>
                   </span>
                   Thông tin đơn hàng
+                  <small th:if="${order.customId != null}" class="text-muted d-block" style="font-size: 14px; font-weight: normal;"
+                         th:text="'Mã đơn: ' + ${order.customId}"></small>
                 </h2>
-                <a
-                  class="btn btn-primary"
-                th:href="${order.tracking_link}"
-                  target="_blank"
-                  style="margin-left: auto;">
+                <button
+                  type="button"
+                  class="btn btn-primary js-pancake-order-detail"
+                  style="margin-left: auto;"
+                  th:attr="data-tracking-link=${order.tracking_link}">
                   Xem chi tiết
-                </a>
+                </button>
               </div>
             </div>
             <div class="boxInformation">
@@ -58,6 +72,9 @@
                   <div class="price" th:text="${order?.money_to_collect ?: 'N/A'}">N/A</div>
                 </li>
               </ul>
+              <p th:if="${order.tracking_link == null}" class="text-muted small mb-0" style="margin-top: 12px;">
+                Đơn chưa có link theo dõi từ Pancake. Bấm "Xem chi tiết" để xem thông tin trên trang này.
+              </p>
             </div>
           </div>
         </div>
@@ -66,8 +83,73 @@
   </div><!--/main -->
 
   <div th:replace="header :: footer"></div>
-    
+
 </div><!--/wrapper -->
+
+<div class="modal fade" id="orderDetailModal" tabindex="-1" role="dialog" aria-labelledby="orderDetailModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+    <div class="modal-content order-detail-modal">
+      <div class="modal-header order-detail-modal__header">
+        <h5 class="modal-title" id="orderDetailModalLabel">Chi tiết đơn hàng</h5>
+        <button type="button" class="close order-detail-modal__close" data-dismiss="modal" aria-label="Đóng">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body order-detail-modal__body" id="orderDetailModalBody"></div>
+      <div class="modal-footer order-detail-modal__footer">
+        <a id="orderDetailModalPancakeLink" href="#" target="_blank" rel="noopener noreferrer" class="btn btn-primary order-detail-modal__btn d-none">Theo dõi trên Pancake</a>
+        <button type="button" class="btn order-detail-modal__btn order-detail-modal__btn--outline" data-dismiss="modal">Đóng</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Popup chờ / thành công thanh toán VietQR -->
+<div class="modal fade" id="vietqrPaymentWaitModal" tabindex="-1" role="dialog"
+     data-backdrop="static" data-keyboard="false" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Thanh toán VietQR</h5>
+      </div>
+      <div class="modal-body text-center">
+        <p class="mb-2"><strong>Mã đơn:</strong> <span id="vietqr-wait-order-id"></span></p>
+        <p class="mb-2"><strong>Số tiền:</strong> <span id="vietqr-wait-amount"></span> VND</p>
+        <p class="mb-3"><strong>Nội dung CK:</strong> <span id="vietqr-wait-content"></span></p>
+        <p id="vietqr-wait-status-msg" class="text-muted mb-2">Đang chờ xác nhận thanh toán...</p>
+        <p id="vietqr-wait-status-hint" class="small text-muted mb-0">
+          Tab thanh toán VietQR đã được mở. Sau khi thanh toán xong, thông báo tại đây sẽ tự cập nhật.
+        </p>
+        <button type="button" id="vietqr-reopen-payment-btn" class="btn btn-outline-primary btn-sm mt-3">
+          Mở lại trang thanh toán VietQR
+        </button>
+        <button type="button" id="vietqr-sandbox-simulate-btn" class="btn btn-outline-secondary btn-sm mt-3 d-none">
+          Đã chuyển khoản — xác nhận thử (sandbox)
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="vietqrPaymentSuccessModal" tabindex="-1" role="dialog" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title text-success">Thanh toán thành công</h5>
+      </div>
+      <div class="modal-body text-center">
+        <p id="vietqr-success-msg" class="mb-2">Thanh toán thành công! Đơn hàng đang được tạo và đồng bộ lên Pancake POS.</p>
+        <p class="small text-muted mb-0">Trang sẽ tải lại để hiển thị đơn hàng mới.</p>
+      </div>
+      <div class="modal-footer justify-content-center">
+        <button type="button" id="vietqr-success-ok-btn" class="btn btn-primary">Xem đơn hàng</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<input type="hidden" id="vietqr-pending-order-id" th:if="${vietqrPendingActive}" th:value="${vietqrPendingOrderId}"/>
+<input type="hidden" id="vietqr-sandbox-enabled" th:if="${vietqrPendingActive and sandboxSimulateEnabled}" value="true"/>
 
   <script th:src="@{/js/payment-detail/order-history.js}"></script>
 </body>

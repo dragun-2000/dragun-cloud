@@ -327,6 +327,22 @@ public class HomeController extends BaseController {
         return conditionMaps;
     }
 
+    private void persistGuestCartToDatabase(UserLoginInfo userLoginInfo, CartForm cartForm) {
+        if (userLoginInfo == null || cartForm == null || CollectionUtils.isEmpty(cartForm.getOrderItems())) {
+            return;
+        }
+        try {
+            String variationId = cartForm.getOrderItems().stream()
+                    .map(OrderItem::getVariationId)
+                    .filter(Objects::nonNull)
+                    .findFirst()
+                    .orElse(null);
+            cartService.create(cartForm, userLoginInfo.getId(), variationId);
+        } catch (CommonServletException e) {
+            // Giữ session cart; cart-detail sẽ thử persist lại
+        }
+    }
+
     private CartForm getCartFormDefault(UserLoginInfo userLoginInfo, CartForm cartForm) throws CommonServletException {
         Account account = accountService.getAccount(userLoginInfo.getId());
         CartForm cartFormFromDb = cartService.findFirstByAccountId(userLoginInfo.getId());
@@ -336,7 +352,7 @@ public class HomeController extends BaseController {
         }
 
         if (CollectionUtils.isEmpty(cartForm.getOrderItems())) {
-            if (cartFormFromDb != null) {
+            if (cartFormFromDb != null && !CollectionUtils.isEmpty(cartFormFromDb.getOrderItems())) {
                 cartForm.setOrderItems(cartFormFromDb.getOrderItems());
             } else {
                 cartForm.setOrderItems(new ArrayList<>());
@@ -344,7 +360,9 @@ public class HomeController extends BaseController {
         } else if (account.isFirstLogin()) {
             account.setFirstLogin(false);
             accountService.save(account);
-            List<OrderItem> existsOrderItems = cartFormFromDb != null ? cartFormFromDb.getOrderItems() : new ArrayList<>();
+            List<OrderItem> existsOrderItems = cartFormFromDb != null && cartFormFromDb.getOrderItems() != null
+                    ? new ArrayList<>(cartFormFromDb.getOrderItems())
+                    : new ArrayList<>();
             List<OrderItem> orderItems = cartForm.getOrderItems();
             List<OrderItem> orderItemsDeleted = new ArrayList<>();
             for (OrderItem orderItem : orderItems) {
@@ -356,11 +374,11 @@ public class HomeController extends BaseController {
             }
             existsOrderItems.removeAll(orderItemsDeleted);
             existsOrderItems.addAll(orderItems);
-
             cartForm.setOrderItems(existsOrderItems);
-
-
+            persistGuestCartToDatabase(userLoginInfo, cartForm);
             return cartForm;
+        } else if (cartFormFromDb == null || CollectionUtils.isEmpty(cartFormFromDb.getOrderItems())) {
+            persistGuestCartToDatabase(userLoginInfo, cartForm);
         }
         return cartForm;
     }

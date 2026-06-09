@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>So sánh old.json vs new.json</title>
+  <style>
+    :root {
+      --green-dark: #1b5e20;
+      --green: #2e7d32;
+      --green-light: #e8f5e9;
+      --green-border: #a5d6a7;
+      --red: #c62828;
+      --red-light: #ffebee;
+      --text: #212121;
+      --muted: #616161;
+      --border: #e0e0e0;
+      --bg: #fafafa;
+      --white: #ffffff;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      font-size: 14px;
+      line-height: 1.5;
+      color: var(--text);
+      background: var(--bg);
+    }
+
+    .page {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 32px 24px 48px;
+    }
+
+    header {
+      background: linear-gradient(135deg, #1b5e20 0%, #2e7d32 100%);
+      color: #fff;
+      border-radius: 12px;
+      padding: 28px 32px;
+      margin-bottom: 28px;
+      box-shadow: 0 4px 16px rgba(27, 94, 32, 0.25);
+    }
+
+    header h1 {
+      margin: 0 0 12px;
+      font-size: 1.75rem;
+      font-weight: 700;
+    }
+
+    header .meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px 28px;
+      font-size: 0.92rem;
+      opacity: 0.95;
+    }
+
+    header .meta span {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    section {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px 28px;
+      margin-bottom: 24px;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+    }
+
+    h2 {
+      margin: 0 0 18px;
+      font-size: 1.25rem;
+      color: var(--green-dark);
+      border-bottom: 2px solid var(--green-border);
+      padding-bottom: 10px;
+    }
+
+    h3 {
+      margin: 20px 0 12px;
+      font-size: 1rem;
+      color: var(--green);
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 14px;
+      margin-bottom: 8px;
+    }
+
+    .stat-card {
+      background: var(--green-light);
+      border: 1px solid var(--green-border);
+      border-radius: 10px;
+      padding: 16px 18px;
+    }
+
+    .stat-card .label {
+      font-size: 0.82rem;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+
+    .stat-card .value {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--green-dark);
+    }
+
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 18px 28px;
+      padding: 14px 18px;
+      background: #f5f5f5;
+      border-radius: 8px;
+      margin-top: 16px;
+      font-size: 0.9rem;
+    }
+
+    .legend-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .sample-old {
+      color: var(--red);
+      text-decoration: line-through;
+      background: var(--red-light);
+      padding: 2px 8px;
+      border-radius: 4px;
+    }
+
+    .sample-new {
+      color: var(--green-dark);
+      font-weight: 700;
+      background: var(--green-light);
+      padding: 2px 8px;
+      border-radius: 4px;
+      border: 1px solid var(--green-border);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+    }
+
+    thead th {
+      background: var(--green-dark);
+      color: #fff;
+      font-weight: 600;
+      text-align: left;
+      padding: 12px 14px;
+      white-space: nowrap;
+    }
+
+    thead th.num {
+      text-align: right;
+    }
+
+    tbody td {
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border);
+      vertical-align: middle;
+    }
+
+    tbody tr.record-group {
+      background: var(--green-light);
+      border-left: 4px solid var(--green);
+    }
+
+    tbody tr.record-group.continuation {
+      background: #f1f8f2;
+      border-left: 4px solid var(--green-border);
+    }
+
+    tbody tr:hover {
+      filter: brightness(0.98);
+    }
+
+    td.id-cell {
+      font-weight: 700;
+      color: var(--green-dark);
+      white-space: nowrap;
+    }
+
+    td.num {
+      text-align: right;
+      font-weight: 600;
+    }
+
+    td.field-cell code {
+      background: rgba(27, 94, 32, 0.12);
+      color: var(--green-dark);
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-weight: 600;
+      font-size: 0.85rem;
+    }
+
+    td.old-cell {
+      color: var(--red);
+      text-decoration: line-through;
+      background: var(--red-light);
+    }
+
+    td.new-cell {
+      color: var(--green-dark);
+      font-weight: 700;
+      background: #c8e6c9;
+      border-left: 3px solid var(--green);
+    }
+
+    .missing, .empty {
+      font-style: italic;
+      color: var(--muted);
+      font-weight: 400;
+      text-decoration: none;
+    }
+
+    td.new-cell .missing,
+    td.new-cell .empty {
+      color: var(--green);
+      font-weight: 600;
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+    }
+
+    .note {
+      color: var(--muted);
+      font-size: 0.9rem;
+      margin: 0 0 16px;
+    }
+
+    @media print {
+      body { background: #fff; }
+      section, header { box-shadow: none; break-inside: avoid; }
+      tbody tr.record-group { background: #f5f5f5; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header>
+      <h1>So sánh thay đổi: old.json vs new.json</h1>
+      <div class="meta">
+        <span>📅 Ngày tạo: 2026-06-05 14:31</span>
+        <span>📄 TRƯỚC: docs/old.json</span>
+        <span>📄 SAU: docs/new.json</span>
+        <span>🔢 Sắp xếp theo: results.id</span>
+      </div>
+    </header>
+
+    <section id="overview">
+      <h2>1. Tổng quan</h2>
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="label">Tổng số bản ghi results</div>
+          <div class="value">70</div>
+        </div>
+        <div class="stat-card">
+          <div class="label">Có thay đổi nghiệp vụ</div>
+          <div class="value">67</div>
+        </div>
+        <div class="stat-card">
+          <div class="label">Chỉ bổ sung trường mới (trống)</div>
+          <div class="value">3</div>
+        </div>
+        <div class="stat-card">
+          <div class="label">Trường header thay đổi</div>
+          <div class="value">0</div>
+        </div>
+      </div>
+
+      <h3>1.1. Thống kê trường thay đổi (trong results)</h3>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Trường</th>
+              <th class="num">Số bản ghi thay đổi</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td><code>hachiojiEvaluationCode</code></td><td class='num'>70</td></tr><tr><td><code>id1</code></td><td class='num'>70</td></tr><tr><td><code>reportComment2</code></td><td class='num'>70</td></tr><tr><td><code>results</code></td><td class='num'>70</td></tr><tr><td><code>stressCode</code></td><td class='num'>70</td></tr><tr><td><code>reportComment1</code></td><td class='num'>69</td></tr><tr><td><code>isCorrection</code></td><td class='num'>67</td></tr><tr><td><code>markOutSource</code></td><td class='num'>19</td></tr><tr><td><code>outSourceCode</code></td><td class='num'>19</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="legend">
+        <div class="legend-item">
+          <span class="sample-old">giá trị cũ</span>
+          <span>TRƯỚC (old.json) — gạch ngang, nền đỏ nhạt</span>
+        </div>
+        <div class="legend-item">
+          <span class="sample-new">giá trị mới</span>
+          <span>SAU (new.json) — in đậm, nền xanh</span>
+        </div>
+        <div class="legend-item">
+          <span style="display:inline-block;width:16px;height:16px;background:#e8f5e9;border:1px solid #a5d6a7;border-left:4px solid #2e7d32;border-radius:2px;"></span>
+          <span>Mỗi nhóm dòng = 1 bản ghi results.id (nền xanh nhạt)</span>
+        </div>
+      </div>
+    </section>
+
+    <section id="summary">
+      <h2>3. Bảng tóm tắt thay đổi theo results.id</h2>
+      <p class="note">
+        Chỉ hiển thị các trường có thay đổi giá trị nghiệp vụ (loại trừ việc chỉ thêm trường mới với giá trị trống).
+      </p>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>results.id</th>
+              <th>sampleCode</th>
+              <th>testItemCode</th>
+              <th>Trường thay đổi</th>
+              <th>TRƯỚC (old.json)</th>
+              <th>SAU (new.json)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class='record-group'><td class='id-cell' rowspan='2'>2870228</td><td rowspan='2'>011</td><td rowspan='2'>Q339011</td><td class='field-cell'><code>isCorrection</code></td><td class='old-cell'>false</td><td class='new-cell'>true</td></tr><tr class='record-group continuation'><td class='field-cell'><code>reportComment1</code></td><td class='old-cell'>04</td><td class='new-cell'>26</td></tr><tr class='record-group'><td class='id-cell' rowspan='2'>2870229</td><td rowspan='2'>011</td><td rowspan='2'>Q340011</td><td class='field-cell'><code>isCorrection</code></td><td class='old-cell'>false</td><td class='new-cell'>true</td></tr><tr class='record-group continuation'><td class='field-cell'><code>reportComment1</code></td><td class='old-cell'>04</td><td class='new-cell'>26</td></tr><tr class='record-group'><td class='id-cell' rowspan='3'>2870230</td><td rowspan='3'>011</td><td rowspan='3'>Q341011</td><td class='field-cell'><code>isCorrection</code></td><td class='old-cell'>false</td><td class='new-cell'>true</td></tr><tr class='record-group continuation'><td class='field-cell'><code>reportComment1</code></td><td class='old-cell'>04</td><td class='new-cell'><span class="empty">(trống)</span></td></tr><tr class='record-group continuation'><td class='field-cell'><code>results</code></td><td class='old-cell'><span class="missing">(không có)</span></td><td class='new-cell'>73.4</td></tr><tr class='record-group'><td class='id-cell' rowspan='3'>2870231</td><td rowspan='3'>011</td><td rowspan='3'>Q345011</td><td class='field-cell'><code>isCorrection</code></td><td class='old-cell'>false</td><td class='new-cell'>true</td></tr><tr class='record-group continuation'><td class='field-cell'><code>reportComment1</code></td><td class='old-cell'>04</td><td class='new-cell'><span class="empty">(trống)</span></td></tr><tr class='record-group continuation'><td class='field-cell'><code>results</code></td><td class='old-cell'><span class="missing">(không có)</span></td><td class='new-cell'>3.7</td></tr><tr class='record-group'><td class='id-cell' rowspan='3'>2870232</td><td rowspan='3'>011</td><td rowspan='3'>Q346011</td><td class='field-cell'><code>isCorrection</code></td><td class='old-cell'>false</td><td class='new-cell'>true</td></tr><tr class='record-group continuation'><td class='field-cell'><code>reportComment1</code></td><td class='old-cell'>04</td><td class='new-cell'><span class="empty">(trống)</span></td></tr><tr class='record-group continuation'><td class='field-cell'><code>results</code></td><td class='old-cell'><span class="missing">(không có)</span></td><td class='new-cell'>0.7</td></tr><tr class='record-group'><td class='id-cell' rowspan='3'>2870233</td><td rowspan='3'>011</td><td rowspan='3'>Q347011</td><td class='field-cell'><code>isCorrection</code></td><td class='old-cell'>false</td><td class='new-cell'>true</td></tr><tr class='record-group continuation'><td class='field-cell'><code>reportComment1</code></td><td class='old-cell'>04</td><td class='new-cell'><span class="empty">(trống)</span></td></tr><tr class='record-group continuation'><td class='field-cell'><code>results</code></td><td class='old-cell'><span class="missing">(không có)</span></td><td class='new-cell'>4.8</td></tr><tr class='record-group'><td class='id-cell' rowspan='3'>2870234</td><td rowspan='3'>011</td><td rowspan='3'>Q348011</td><td class='field-cell'><code>isCorrection</code></td><td class='old-cell'>false</td><td class='new-cell'>true</td></tr><tr class='record-group continuation'><td class='field-cell'><code>reportComment1</code></td><td class='old-cell'>04</td><td class='new-cell'><span class="empty">(trống)</span></td></tr><tr class='record-group continuation'><td class='field-cell'><code>results</code></td><td class='old-cell'><span class="missing">(không có)</span></td><td class='new-cell'>17.4</td></tr><tr class='record-group'><td class='id-cell' rowspan='2'>2870235</td><td rowspan='2'>011</td><td rowspan='2'>Q349011</td><td class='field-cell'><code>isCorrection</code></td><td class='old-cell'>false</td><td class='new-cell'>true</td></tr><tr class='record-group continuation'><td class='field-cell'><code>reportComment1</code></td><td class='old-cell'>04</td><td class='new-cell'>26</td></tr><tr class='record-group'><td class='id-cell' rowspan='2'>2870236</td><td rowspan='2'>011</td><td rowspan='2'>Q350011</td><td class='field-cell'><code>isCorrection</code></td><td class='old-cell'>false</td><td class='new-cell'>true</td></tr><tr class='record-group continuation'><td class='field-cell'><code>reportComment1</code></td><td class='old-cell'>04</td><td class='new-cell'>26</td></tr><tr class='record-group'><td class='id-cell' rowspan='2'>2870237</td><td rowspan='2'>011</td><td rowspan='2'>Q351011</td><td class='field-cell'><code>isCorrection</code></td><td class='old-cell'>false</td><td class='new-cell'>true</td></tr><tr class='record-group continuation'><td class='field-cell'><code>reportComment1</code></td><td class='old-cell'>04</td><td class='new-cell'>26</td></tr><tr class='record-group'><td class='id-cell' rowspan='2'>2870238</td><td rowspan='2'>011</td><td rowspan='2'>Q352011</td><td class='field-cell'><code>isCorrection</code></td><td class='old-cell'>false</td><td class='new-cell'>true</td></tr><tr class='record-group continuation'><td class='field-cell'><code>reportComment1</code></td><td class='old-cell'>04</td><td class='new-cell'>26</td></tr><tr class='record-group'><td class='id-cell' rowspan='2'>2870239</td><td rowspan='2'>011</td><td rowspan='2'>Q353011</td><td class='field-cell'><code>isCorrection</code></td><td class='old-cell'>false</td><td class='new-cell'>true</td></tr><tr class='record-group continuation'><td class='field-cell'><code>reportComment1</code></td><td class='old-cell'>04</td><td class='new-cell'>26</td></tr><tr class='record-group'><td class='id-cell' rowspan='2'>2870240</td><td rowspan='2'>011</td><td rowspan='2'>Q354011</td><td class='field-cell'><code>isCorrection</code></td><td class='old-cell'>false</td><td class='new-cell'>true</td></tr><tr class='record-group continuation'><td class='field-cell'><code>reportComment1</code></td><td class='old-cell'>04</td><td class='new-cell'>26</td></tr><tr class='record-group'><td class='id-cell' rowspan='2'>2870241</td><td rowspan='2'>011</td><td rowspan='2'>Q355011</td><td class='field-cell'><code>isCorrection</code></td><td class='old-cell'>false</td><td class='new-cell'>true</td></tr><tr class='record-group continuation'><td class='field-cell'><code>reportComment1</code></td><td class='old-cell'>04</td><td class='new-cell'>26</td></tr><tr class='record-group'><td class='id-cell' rowspan='3'>2870243</td><td rowspan='3'>011</td><td rowspan='3'>H603011</td><td class='field-cell'><code>isCorrection</code></td><td class='old-cell'>false</td><td class='new-cell'>true</td></tr><tr class='record-group continuation'><td class='field-cell'><code>reportComment1</code></td><td class='old-cell'>04</td><td class='new-cell'><span class="empty">(trống)</span></td></tr><tr class='record-group continuation'><td class='field-cell'><code>results</code></td><td class='old-cell'><span class="missing">(không có)</span></td><td class='new-cell'>34.1</td></tr><tr class='record-group'><td class='id-cell' rowspan='3'>2870244</td><td rowspan='3'>011</td><td rowspan='3'>W093011</td><td class='field-cell'><code>isCorrection</code></td><td class='old-cell'>false</td><td class='new-cell'>true</td></tr><tr class='record-group continuation'><td class='field-cell'><code>reportComment1</code></td><td class='old-cell'>04</td><td class='new-cell'><span class="empty">(trống)</span></td></tr><tr class='record-group continuation'><td class='field-cell'><code>results</code></td><td class='old-cell'><span class="missing">(không có)</span></td><td class='new-cell'>22.6</td></tr><tr class='record-group'><td class='id-cell' rowspan='3'>2870245</td><td rowspan='3'>011</td><td rowspan='3'>W499011</td><td class='field-cell'><code>isCorrection</code></td><td class='old-cell'>false</td><td class='new-cell'>true</td></tr><tr class='record-group continuation'><td class='field-cell'><code>reportComment1</code></td><td class='old-cell'>04</td><td class='new-cell'><span class="empty">(trống)</span></td></tr><tr class='record-group continuation'><td class='field-cell'><code>results</code></td><td class='old-cell'><span class="missing">(không có)</span></td><td class='new-cell'>3220</td></tr><tr class='record-group'><td class='id-cell' rowspan='3'>2870246</td><td rowspan='3'>011</td><td rowspan='3'>X268011</td><td class='field-cell'><code>isCorrection</code></td><td class='old-cell'>false</td><td class='new-cell'>true</td></tr><tr class='record-group continuation'><td class='field-cell'><code>reportComment1</code></td><td class='old-cell'>04</td><td class='new-cell'><span class="empty">(trống)</span></td></tr><tr class='record-group continuation'><td class='field-cell'><code>results</code></td><td class='old-cell'><span class="missing">(không có)</span></td><td class='new-cell'>160</td></tr><tr class='record-group'><td class='id-cell' rowspan='3'>2870247</td><td rowspan='3'>011</td><td rowspan='3'>X743011</td><td class='field-cell'><code>isCorrection</code></td><td class='old-cell'>false</td><td class='new-cell'>true</td></tr><tr class='record-group continuation'><td class='field-cell'><code>reportComment1</code></td><td class='old-cell'>04</td><td class='new-cell'><span class="empty">(trống)</span></td></tr><tr class='record-group continuation'><td class='field-cell'><code>results</code></td><td class='old-cell'><span class="missing">(không có)</span></td><td class='new-cell'>30</td></tr><tr class='record-group'><td class='id-cell' rowspan='3'>2870248</td><td rowspan='3'>011</td><td rowspan='3'>X769011</td><td class='field-cell'><code>isCorrection</code></td><td class='old-cell'>false</td><td class='new-cell'>true</td></tr><tr class='record-group continuation'><td class='field-cell'><code>reportComment1</code></td><td class='old-cell'>04</td><td class='new-cell'><span class="empty">(trống)</span></td></tr><tr class='record-group continuation'><td class='field-cell'><code>results</code></td><td class='old-cell'><span class="missing">(không có)</span></td><td class='new-cell'>760</td></tr><tr class='record-group'><td class='id-cell' rowspan='3'>2870249</td><td rowspan='3'>011</td><td rowspan='3'>X963011</td><td class='field-cell'><code>isCorrection</code></td><td class='old-cell'>false</td><td class='new-cell'>true</td></tr><tr class='record-group continuation'><td class='field-cell'><code>reportComment1</code></td><td class='old-cell'>04</td><td class='new-cell'><span class="empty">(trống)</span></td></tr><tr class='record-group continuation'><td class='field-cell'><code>results</code></td><td class='old-cell'><span class="missing">(không có)</span></td><td class='new-cell'>210</td></tr><tr class='record-group'><td class='id-cell' rowspan='3'>2870250</td><td rowspan='3'>011</td><td rowspan='3'>0781011</td><td class='field-cell'><code>isCorrection</code></td><td class='old-cell'>false</td><td class='new-cell'>true</td></tr><tr class='record-group continuation'><td class='field-cell'><code>reportComment1</code></td><td class='old-cell'>04</td><td class='new-cell'><span class="empty">(trống)</span></td></tr><tr class='record-group continuation'><td class='field-cell'><code>results</code></td><td class='old-cell'><span class="missing">(không có)</span></td><td class='new-cell'>4400</td></tr><tr class='record-group'><td class='id-cell' rowspan='3'>2870251</td><td rowspan='3'>011</td><td rowspan='3'>0782011</td><td class='field-cell'><code>isCorrection</code></td><td class='old-cell'>false</td><td class='new-cell'>true</td></tr><tr class='record-group continuation'><td class='field-cell'><code>reportComment1</code></td><td class='old-cell'>04</td><td class='new-cell'><span class="empty">(trống)</span></td></tr><tr class='record-group continuation'><td class='field-cell'><code>results</code></td><td class='old-cell'><span class="missing">(không có)</span></td><td class='new-cell'>423</td></tr><tr class='record-group'><td class='id-cell' rowspan='3'>2870252</td><td rowspan='3'>011</td><td rowspan='3'>3940011</td><td class='field-cell'><code>isCorrection</code></td><td class='old-cell'>false</td><td class='new-cell'>true</td></tr><tr class='record-group continuation'><td class='field-cell'><code>reportComment1</code></td><td class='old-cell'>04</td><td class='new-cell'><span class="empty">(trống)</span></td></tr><tr class='record-group continuation'><td class='field-cell'><code>results</code></td><td class='old-cell'><span class="missing">(không có)</span></td><td class='new-cell'>13.3</td></tr><tr class='record-group'><td class='id-cell' rowspan='3'>2870253</td><td rowspan='3'>011</td><td rowspan='3'>3942011</td><td class='field-cell'><code>isCorrection</code></td><td class='old-cell'>false</td><td class='new-cell'>true</td></tr><tr class='record-group continuation'><td class='field-cell'><code>reportComment1</code></td><td class='old-cell'>04</td><td class='new-cell'><span class="empty">(trống)</span></td></tr><tr class='record-group continuation'><td class='field-cell'><code>results</code></td><td class='old-cell'><span class="missing">(không có)</span></td><td class='new-cell'>39.0</td></tr><tr class='record-group'><td class='id-cell' rowspan='3'>2870254</td><td rowspan='3'>011</td><td rowspan='3'>3982011</td><td class='field-cell'><code>isCorrection</code></td><td class='old-cell'>false</td><td class='new-cell'>true</td></tr><tr class='record-group continuation'><td class='field-cell'><code>reportComment1</code></td><td class='old-cell'>04</td><td class='new-cell'><span class="empty">(trống)</span></td></tr><tr class='record-group continuation'><td class='field-cell'><code>results</code></td><td class='old-cell'><span class="missing">(không có)</span></td><td class='new-cell'>92.2</td></tr><tr class='record-group'><td class='id-cell' rowspan='3'>2870256</td><td rowspan='3'>020</td><td rowspan='3'>6576020</td><td class='field-cell'><code>isCorrection</code></td><td class='old-cell'>false</td><td class='new-cell'>true</td></tr><tr class='record-group continuation'><td class='field-cell'><code>reportComment1</code></td><td class='old-cell'>04</td><td class='new-cell'><span class="empty">(trống)</span></td></tr><tr class='record-group continuation'><td class='field-cell'><code>results</code></td><td class='old-cell'><span class="missing">(không có)</span></td><td class='new-cell'>0.6</td></tr><tr class='record-group'><td class='id-cell' rowspan='3'>2870257</td><td rowspan='3'>021</td><td rowspan='3'>5059021</td><td class='field-cell'><code>isCorrection</code></td><td class='old-cell'>false</td><td class='new-cell'>true</td></tr><tr class='record-group continuation'><td class='field-cell'><code>reportComment1</code></td><td class='old-cell'>04</td><td class='new-cell'><span class="empty">(trống)</span></td></tr><tr class='record-group continuation'><td class='field-cell'><code>results</code></td><td class='old-cell'><span class="missing">(không có)</span></td><td class='new-cell'>4.6</td></tr><tr class='record-group'><td class='id-cell' rowspan='3'>2870258</td><td rowspan='3'>021</td><td rowspan='3'>2269021</td><td class='field-cell'><code>isCorrection</code></td><td class='old-cell'>false</td><td class='new-cell'>true</td></tr><tr class='record-group continuation'><td class='field-cell'><code>reportComment1</code></td><td class='old-cell'>04</td><td class='new-cell'><span class="empty">(trống)</span></td></tr><tr class='record-group continuation'><td class='field-cell'><code>results</code></td><td class='old-cell'><span class="missing">(không có)</span></td><td class='new-cell'>117</td></tr><tr class='record-group'><td class='id-cell' rowspan='3'>2870259</td><td rowspan='3'>021</td><td rowspan='3'>0821021</td><td class='field-cell'><code>isCorrection</code></td><td class='old-cell'>false</td><td class='new-cell'>true</td></tr><tr class='record-group continuation'><td class='field-cell'><code>reportComment1</code></td><td class='old-cell'>04</td><td class='new-cell'><span class="empty">(trống)</span></td></tr><tr class='record-group continuation'><td class='field-cell'><code>results</code></td><td class='old-cell'><span class="missing">(không có)</span></td><td class='new-cell'>0.33</td></tr><tr class='record-group'><td class='id-cell' rowspan='3'>2870260</td><td rowspan='3'>021</td><td rowspan='3'>0439021</td><td class='field-cell'><code>isCorrection</code></td><td class='old-cell'>false</td><td class='new-cell'>true</td></tr><tr class='record-group continuation'><td class='field-cell'><code>reportComment1</code></td><td class='old-cell'>04</td><td class='new-cell'><span class="empty">(trống)</span></td></tr><tr class='record-group continuation'><td class='field-cell'><code>results</code></td><td class='old-cell'><span class="missing">(không có)</span></td><td class='new-cell'>11</td></tr><tr class='record-group'><td class='id-cell' rowspan='3'>2870261</td><td rowspan='3'>021</td><td rowspan='3'>0438021</td><td class='field-cell'><code>isCorrection</code></td><td class='old-cell'>false</td><td class='new-cell'>true</td></tr><tr class='record-group continuation'><td class='field-cell'><code>reportComment1</code></td><td class='old-cell'>04</td><td class='new-cell'><span class="empty">(trống)</span></td></tr><tr class='record-group continuation'><td class='field-cell'><code>results</code></td><td class='old-cell'><span class="missing">(không có)</span></td><td class='new-cell'>16</td></tr><tr class='record-group'><td class='id-cell' rowspan='3'>2870262</td><td rowspan='3'>021</td><td rowspan='3'>0436021</td><td class='field-cell'><code>isCorrection</code></td><td class='old-cell'>false</td><td class='new-cell'>true</td></tr><tr class='record-group continuation'><td class='field-cell'><code>reportComment1</code></td><td class='old-cell'>04</td><td class='new-cell'><span class="empty">(trống)</span></td></tr><tr class='record-group continuation'><td class='field-cell'><code>results</code></td><td class='old-cell'><span class="missing">(không có)</span></td><td class='new-cell'>10</td></tr><tr class='record-group'><td class='id-cell' rowspan='3'>2870263</td><td rowspan='3'>021</td><td rowspan='3'>0433021</td><td class='field-cell'><code>isCorrection</code></td><td class='old-cell'>false</td><td class='new-cell'>true</td></tr><tr class='record-group continuation'><td class='field-cell'><code>reportComment1</code></td><td class='old-cell'>04</td><td class='new-cell'><span class="empty">(trống)</span></td></tr><tr class='record-group continuation'><td class='field-cell'><code>results</code></td><td class='old-cell'><span class="missing">(không có)</span></td><td class='new-cell'>76</td></tr><tr class='record-group'><td class='id-cell' rowspan='3'>2870264</td><td rowspan='3'>021</td><td rowspan='3'>0418021</td><td class='field-cell'><code>isCorrection</code></td><td class='old-cell'>false</td><td class='new-cell'>true</td></tr><tr class='record-group continuation'><td class='field-cell'><code>reportComment1</code></td><td class='old-cell'>04</td><td class='new-cell'><span class="empty">(trống)</span></td></tr><tr class='record-group continuation'><td class='field-cell'><code>results</code></td><td class='old-cell'><span class="missing">(không có)</span></td><td class='new-cell'>105</td></tr><tr class='record-group'><td class='id-cell' rowspan='3'>2870265</td><td rowspan='3'>021</td><td rowspan='3'>0417021</td><td class='field-cell'><code>isCorrection</code></td><td class='old-cell'>false</td><td class='new-cell'>true</td></tr><tr class='record-group continuation'><td class='field-cell'><code>reportComment1</code></td><td class='old-cell'>04</td><td class='new-cell'><span class="empty">(trống)</span></td></tr><tr class='record-group continuation'><td class='field-cell'><code>results</code></td><td class='old-cell'><span class="missing">(không có)</span></td><td class='new-cell'>3.7</td></tr><tr class='record-group'><td class='id-cell' rowspan='3'>2870266</td><td rowspan='3'>021</td><td rowspan='3'>0416021</td><td class='field-cell'><code>isCorrection</code></td><td class='old-cell'>false</td><td class='new-cell'>true</td></tr><tr class='record-group continuation'><td class='field-cell'><code>reportComment1</code></td><td class='old-cell'>04</td><td class='new-cell'><span class="empty">(trống)</span></td></tr><tr class='record-group continuation'><td class='field-cell'><code>results</code></td><td class='old-cell'><span class="missing">(không có)</span></td><td class='new-cell'>141</td></tr><tr class='record-group'><td class='id-cell' rowspan='3'>2870267</td><td rowspan='3'>021</td><td rowspan='3'>0408021</td><td class='field-cell'><code>isCorrection</code></td><td class='old-cell'>false</td><td class='new-cell'>true</td></tr><tr class='record-group continuation'><td class='field-cell'><code>reportComment1</code></td><td class='old-cell'>04</td><td class='new-cell'><span class="empty">(trống)</span></td></tr><tr class='record-group continuation'><td class='field-cell'><code>results</code></td><td class='old-cell'><span class="missing">(không có)</span></td><td class='new-cell'>9.1</td></tr><tr class='record-group'><td class='id-cell' rowspan='3'>2870268</td><td rowspan='3'>021</td><td rowspan='3'>0407021</td><td class='field-cell'><code>isCorrection</code></td><td class='old-cell'>false</td><td class='new-cell'>true</td></tr><tr class='record-group continuation'><td class='field-cell'><code>reportComment1</code></td><td class='old-cell'>04</td><td class='new-cell'><span class="empty">(trống)</span></td></tr><tr class='record-group continuation'><td class='field-cell'><code>results</code></td><td class='old-cell'><span class="missing">(không có)</span></td><td class='new-cell'>4.7</td></tr><tr class='record-group'><td class='id-cell' rowspan='3'>2870269</td><td rowspan='3'>021</td><td rowspan='3'>0406021</td><td class='field-cell'><code>isCorrection</code></td><td class='old-cell'>false</td><td class='new-cell'>true</td></tr><tr class='record-group continuation'><td class='field-cell'><code>reportComment1</code></td><td class='old-cell'>04</td><td class='new-cell'><span class="empty">(trống)</span></td></tr><tr class='record-group continuation'><td class='field-cell'><code>results</code></td><td class='old-cell'><span class="missing">(không có)</span></td><td class='new-cell'>0.76</td></tr><tr class='record-group'><td class='id-cell' rowspan='3'>2870270</td><td rowspan='3'>021</td><td rowspan='3'>0405021</td><td class='field-cell'><code>isCorrection</code></td><td class='old-cell'>false</td><td class='new-cell'>true</td></tr><tr class='record-group continuation'><td class='field-cell'><code>reportComment1</code></td><td class='old-cell'>04</td><td class='new-cell'><span class="empty">(trống)</span></td></tr><tr class='record-group continuation'><td class='field-cell'><code>results</code></td><td class='old-cell'><span class="missing">(không có)</span></td><td class='new-cell'>11.7</td></tr><tr class='record-group'><td class='id-cell' rowspan='3'>2870271</td><td rowspan='3'>021</td><td rowspan='3'>0401021</td><td class='field-cell'><code>isCorrection</code></td><td class='old-cell'>false</td><td class='new-cell'>true</td></tr><tr class='record-group continuation'><td class='field-cell'><code>reportComment1</code></td><td class='old-cell'>04</td><td class='new-cell'><span class="empty">(trống)</span></td></tr><tr class='record-group continuation'><td class='field-cell'><code>results</code></td><td class='old-cell'><span class="missing">(không có)</span></td><td class='new-cell'>48</td></tr><tr class='record-group'><td class='id-cell' rowspan='3'>2870272</td><td rowspan='3'>021</td><td rowspan='3'>0394021</td><td class='field-cell'><code>isCorrection</code></td><td class='old-cell'>false</td><td class='new-cell'>true</td></tr><tr class='record-group continuation'><td class='field-cell'><code>reportComment1</code></td><td class='old-cell'>04</td><td class='new-cell'><span class="empty">(trống)</span></td></tr><tr class='record-group continuation'><td class='field-cell'><code>results</code></td><td class='old-cell'><span class="missing">(không có)</span></td><td class='new-cell'>210</td></tr><tr class='record-group'><td class='id-cell' rowspan='3'>2870273</td><td rowspan='3'>021</td><td rowspan='3'>0388021</td><td class='field-cell'><code>isCorrection</code></td><td class='old-cell'>false</td><td class='new-cell'>true</td></tr><tr class='record-group continuation'><td class='field-cell'><code>reportComment1</code></td><td class='old-cell'>04</td><td class='new-cell'><span class="empty">(trống)</span></td></tr><tr class='record-group continuation'><td class='field-cell'><code>results</code></td><td class='old-cell'><span class="missing">(không có)</span></td><td class='new-cell'>0.3</td></tr><tr class='record-group'><td class='id-cell' rowspan='3'>2870274</td><td rowspan='3'>021</td><td rowspan='3'>0381021</td><td class='field-cell'><code>isCorrection</code></td><td class='old-cell'>false</td><td class='new-cell'>true</td></tr><tr class='record-group continuation'><td class='field-cell'><code>reportComment1</code></td><td class='old-cell'>04</td><td class='new-cell'><span class="empty">(trống)</span></td></tr><tr class='record-group continuation'><td class='field-cell'><code>results</code></td><td class='old-cell'><span class="missing">(không có)</span></td><td class='new-cell'>7.3</td></tr><tr class='record-group'><td class='id-cell' rowspan='3'>2870275</td><td rowspan='3'>021</td><td rowspan='3'>0203021</td><td class='field-cell'><code>isCorrection</code></td><td class='old-cell'>false</td><td class='new-cell'>true</td></tr><tr class='record-group continuation'><td class='field-cell'><code>reportComment1</code></td><td class='old-cell'>04</td><td class='new-cell'><span class="empty">(trống)</span></td></tr><tr class='record-group continuation'><td class='field-cell'><code>results</code></td><td class='old-cell'><span class="missing">(không có)</span></td><td class='new-cell'>79</td></tr><tr class='record-group'><td class='id-cell' rowspan='3'>2870276</td><td rowspan='3'>021</td><td rowspan='3'>X436021</td><td class='field-cell'><code>isCorrection</code></td><td class='old-cell'>false</td><td class='new-cell'>true</td></tr><tr class='record-group continuation'><td class='field-cell'><code>reportComment1</code></td><td class='old-cell'>04</td><td class='new-cell'><span class="empty">(trống)</span></td></tr><tr class='record-group continuation'><td class='field-cell'><code>results</code></td><td class='old-cell'><span class="missing">(không có)</span></td><td class='new-cell'>67</td></tr><tr class='record-group'><td class='id-cell' rowspan='3'>2870277</td><td rowspan='3'>021</td><td rowspan='3'>X437021</td><td class='field-cell'><code>isCorrection</code></td><td class='old-cell'>false</td><td class='new-cell'>true</td></tr><tr class='record-group continuation'><td class='field-cell'><code>reportComment1</code></td><td class='old-cell'>04</td><td class='new-cell'><span class="empty">(trống)</span></td></tr><tr class='record-group continuation'><td class='field-cell'><code>results</code></td><td class='old-cell'><span class="missing">(không có)</span></td><td class='new-cell'>196</td></tr><tr class='record-group'><td class='id-cell' rowspan='3'>2870278</td><td rowspan='3'>021</td><td rowspan='3'>0A51021</td><td class='field-cell'><code>isCorrection</code></td><td class='old-cell'>false</td><td class='new-cell'>true</td></tr><tr class='record-group continuation'><td class='field-cell'><code>reportComment1</code></td><td class='old-cell'>04</td><td class='new-cell'><span class="empty">(trống)</span></td></tr><tr class='record-group continuation'><td class='field-cell'><code>results</code></td><td class='old-cell'><span class="missing">(không có)</span></td><td class='new-cell'>0.016</td></tr><tr class='record-group'><td class='id-cell' rowspan='3'>2870279</td><td rowspan='3'>022</td><td rowspan='3'>R033022</td><td class='field-cell'><code>isCorrection</code></td><td class='old-cell'>false</td><td class='new-cell'>true</td></tr><tr class='record-group continuation'><td class='field-cell'><code>reportComment1</code></td><td class='old-cell'>04</td><td class='new-cell'><span class="empty">(trống)</span></td></tr><tr class='record-group continuation'><td class='field-cell'><code>results</code></td><td class='old-cell'><span class="missing">(không có)</span></td><td class='new-cell'>20</td></tr><tr class='record-group'><td class='id-cell' rowspan='3'>2870280</td><td rowspan='3'>03B</td><td rowspan='3'>039003B</td><td class='field-cell'><code>isCorrection</code></td><td class='old-cell'>false</td><td class='new-cell'>true</td></tr><tr class='record-group continuation'><td class='field-cell'><code>reportComment1</code></td><td class='old-cell'>04</td><td class='new-cell'><span class="empty">(trống)</span></td></tr><tr class='record-group continuation'><td class='field-cell'><code>results</code></td><td class='old-cell'><span class="missing">(không có)</span></td><td class='new-cell'>85</td></tr><tr class='record-group'><td class='id-cell' rowspan='3'>2870281</td><td rowspan='3'>541</td><td rowspan='3'>N751541</td><td class='field-cell'><code>hachiojiEvaluationCode</code></td><td class='old-cell'><span class="missing">(không có)</span></td><td class='new-cell'>19</td></tr><tr class='record-group continuation'><td class='field-cell'><code>isCorrection</code></td><td class='old-cell'>false</td><td class='new-cell'>true</td></tr><tr class='record-group continuation'><td class='field-cell'><code>reportComment1</code></td><td class='old-cell'>04</td><td class='new-cell'><span class="empty">(trống)</span></td></tr><tr class='record-group'><td class='id-cell' rowspan='3'>2870282</td><td rowspan='3'>541</td><td rowspan='3'>N750541</td><td class='field-cell'><code>hachiojiEvaluationCode</code></td><td class='old-cell'><span class="missing">(không có)</span></td><td class='new-cell'>19</td></tr><tr class='record-group continuation'><td class='field-cell'><code>isCorrection</code></td><td class='old-cell'>false</td><td class='new-cell'>true</td></tr><tr class='record-group continuation'><td class='field-cell'><code>reportComment1</code></td><td class='old-cell'>04</td><td class='new-cell'><span class="empty">(trống)</span></td></tr><tr class='record-group'><td class='id-cell' rowspan='3'>2870283</td><td rowspan='3'>541</td><td rowspan='3'>Y289541</td><td class='field-cell'><code>isCorrection</code></td><td class='old-cell'>false</td><td class='new-cell'>true</td></tr><tr class='record-group continuation'><td class='field-cell'><code>reportComment1</code></td><td class='old-cell'>04</td><td class='new-cell'><span class="empty">(trống)</span></td></tr><tr class='record-group continuation'><td class='field-cell'><code>results</code></td><td class='old-cell'><span class="missing">(không có)</span></td><td class='new-cell'>5.5</td></tr><tr class='record-group'><td class='id-cell' rowspan='3'>2870284</td><td rowspan='3'>541</td><td rowspan='3'>Y290541</td><td class='field-cell'><code>hachiojiEvaluationCode</code></td><td class='old-cell'><span class="missing">(không có)</span></td><td class='new-cell'>19</td></tr><tr class='record-group continuation'><td class='field-cell'><code>isCorrection</code></td><td class='old-cell'>false</td><td class='new-cell'>true</td></tr><tr class='record-group continuation'><td class='field-cell'><code>reportComment1</code></td><td class='old-cell'>04</td><td class='new-cell'><span class="empty">(trống)</span></td></tr><tr class='record-group'><td class='id-cell' rowspan='3'>2870285</td><td rowspan='3'>541</td><td rowspan='3'>Y291541</td><td class='field-cell'><code>hachiojiEvaluationCode</code></td><td class='old-cell'><span class="missing">(không có)</span></td><td class='new-cell'>19</td></tr><tr class='record-group continuation'><td class='field-cell'><code>isCorrection</code></td><td class='old-cell'>false</td><td class='new-cell'>true</td></tr><tr class='record-group continuation'><td class='field-cell'><code>reportComment1</code></td><td class='old-cell'>04</td><td class='new-cell'><span class="empty">(trống)</span></td></tr><tr class='record-group'><td class='id-cell' rowspan='3'>2870286</td><td rowspan='3'>541</td><td rowspan='3'>Y292541</td><td class='field-cell'><code>hachiojiEvaluationCode</code></td><td class='old-cell'><span class="missing">(không có)</span></td><td class='new-cell'>17</td></tr><tr class='record-group continuation'><td class='field-cell'><code>isCorrection</code></td><td class='old-cell'>false</td><td class='new-cell'>true</td></tr><tr class='record-group continuation'><td class='field-cell'><code>reportComment1</code></td><td class='old-cell'>04</td><td class='new-cell'><span class="empty">(trống)</span></td></tr><tr class='record-group'><td class='id-cell' rowspan='3'>2870287</td><td rowspan='3'>541</td><td rowspan='3'>Y293541</td><td class='field-cell'><code>hachiojiEvaluationCode</code></td><td class='old-cell'><span class="missing">(không có)</span></td><td class='new-cell'>19</td></tr><tr class='record-group continuation'><td class='field-cell'><code>isCorrection</code></td><td class='old-cell'>false</td><td class='new-cell'>true</td></tr><tr class='record-group continuation'><td class='field-cell'><code>reportComment1</code></td><td class='old-cell'>04</td><td class='new-cell'><span class="empty">(trống)</span></td></tr><tr class='record-group'><td class='id-cell' rowspan='3'>2870288</td><td rowspan='3'>541</td><td rowspan='3'>Y300541</td><td class='field-cell'><code>hachiojiEvaluationCode</code></td><td class='old-cell'><span class="missing">(không có)</span></td><td class='new-cell'>19</td></tr><tr class='record-group continuation'><td class='field-cell'><code>isCorrection</code></td><td class='old-cell'>false</td><td class='new-cell'>true</td></tr><tr class='record-group continuation'><td class='field-cell'><code>reportComment1</code></td><td class='old-cell'>04</td><td class='new-cell'><span class="empty">(trống)</span></td></tr><tr class='record-group'><td class='id-cell' rowspan='3'>2870289</td><td rowspan='3'>541</td><td rowspan='3'>Y311541</td><td class='field-cell'><code>hachiojiEvaluationCode</code></td><td class='old-cell'><span class="missing">(không có)</span></td><td class='new-cell'>19</td></tr><tr class='record-group continuation'><td class='field-cell'><code>isCorrection</code></td><td class='old-cell'>false</td><td class='new-cell'>true</td></tr><tr class='record-group continuation'><td class='field-cell'><code>reportComment1</code></td><td class='old-cell'>04</td><td class='new-cell'><span class="empty">(trống)</span></td></tr><tr class='record-group'><td class='id-cell' rowspan='3'>2870290</td><td rowspan='3'>541</td><td rowspan='3'>Y317541</td><td class='field-cell'><code>isCorrection</code></td><td class='old-cell'>false</td><td class='new-cell'>true</td></tr><tr class='record-group continuation'><td class='field-cell'><code>reportComment1</code></td><td class='old-cell'>04</td><td class='new-cell'><span class="empty">(trống)</span></td></tr><tr class='record-group continuation'><td class='field-cell'><code>results</code></td><td class='old-cell'><span class="missing">(không có)</span></td><td class='new-cell'>1.007</td></tr><tr class='record-group'><td class='id-cell' rowspan='3'>2870292</td><td rowspan='3'>970</td><td rowspan='3'>L452970</td><td class='field-cell'><code>isCorrection</code></td><td class='old-cell'>false</td><td class='new-cell'>true</td></tr><tr class='record-group continuation'><td class='field-cell'><code>reportComment1</code></td><td class='old-cell'>04</td><td class='new-cell'><span class="empty">(trống)</span></td></tr><tr class='record-group continuation'><td class='field-cell'><code>results</code></td><td class='old-cell'><span class="missing">(không có)</span></td><td class='new-cell'>1.01</td></tr><tr class='record-group'><td class='id-cell' rowspan='3'>2870293</td><td rowspan='3'>970</td><td rowspan='3'>L451970</td><td class='field-cell'><code>isCorrection</code></td><td class='old-cell'>false</td><td class='new-cell'>true</td></tr><tr class='record-group continuation'><td class='field-cell'><code>reportComment1</code></td><td class='old-cell'>04</td><td class='new-cell'><span class="empty">(trống)</span></td></tr><tr class='record-group continuation'><td class='field-cell'><code>results</code></td><td class='old-cell'><span class="missing">(không có)</span></td><td class='new-cell'>1.01</td></tr><tr class='record-group'><td class='id-cell' rowspan='3'>2870294</td><td rowspan='3'>970</td><td rowspan='3'>L450970</td><td class='field-cell'><code>isCorrection</code></td><td class='old-cell'>false</td><td class='new-cell'>true</td></tr><tr class='record-group continuation'><td class='field-cell'><code>reportComment1</code></td><td class='old-cell'>04</td><td class='new-cell'><span class="empty">(trống)</span></td></tr><tr class='record-group continuation'><td class='field-cell'><code>results</code></td><td class='old-cell'><span class="missing">(không có)</span></td><td class='new-cell'>99</td></tr><tr class='record-group'><td class='id-cell' rowspan='3'>2870295</td><td rowspan='3'>970</td><td rowspan='3'>L449970</td><td class='field-cell'><code>isCorrection</code></td><td class='old-cell'>false</td><td class='new-cell'>true</td></tr><tr class='record-group continuation'><td class='field-cell'><code>reportComment1</code></td><td class='old-cell'>04</td><td class='new-cell'><span class="empty">(trống)</span></td></tr><tr class='record-group continuation'><td class='field-cell'><code>results</code></td><td class='old-cell'><span class="missing">(không có)</span></td><td class='new-cell'>11.3</td></tr><tr class='record-group'><td class='id-cell' rowspan='3'>2870296</td><td rowspan='3'>970</td><td rowspan='3'>1385970</td><td class='field-cell'><code>isCorrection</code></td><td class='old-cell'>false</td><td class='new-cell'>true</td></tr><tr class='record-group continuation'><td class='field-cell'><code>reportComment1</code></td><td class='old-cell'>04</td><td class='new-cell'><span class="empty">(trống)</span></td></tr><tr class='record-group continuation'><td class='field-cell'><code>results</code></td><td class='old-cell'><span class="missing">(không có)</span></td><td class='new-cell'>25.6</td></tr><tr class='record-group'><td class='id-cell' rowspan='3'>2870297</td><td rowspan='3'>970</td><td rowspan='3'>0910970</td><td class='field-cell'><code>isCorrection</code></td><td class='old-cell'>false</td><td class='new-cell'>true</td></tr><tr class='record-group continuation'><td class='field-cell'><code>reportComment1</code></td><td class='old-cell'>04</td><td class='new-cell'><span class="empty">(trống)</span></td></tr><tr class='record-group continuation'><td class='field-cell'><code>results</code></td><td class='old-cell'><span class="missing">(không có)</span></td><td class='new-cell'>25.3</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+</body>
+</html>

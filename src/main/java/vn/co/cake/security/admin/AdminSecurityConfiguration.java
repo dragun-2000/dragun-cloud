@@ -49,7 +49,6 @@ public class AdminSecurityConfiguration extends WebSecurityConfigurerAdapter {
     @Override
     protected void configure(HttpSecurity http) throws Exception {
         http.securityContext().securityContextRepository(adminContextRepository);
-        http.sessionManagement().enableSessionUrlRewriting(true);
 
         http.requestMatchers().antMatchers("/AM/**", "/HO/**", "/csv/**")
             .and()
@@ -89,9 +88,7 @@ public class AdminSecurityConfiguration extends WebSecurityConfigurerAdapter {
             .userDetailsService(adminDetailsService)
         ;
 
-        http.sessionManagement()
-                .enableSessionUrlRewriting(true)
-        ;
+        http.sessionManagement().enableSessionUrlRewriting(false);
 
         http.csrf()
                 .ignoringAntMatchers(RequestPathConst.HOME, RequestPathConst.AM, RequestPathConst.AM001, RequestPathConst.AM001_LOGIN, RequestPathConst.SA001_LOGIN, RequestPathConst.SA001_REGISTER)

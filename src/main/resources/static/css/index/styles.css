@@ -3784,3 +3784,205 @@ del {
   width: 100% !important;
   display: block !important;
 }
+
+/***** -- order detail modal -- *****/
+.order-detail-modal {
+  border: none;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 12px 40px rgba(21, 34, 56, 0.18);
+}
+.order-detail-modal__header {
+  background: #152238;
+  color: #fff;
+  border-bottom: none;
+  padding: 18px 24px;
+  align-items: center;
+}
+.order-detail-modal__header .modal-title {
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+.order-detail-modal__close {
+  color: #fff;
+  opacity: 0.85;
+  text-shadow: none;
+  padding: 0;
+  margin: 0;
+}
+.order-detail-modal__close:hover {
+  color: #fff;
+  opacity: 1;
+}
+.order-detail-modal__body {
+  padding: 0;
+  background: #f4f4f5;
+}
+.order-detail-modal__summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding: 20px 24px;
+  background: #fff;
+  border-bottom: 1px solid #e5e7eb;
+}
+.order-detail-modal__summary-main {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.order-detail-modal__code-label {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #6b7280;
+}
+.order-detail-modal__code {
+  font-size: 20px;
+  font-weight: 700;
+  color: #152238;
+  letter-spacing: 0.03em;
+}
+.order-detail-modal__badge {
+  display: inline-block;
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+.order-detail-modal__badge--success {
+  background: rgba(21, 34, 56, 0.1);
+  color: #152238;
+}
+.order-detail-modal__badge--warning {
+  background: #fffbeb;
+  color: #b45309;
+}
+.order-detail-modal__badge--danger {
+  background: #fef2f2;
+  color: #b91c1c;
+}
+.order-detail-modal__section {
+  padding: 20px 24px;
+  background: #fff;
+  margin-top: 12px;
+}
+.order-detail-modal__section:first-of-type {
+  margin-top: 0;
+}
+.order-detail-modal__section-title {
+  margin: 0 0 14px;
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #152238;
+}
+.order-detail-modal__grid {
+  margin: 0;
+}
+.order-detail-modal__row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 12px 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+.order-detail-modal__row:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+.order-detail-modal__row--full {
+  flex-direction: column;
+  gap: 6px;
+}
+.order-detail-modal__row--full dd {
+  text-align: left;
+}
+.order-detail-modal__row dt {
+  margin: 0;
+  flex: 0 0 42%;
+  font-size: 14px;
+  font-weight: 500;
+  color: #6b7280;
+}
+.order-detail-modal__row dd {
+  margin: 0;
+  flex: 1;
+  font-size: 15px;
+  font-weight: 600;
+  color: #1a1a1a;
+  text-align: right;
+  word-break: break-word;
+}
+.order-detail-modal__amount-box {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 8px;
+  padding: 16px 18px;
+  border-radius: 8px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+}
+.order-detail-modal__amount-label {
+  font-size: 14px;
+  font-weight: 500;
+  color: #6b7280;
+}
+.order-detail-modal__amount-value {
+  font-size: 18px;
+  font-weight: 700;
+  color: #152238;
+}
+.order-detail-modal__footer {
+  border-top: 1px solid #e5e7eb;
+  background: #fff;
+  padding: 16px 24px;
+  justify-content: flex-end;
+  gap: 10px;
+}
+.order-detail-modal__btn {
+  min-width: 120px;
+  font-weight: 600;
+  border-radius: 6px;
+  padding: 10px 20px;
+}
+.order-detail-modal__btn.btn-primary {
+  background: #152238;
+  border-color: #152238;
+}
+.order-detail-modal__btn.btn-primary:hover,
+.order-detail-modal__btn.btn-primary:focus {
+  background: #1e2f4a;
+  border-color: #1e2f4a;
+}
+.order-detail-modal__btn--outline {
+  background: #fff;
+  color: #152238;
+  border: 1px solid #d1d5db;
+}
+.order-detail-modal__btn--outline:hover {
+  background: #f9fafb;
+  color: #152238;
+}
+@media (max-width: 575px) {
+  .order-detail-modal__row {
+    flex-direction: column;
+    gap: 4px;
+  }
+  .order-detail-modal__row dd {
+    text-align: left;
+  }
+  .order-detail-modal__summary {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}

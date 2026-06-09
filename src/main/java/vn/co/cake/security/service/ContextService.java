@@ -44,7 +44,7 @@ public class ContextService {
     }
 
     /**
-     * Login successfully stores SecurityContext in Redis
+     * Login successfully stores SecurityContext backup (in-memory)
      */
     public void storesSecurityContextInRedis(HttpServletRequest request) throws IOException {
         SecurityContext context = SecurityContextHolder.getContext();

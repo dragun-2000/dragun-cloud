@@ -10,6 +10,7 @@ import javax.persistence.Table;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import vn.co.cake.dto.OrderItem;
+import vn.co.cake.utils.OrderPricingUtil;
 
 import java.math.BigDecimal;
 
@@ -42,7 +43,8 @@ public class CartItem extends BaseEntity {
     public CartItem(OrderItem orderItem, Cart cart, Variation variation, Product product) {
         this.variation = variation;
         this.quantity = orderItem.getQuantity();
-        this.totalPrice = orderItem.getPrice().multiply(BigDecimal.valueOf(orderItem.getQuantity()));
+        BigDecimal unitPrice = OrderPricingUtil.resolveSellingUnitPrice(product, variation);
+        this.totalPrice = unitPrice.multiply(BigDecimal.valueOf(orderItem.getQuantity()));
         this.cart = cart;
         this.option = orderItem.getOption();
         this.image = product != null ? product.getImage() : null;
@@ -51,7 +53,8 @@ public class CartItem extends BaseEntity {
     public void update(OrderItem orderItem, Cart cart, Variation variation, Product product) {
         this.variation = variation;
         this.quantity = orderItem.getQuantity();
-        this.totalPrice = orderItem.getPrice().multiply(BigDecimal.valueOf(orderItem.getQuantity()));
+        BigDecimal unitPrice = OrderPricingUtil.resolveSellingUnitPrice(product, variation);
+        this.totalPrice = unitPrice.multiply(BigDecimal.valueOf(orderItem.getQuantity()));
         this.cart = cart;
         this.option = orderItem.getOption();
         this.image = product != null ? product.getImage() : null;

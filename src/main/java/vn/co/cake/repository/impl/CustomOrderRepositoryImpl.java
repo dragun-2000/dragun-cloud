@@ -9,7 +9,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 import vn.co.cake.entity.Order;
 import vn.co.cake.entity.QOrder;
-import vn.co.cake.entity.QOrderItem;
 import vn.co.cake.enums.OrderStatus;
 import vn.co.cake.repository.BaseRepository;
 import vn.co.cake.repository.CustomOrderRepository;
@@ -53,18 +52,19 @@ public class CustomOrderRepositoryImpl extends BaseRepository implements CustomO
             where.and(qOrder.created.before(toDate));
         }
 
-        QOrderItem qOrderItem = QOrderItem.orderItem;
-        
         List<Order> orders = query.from(qOrder)
-                .leftJoin(qOrder.orderItems, qOrderItem).fetchJoin()
                 .where(where)
-                .distinct()
                 .limit(pageable.getPageSize())
                 .offset(pageable.getOffset())
                 .orderBy(qOrder.code.desc())
                 .fetch();
 
-        return new PageImpl<>(orders, pageable, query.fetchCount());
+        long total = new JPAQuery<>(entityManager)
+                .from(qOrder)
+                .where(where)
+                .fetchCount();
+
+        return new PageImpl<>(orders, pageable, total);
     }
 
     @Override
@@ -90,17 +90,18 @@ public class CustomOrderRepositoryImpl extends BaseRepository implements CustomO
             where.and(qOrder.created.before(toDate));
         }
 
-        QOrderItem qOrderItem = QOrderItem.orderItem;
-        
         List<Order> orders = query.from(qOrder)
-                .leftJoin(qOrder.orderItems, qOrderItem).fetchJoin()
                 .where(where)
-                .distinct()
                 .limit(pageable.getPageSize())
                 .offset(pageable.getOffset())
                 .orderBy(qOrder.code.desc())
                 .fetch();
 
-        return new PageImpl<>(orders, pageable, query.fetchCount());
+        long total = new JPAQuery<>(entityManager)
+                .from(qOrder)
+                .where(where)
+                .fetchCount();
+
+        return new PageImpl<>(orders, pageable, total);
     }
 }

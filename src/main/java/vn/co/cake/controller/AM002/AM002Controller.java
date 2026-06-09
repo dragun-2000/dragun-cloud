@@ -40,8 +40,7 @@ public class AM002Controller extends BaseController {
     private final AccountService accountService;
     private final OrderService orderService;
 
-    public AM002Controller(AccountService accountService,
-                           OrderService orderService) {
+    public AM002Controller(AccountService accountService, OrderService orderService) {
         this.accountService = accountService;
         this.orderService = orderService;
     }
@@ -71,7 +70,7 @@ public class AM002Controller extends BaseController {
         PageUtil pageUtil = getPageSize(session);
         searchForm = getSessionOrderForm(session, homePage);
         Page<Order> orders = orderService.findAllByCondition(searchForm, pageUtil);
-        List<OrderDetailResponse> responses = orders.stream().map(OrderDetailResponse::new).collect(Collectors.toList());
+        List<OrderDetailResponse> responses = orders.stream().map(OrderDetailResponse::forList).collect(Collectors.toList());
         model.addAttribute("orders", responses);
         setPaginationAttribute(pageUtil, orders.getTotalElements(), RequestPathConst.AM002, model, settingCondition(searchForm));
         model.addAttribute(SEARCH_CONDITION, searchForm);

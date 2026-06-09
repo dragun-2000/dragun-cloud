@@ -58,7 +58,6 @@ public class UserSecurityConfiguration extends WebSecurityConfigurerAdapter {
     @Override
     protected void configure(HttpSecurity http) throws Exception {
         http.securityContext().securityContextRepository(userContextRepository);
-        http.sessionManagement().enableSessionUrlRewriting(true);
 
         http.requestMatchers().antMatchers("/SA/**", "/csv/**")
             .and()
@@ -100,9 +99,8 @@ public class UserSecurityConfiguration extends WebSecurityConfigurerAdapter {
             .userDetailsService(userDetailsService)
         ;
 
-        http.sessionManagement()
-                .enableSessionUrlRewriting(true)
-        ;
+        // Cookie-only session: tránh ;jsessionid=... trên URL (bị StrictHttpFirewall từ chối).
+        http.sessionManagement().enableSessionUrlRewriting(false);
 
         http.csrf()
                 .ignoringAntMatchers(RequestPathConst.SA, RequestPathConst.SA001, RequestPathConst.SA001_LOGIN,

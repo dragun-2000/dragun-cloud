@@ -1,52 +1,44 @@
 package vn.co.cake.security.repository;
 
-import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.stereotype.Repository;
 
-import javax.annotation.PostConstruct;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 /**
- * ContextRepository
+ * In-memory store for security context backup and admin bookmark URLs.
  */
 @Repository
 public class ContextRepository {
 
-    // context key , context
-    private ValueOperations<String, Object> contextValueOperations;
+    private final ConcurrentMap<String, Object> values = new ConcurrentHashMap<>();
+    private final ConcurrentMap<String, Long> contextExpiresAtMs = new ConcurrentHashMap<>();
 
-    private RedisTemplate<String, Object> redisTemplate;
-
-    public ContextRepository(RedisTemplate<String, Object> redisTemplate) {
-        this.redisTemplate = redisTemplate;
+    public void saveContext(String id, String context, int timeoutDays) {
+        values.put(id, context);
+        long expiresAt = System.currentTimeMillis() + (timeoutDays * 24L * 60L * 60L * 1000L);
+        contextExpiresAtMs.put(id, expiresAt);
     }
 
-    @PostConstruct
-    private void init() {
-        contextValueOperations = redisTemplate.opsForValue();
-    }
-
-    // save context
-    public void saveContext(String id, String context, int timeout) {
-        contextValueOperations.set(id, context, timeout, TimeUnit.DAYS);
-    }
-
-    // find by context key
     public Object findContextById(String id) {
-        return contextValueOperations.get(id);
+        Long expiresAt = contextExpiresAtMs.get(id);
+        if (expiresAt != null && System.currentTimeMillis() > expiresAt) {
+            deleteKey(id);
+            return null;
+        }
+        return values.get(id);
     }
 
-    // delete key
     public Boolean deleteKey(String id) {
-        return contextValueOperations.getOperations().delete(id);
+        contextExpiresAtMs.remove(id);
+        return values.remove(id) != null;
     }
 
     public void saveBookmarkUrl(String key, String url) {
-        contextValueOperations.set(key, url);
+        values.put(key, url);
     }
 
     public Object getBookmarkUrl(String key) {
-        return contextValueOperations.get(key);
+        return values.get(key);
     }
 }

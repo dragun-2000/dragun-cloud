@@ -16,6 +16,7 @@ import vn.co.cake.request.OrderDetailRequest;
 import vn.co.cake.request.SearchRequest;
 import vn.co.cake.service.OrderService;
 import vn.co.cake.utils.DateUtil;
+import vn.co.cake.utils.OrderPricingUtil;
 import vn.co.cake.utils.StringUtil;
 
 import java.math.BigDecimal;
@@ -74,6 +75,27 @@ public class OrderServiceImpl implements OrderService {
     }
     
     @Override
+    public String generateOrderCode() {
+        return this.getCodeMaxOrder();
+    }
+
+    @Override
+    public BigDecimal calculateGrandTotal(List<vn.co.cake.dto.OrderItem> newOrderItems) {
+        BigDecimal totalPriceOrder = calculateItemsSubtotal(newOrderItems);
+        Voucher shippingFee = voucherRepository.findFirstByCodeAndDeletedIsFalse(OrderConstants.VOUCHER_SHIPPING_FEE);
+        int fee = 0;
+        if (shippingFee != null && totalPriceOrder.longValue() < OrderConstants.FREE_SHIPPING_THRESHOLD) {
+            fee = shippingFee.getShippingFee();
+        }
+        return totalPriceOrder.add(BigDecimal.valueOf(fee));
+    }
+
+    @Override
+    public BigDecimal calculateItemsSubtotal(List<vn.co.cake.dto.OrderItem> orderItems) {
+        return getTotalPriceOrder(orderItems, 0L);
+    }
+
+    @Override
     public Order create(Long accountId, List<vn.co.cake.dto.OrderItem> newOrderItems, OrderDetailRequest request) throws CommonServletException {
         Account account = accountRepository.findByIdAndDeletedFalse(accountId);
         if (Objects.isNull(account)) {
@@ -93,21 +115,50 @@ public class OrderServiceImpl implements OrderService {
             throw new CommonServletException("Order failed!");
         }
 
-        long discountPrice = 0;
-        Voucher shippingFee = voucherRepository.findFirstByCodeAndDeletedIsFalse(OrderConstants.VOUCHER_SHIPPING_FEE);
-        int fee = 0;
-        BigDecimal totalPriceOrder = this.getTotalPriceOrder(itemOrders, discountPrice);
-        if (shippingFee != null && totalPriceOrder.longValue() < OrderConstants.FREE_SHIPPING_THRESHOLD) {
-            fee = shippingFee.getShippingFee();
-        }
-
         Order order = new Order();
         order.setCode(this.getCodeMaxOrder());
+        return persistNewOrder(accountId, newOrderItems, request, order, account, itemOrders, variationMap);
+    }
+
+    @Override
+    public Order createWithOrderCode(Long accountId, List<vn.co.cake.dto.OrderItem> newOrderItems,
+                                     OrderDetailRequest request, String orderCode) throws CommonServletException {
+        Account account = accountRepository.findByIdAndDeletedFalse(accountId);
+        if (Objects.isNull(account)) {
+            throw new CommonServletException("please login before order");
+        }
+        if (CollectionUtils.isEmpty(newOrderItems)) {
+            throw new CommonServletException("Order failed!");
+        }
+        List<vn.co.cake.dto.OrderItem> itemOrders = newOrderItems.stream()
+                .filter(orderItem -> orderItem.getQuantity() > 0).collect(Collectors.toList());
+        List<String> variationIds = itemOrders.stream().map(vn.co.cake.dto.OrderItem::getVariationId).collect(Collectors.toList());
+        List<Variation> variations = variationRepository.findAllByVariationIdIn(variationIds);
+        Map<String, Variation> variationMap = variations.stream()
+                .collect(Collectors.toMap(Variation::getVariationId, variation -> variation));
+        if (CollectionUtils.isEmpty(itemOrders)) {
+            throw new CommonServletException("Order failed!");
+        }
+        Order order = new Order();
+        order.setCode(orderCode);
+        return persistNewOrder(accountId, newOrderItems, request, order, account, itemOrders, variationMap);
+    }
+
+    private Order persistNewOrder(Long accountId, List<vn.co.cake.dto.OrderItem> newOrderItems, OrderDetailRequest request,
+                                  Order order, Account account, List<vn.co.cake.dto.OrderItem> itemOrders,
+                                  Map<String, Variation> variationMap) throws CommonServletException {
+        long discountPrice = 0;
+        Voucher shippingFeeVoucher = voucherRepository.findFirstByCodeAndDeletedIsFalse(OrderConstants.VOUCHER_SHIPPING_FEE);
+        int fee = 0;
+        BigDecimal totalPriceOrder = calculateItemsSubtotal(itemOrders);
+        if (shippingFeeVoucher != null && totalPriceOrder.longValue() < OrderConstants.FREE_SHIPPING_THRESHOLD) {
+            fee = shippingFeeVoucher.getShippingFee();
+        }
         order.setAccount(account);
         order.setPaymentMethod(request.getPaymentMethod());
         order.setStatus(OrderStatus.NEW.getValue());
         order.setShippingAddress(this.getAddressShipping(request));
-        order.setTotalAmount(this.getTotalPriceOrder(itemOrders, discountPrice));
+        order.setTotalAmount(calculateItemsSubtotal(itemOrders).subtract(BigDecimal.valueOf(discountPrice)));
         order.setShippingFee(BigDecimal.valueOf(fee));
 
         order.setFullName(request.getFullName());
@@ -134,11 +185,12 @@ public class OrderServiceImpl implements OrderService {
                 throw new CommonServletException("Sản phẩm không tồn tại trong hệ thống!");
             }
 
+            BigDecimal sellingPrice = OrderPricingUtil.resolveSellingUnitPrice(product, variation);
             OrderItem orderItem = new OrderItem();
             orderItem.setOrder(order);
             orderItem.setVariation(variation);
-            orderItem.setPrice(BigDecimal.valueOf(variation.getRetailPrice()));
-            orderItem.setFinalPrice(product.getFinalPrice());
+            orderItem.setPrice(OrderPricingUtil.resolveListUnitPrice(product, variation));
+            orderItem.setFinalPrice(sellingPrice);
             orderItem.setDiscountPrice(product.getDiscountPrice());
             orderItem.setQuantity(cartItemRequest.getQuantity());
             orderItem.setOption(cartItemRequest.getOption());
@@ -180,9 +232,35 @@ public class OrderServiceImpl implements OrderService {
     }
 
     private BigDecimal getTotalPriceOrder(List<vn.co.cake.dto.OrderItem> orderItems, long discountPrice) {
-        long sum = orderItems.stream().mapToLong(orderItem -> orderItem.getPrice().multiply(BigDecimal.valueOf(orderItem.getQuantity())).longValue()).sum();
-        sum = sum - discountPrice;
-        return BigDecimal.valueOf(sum);
+        if (CollectionUtils.isEmpty(orderItems)) {
+            return BigDecimal.ZERO;
+        }
+        List<String> variationIds = orderItems.stream()
+                .map(vn.co.cake.dto.OrderItem::getVariationId)
+                .filter(Objects::nonNull)
+                .distinct()
+                .collect(Collectors.toList());
+        if (CollectionUtils.isEmpty(variationIds)) {
+            return BigDecimal.ZERO;
+        }
+        Map<String, Variation> variationMap = variationRepository.findAllByVariationIdIn(variationIds).stream()
+                .collect(Collectors.toMap(Variation::getVariationId, v -> v, (a, b) -> a));
+
+        long sum = 0;
+        for (vn.co.cake.dto.OrderItem cartItem : orderItems) {
+            if (cartItem.getQuantity() <= 0) {
+                continue;
+            }
+            Variation variation = variationMap.get(cartItem.getVariationId());
+            if (variation == null) {
+                continue;
+            }
+            Product product = productRepository.findFirstByProductPancakeIdAndDeletedIsFalse(variation.getPancakeProductId());
+            BigDecimal unitPrice = OrderPricingUtil.resolveSellingUnitPrice(product, variation);
+            sum += unitPrice.multiply(BigDecimal.valueOf(cartItem.getQuantity())).longValue();
+        }
+        sum -= discountPrice;
+        return BigDecimal.valueOf(Math.max(sum, 0));
     }
 
     private String getCodeMaxOrder() {

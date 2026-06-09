@@ -164,14 +164,21 @@
                   </ul>
                 </div>
               </li>
-              <li>
-                <a th:href="@{/cart-detail}"><span id="bag-total" class="bag-text" th:text="#{header.myBag}">My bag:</span> <span th:text="${totalCartItems == null ? 0 : totalCartItems}"></span></a>
+              <li class="header-cart-desktop">
+                <a class="btn btn-cart" th:href="@{/cart-detail}" th:attr="aria-label=#{header.myBag}">
+                  <img class="svg" src="/images/common/icon-cart.svg" alt="">
+                  <span id="bag-count" class="bag-number" th:text="${totalCartItems == null ? 0 : totalCartItems}">0</span>
+                </a>
               </li>
               <li>
                 <button type="button" id="btn-lang-toggle" class="btn-lang-toggle" title="Chuyển ngôn ngữ / Switch language" aria-label="Chuyển ngôn ngữ">
-                  <span class="lang-flag lang-flag-us" data-lang="en" title="English">🇺🇸</span>
-                  <span class="lang-sep">/</span>
-                  <span class="lang-flag lang-flag-vn" data-lang="vi" title="Tiếng Việt">🇻🇳</span>
+                  <span class="lang-flag lang-flag-us" data-lang="en" title="English">
+                    <img class="lang-flag-img" src="/images/common/flag-us.svg" width="22" height="15" alt="English">
+                  </span>
+                  <span class="lang-sep" aria-hidden="true">/</span>
+                  <span class="lang-flag lang-flag-vn" data-lang="vi" title="Tiếng Việt">
+                    <img class="lang-flag-img" src="/images/common/flag-vn.svg" width="22" height="15" alt="Tiếng Việt">
+                  </span>
                 </button>
               </li>
             </ul>
@@ -263,14 +270,18 @@
             </h1>
           </div>
           <button type="button" id="btn-lang-toggle-sp" class="btn-lang-toggle btn-lang-toggle-sp" title="Chuyển ngôn ngữ / Switch language" aria-label="Chuyển ngôn ngữ">
-            <span class="lang-flag" data-lang="en">🇺🇸</span>
-            <span class="lang-sep">/</span>
-            <span class="lang-flag" data-lang="vi">🇻🇳</span>
+            <span class="lang-flag lang-flag-us" data-lang="en" title="English">
+              <img class="lang-flag-img" src="/images/common/flag-us.svg" width="22" height="15" alt="English">
+            </span>
+            <span class="lang-sep" aria-hidden="true">/</span>
+            <span class="lang-flag lang-flag-vn" data-lang="vi" title="Tiếng Việt">
+              <img class="lang-flag-img" src="/images/common/flag-vn.svg" width="22" height="15" alt="Tiếng Việt">
+            </span>
           </button>
           <div class="cart">
             <a class="btn btn-cart" th:href="@{/cart-detail}">
               <img class="svg" src="/images/common/icon-cart.svg" alt="">
-              <span id="bag-total-mobile" class="bag-number" th:text="${totalCartItems == null ? 0 : totalCartItems}"></span>
+              <span id="bag-count-mobile" class="bag-number" th:text="${totalCartItems == null ? 0 : totalCartItems}">0</span>
             </a>
           </div>
         </div>
@@ -292,6 +303,45 @@
       .account-area > ul > li > a {
         white-space: nowrap;
         flex-shrink: 0;
+      }
+      .account-area > ul > li.header-cart-desktop > a.btn-cart {
+        width: 26px;
+        height: 24px;
+        padding: 0;
+        margin: 0 10px;
+        line-height: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        background: transparent;
+        border: none;
+        box-shadow: none;
+      }
+      .account-area > ul > li.header-cart-desktop > a.btn-cart:hover,
+      .account-area > ul > li.header-cart-desktop > a.btn-cart:focus {
+        background: #f8f8f8;
+        box-shadow: none;
+      }
+      .account-area > ul > li.header-cart-desktop > a.btn-cart svg {
+        max-height: 100%;
+      }
+      .account-area > ul > li.header-cart-desktop .bag-number {
+        background: #E83636;
+        border-radius: 24px;
+        padding: 0 2px;
+        min-width: 20px;
+        color: #fff;
+        font-size: 8px;
+        font-weight: 700;
+        position: absolute;
+        top: -2px;
+        right: -8px;
+        text-align: center;
+        max-width: none;
+        display: block;
+        overflow: visible;
+        white-space: nowrap;
       }
       .account-area > ul > li .btn-lang-toggle {
         flex-shrink: 0;
@@ -329,18 +379,30 @@
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        min-width: 1.25em;
-        height: 1em;
-        line-height: 1;
-        font-size: 1em;
         cursor: pointer;
-        opacity: 0.85;
+        opacity: 0.75;
         vertical-align: middle;
-        box-sizing: content-box;
+        line-height: 0;
+        font-size: 0;
       }
-      .btn-lang-toggle .lang-flag:hover,
+      .btn-lang-toggle .lang-flag-img {
+        display: block;
+        width: 22px;
+        height: 15px;
+        object-fit: cover;
+        border-radius: 2px;
+        border: 1px solid rgba(0, 0, 0, 0.12);
+        pointer-events: none;
+      }
+      .btn-lang-toggle .lang-flag:hover {
+        opacity: 1;
+      }
       .btn-lang-toggle .lang-flag.active {
         opacity: 1;
+      }
+      .btn-lang-toggle .lang-flag.active .lang-flag-img {
+        outline: 2px solid rgba(0, 0, 0, 0.45);
+        outline-offset: 1px;
       }
       .btn-lang-toggle .lang-sep {
         display: inline-flex;
