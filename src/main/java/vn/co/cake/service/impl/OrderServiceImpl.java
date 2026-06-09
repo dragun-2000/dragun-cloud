@@ -185,13 +185,15 @@ public class OrderServiceImpl implements OrderService {
                 throw new CommonServletException("Sản phẩm không tồn tại trong hệ thống!");
             }
 
+            BigDecimal listPrice = OrderPricingUtil.resolveListUnitPrice(product, variation);
             BigDecimal sellingPrice = OrderPricingUtil.resolveSellingUnitPrice(product, variation);
+            BigDecimal unitDiscount = OrderPricingUtil.resolveUnitDiscount(product, variation);
             OrderItem orderItem = new OrderItem();
             orderItem.setOrder(order);
             orderItem.setVariation(variation);
-            orderItem.setPrice(OrderPricingUtil.resolveListUnitPrice(product, variation));
+            orderItem.setPrice(listPrice);
             orderItem.setFinalPrice(sellingPrice);
-            orderItem.setDiscountPrice(product.getDiscountPrice());
+            orderItem.setDiscountPrice(unitDiscount);
             orderItem.setQuantity(cartItemRequest.getQuantity());
             orderItem.setOption(cartItemRequest.getOption());
             orderItems.add(orderItem);

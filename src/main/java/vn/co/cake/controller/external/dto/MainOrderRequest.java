@@ -2,7 +2,9 @@ package vn.co.cake.controller.external.dto;
 
 import lombok.Data;
 import vn.co.cake.entity.*;
+import vn.co.cake.utils.OrderPricingUtil;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -58,7 +60,7 @@ public class MainOrderRequest {
     }
     
     private int discount(List<OrderItem> orderItems) {
-        return orderItems.stream().mapToInt(orderItem -> orderItem.getDiscountPrice().intValue()).sum();
+        return OrderPricingUtil.sumOrderDiscountAmount(orderItems);
     }
 }
 
@@ -84,7 +86,7 @@ class Item {
         this.quantity = orderItem.getQuantity();
         this.variation_id = orderItem.getVariation().getVariationId();
         this.product_id = orderItem.getVariation().getPancakeProductId();
-        this.variation_info = new VariationInfo(orderItem.getVariation());
+        this.variation_info = new VariationInfo(orderItem);
     }
 }
 
@@ -99,13 +101,21 @@ class VariationInfo {
     private int weight;
 
     public VariationInfo() {}
-    public VariationInfo(Variation variation) {
+
+    public VariationInfo(OrderItem orderItem) {
+        Variation variation = orderItem.getVariation();
         this.detail = null;
         this.fields = null;
         this.display_id = variation.getDisplayId();
         this.name = variation.getName();
         this.product_display_id = variation.getDisplayId();
-        this.retail_price = variation.getRetailPrice().intValue();
+        if (orderItem.getPrice() != null && orderItem.getPrice().compareTo(BigDecimal.ZERO) > 0) {
+            this.retail_price = orderItem.getPrice().intValue();
+        } else if (variation.getRetailPrice() != null) {
+            this.retail_price = variation.getRetailPrice().intValue();
+        } else {
+            this.retail_price = 0;
+        }
         this.weight = 200;
     }
 }
