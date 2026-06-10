@@ -5,30 +5,12 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="a5e999e8-a3db-4f03-91f7-fa5e14c40d35" name="Changes" comment="fix bug calculate discount pancake order">
-      <change afterPath="$PROJECT_DIR$/init/migration_add_vietqr_pilot_settings.sql" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/vn/co/cake/controller/AM011/AM011Controller.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/vn/co/cake/payment/api/VietQrPilotAccessController.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/vn/co/cake/payment/dto/VietQrAccessStatusResponse.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/vn/co/cake/payment/dto/VietQrPilotSettingsForm.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/vn/co/cake/payment/dto/VietQrPilotUnlockRequest.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/vn/co/cake/payment/entity/VietQrPilotSettings.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/vn/co/cake/payment/repository/VietQrPilotSettingsRepository.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/vn/co/cake/payment/service/VietQrPilotAccessService.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/resources/static/js/AM011/AM011.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/resources/templates/AM011/AM011.html" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/init/init.sql" beforeDir="false" afterPath="$PROJECT_DIR$/init/init.sql" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/vn/co/cake/common/RequestPathConst.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/vn/co/cake/common/RequestPathConst.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/vn/co/cake/common/ScreenPathConst.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/vn/co/cake/common/ScreenPathConst.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/vn/co/cake/controller/store/CartController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/vn/co/cake/controller/store/CartController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/vn/co/cake/payment/PaymentConstants.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/vn/co/cake/payment/PaymentConstants.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/vn/co/cake/payment/api/PaymentCheckoutController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/vn/co/cake/payment/api/PaymentCheckoutController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/vn/co/cake/security/user/UserLogoutSuccessHandler.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/vn/co/cake/security/user/UserLogoutSuccessHandler.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/static/js/cart/cart-detail.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/static/js/cart/cart-detail.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/static/js/payment-detail/payment-detail.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/static/js/payment-detail/payment-detail.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/templates/cart-detail.html" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/templates/cart-detail.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/templates/payment-detail.html" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/templates/payment-detail.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/templates/template/sidebar.html" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/templates/template/sidebar.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/vn/co/cake/config/MinioConfig.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/application-development.properties" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/application-development.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/application-production.properties" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/application-production.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/application-staging.properties" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/application.properties" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/application.properties" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -181,7 +163,15 @@
       <option name="project" value="LOCAL" />
       <updated>1780987464498</updated>
     </task>
-    <option name="localTasksCounter" value="4" />
+    <task id="LOCAL-00004" summary="fix bug calculate discount pancake order">
+      <option name="closed" value="true" />
+      <created>1781058259545</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1781058259545</updated>
+    </task>
+    <option name="localTasksCounter" value="5" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
