@@ -22,6 +22,7 @@ import vn.co.cake.payment.dto.PaymentCheckoutResponse;
 import vn.co.cake.payment.dto.PaymentCheckoutStatusResponse;
 import vn.co.cake.payment.service.CodCheckoutService;
 import vn.co.cake.payment.service.VietQrCheckoutService;
+import vn.co.cake.payment.service.VietQrPilotAccessService;
 import vn.co.cake.payment.support.PaymentCheckoutFlowLog;
 import vn.co.cake.request.OrderDetailRequest;
 import vn.co.cake.response.CommonResponse;
@@ -39,15 +40,18 @@ public class PaymentCheckoutController extends BaseController {
     private final VietQrCheckoutService vietQrCheckoutService;
     private final CartService cartService;
     private final VietQrProperties vietQrProperties;
+    private final VietQrPilotAccessService vietQrPilotAccessService;
 
     public PaymentCheckoutController(CodCheckoutService codCheckoutService,
                                      VietQrCheckoutService vietQrCheckoutService,
                                      CartService cartService,
-                                     VietQrProperties vietQrProperties) {
+                                     VietQrProperties vietQrProperties,
+                                     VietQrPilotAccessService vietQrPilotAccessService) {
         this.codCheckoutService = codCheckoutService;
         this.vietQrCheckoutService = vietQrCheckoutService;
         this.cartService = cartService;
         this.vietQrProperties = vietQrProperties;
+        this.vietQrPilotAccessService = vietQrPilotAccessService;
     }
 
     @PostMapping("/create")
@@ -76,6 +80,7 @@ public class PaymentCheckoutController extends BaseController {
                 return ResponseEntity.ok(response);
             }
             if (PaymentConstants.METHOD_VIETQR.equals(paymentMethod)) {
+                vietQrPilotAccessService.assertCanUseVietQr(session, loginInfo.getId());
                 PaymentCheckoutFlowLog.step("-", 1,
                         "API POST /api/payment/create — VietQR, accountId=%s", loginInfo.getId());
                 PaymentCheckoutResponse response = vietQrCheckoutService.startCheckout(loginInfo.getId(), cartForm, request);
@@ -122,6 +127,7 @@ public class PaymentCheckoutController extends BaseController {
             return errorResponse(HttpStatus.FORBIDDEN, "Vui lòng đăng nhập");
         }
         try {
+            vietQrPilotAccessService.assertCanUseVietQr(session, loginInfo.getId());
             PaymentCheckoutFlowLog.step(vietqrOrderId, 1,
                     "API POST sandbox-simulate — accountId=%s", loginInfo.getId());
             vietQrCheckoutService.runSandboxPaymentConfirm(vietqrOrderId, loginInfo.getId());

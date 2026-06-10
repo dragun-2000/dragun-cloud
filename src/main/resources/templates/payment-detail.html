@@ -1,11 +1,14 @@
 <!doctype html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head th:replace="header :: common-header"></head>
 <body>
 <div class="wrapper">
   <div th:replace="header :: header"></div>
   <div class="main main--pageDelivery-information">
-    <form id="create-order" name="f" th:object="${orderDetail}" class="needs-validation ml-3" novalidate>
+    <form id="create-order" name="f" th:object="${orderDetail}" class="needs-validation ml-3" novalidate
+          th:attr="data-vietqr-visible-to-all=${vietQrAccess != null ? vietQrAccess.visibleToAll : true},
+                   data-vietqr-unlocked=${vietQrAccess != null ? vietQrAccess.unlocked : false}">
+      <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
       <div hidden ><input id="totalPriceBill" th:value="${totalPrice}"></div>
       <div class="wrap wrap--mw900">
         <h2 class="delivery-title">Thông tin giao hàng</h2>
@@ -29,7 +32,7 @@
                   </span>
                 </label>
               </li>
-              <li>
+              <li th:if="${vietQrEnabled}">
                 <label class="custom-control custom-radio">
                   <input class="custom-control-input" type="radio" name="radio" id="payment-vietqr" value="VIETQR">
                   <span class="custom-control-indicator"></span>
@@ -42,7 +45,8 @@
                     </div>
                   </span>
                 </label>
-                <div class="boxInformation">
+                <div class="boxInformation" id="vietqr-info-box"
+                     th:if="${vietQrAccess != null and vietQrAccess.canUseVietQr}">
                   <ul class="priceInformation">
                     <li>
                       <div class="text-left">Quét mã VietQR sau khi đặt hàng. Hệ thống tự xác nhận thanh toán trong vài phút.</div>
@@ -145,7 +149,7 @@
                   <span class="terms-checkbox-text">Tôi đã đọc và đồng ý với các chính sách và điều kiện quy định tại website</span>
                 </label>
               </div>
-              <button id="order-btn" type="submit" class="btn btn-dark" disabled>Đặt Hàng</button>
+              <button id="order-btn" type="button" class="btn btn-dark" disabled>Đặt Hàng</button>
             </div>
           </div>
         </div>
@@ -176,6 +180,30 @@
       </div>
   </div>
 
+  <div class="popup" id="vietqrPilotPopup">
+      <div class="popup-content vietqr-pilot-popup-content">
+          <h2>Thanh toán VietQR đang pilot</h2>
+          <p id="vietqr-pilot-popup-message" class="vietqr-pilot-popup-lead"
+             th:text="${vietQrAccess != null && vietQrAccess.pilotMessage != null ? vietQrAccess.pilotMessage : 'Tính năng thanh toán VietQR đang trong giai đoạn pilot.'}">
+              Tính năng thanh toán VietQR đang trong giai đoạn pilot.
+          </p>
+          <p class="vietqr-pilot-popup-guide">
+              Nhập mật khẩu pilot và bấm <strong>Xác nhận</strong> để tiếp tục thanh toán VietQR.
+              Hoặc bấm <strong>Thanh toán khi nhận hàng (COD)</strong> vì VietQR đang trong quá trình pilot.
+          </p>
+          <label class="vietqr-pilot-popup-label" for="vietqr-pilot-popup-password">Mật khẩu pilot</label>
+          <input type="password" class="form-control" id="vietqr-pilot-popup-password"
+                 placeholder="Nhập mật khẩu pilot" autocomplete="off"/>
+          <p id="vietqr-pilot-popup-error" class="vietqr-pilot-popup-error" style="display:none;"></p>
+          <div class="vietqr-pilot-popup-actions vietqr-pilot-popup-actions--stack">
+              <button type="button" id="vietqr-pilot-popup-confirm" class="close-btn">Xác nhận</button>
+              <button type="button" id="vietqr-pilot-popup-cancel" class="close-btn fail">
+                  Thanh toán khi nhận hàng (COD)
+              </button>
+          </div>
+      </div>
+  </div>
+
   <!-- VietQR: chờ thanh toán / thành công (cùng trang payment-detail) -->
   <div class="popup" id="vietqrPaymentPopup">
       <div class="popup-content vietqr-popup-content">
@@ -200,6 +228,15 @@
       </div>
   </div>
   <input type="hidden" id="vietqr-sandbox-enabled" th:if="${sandboxSimulateEnabled}" value="true"/>
+  <input type="hidden" id="vietqr-can-use"
+         th:if="${vietQrAccess != null}"
+         th:value="${vietQrAccess.canUseVietQr}"/>
+  <input type="hidden" id="vietqr-pilot-mode"
+         th:if="${vietQrAccess != null}"
+         th:value="${vietQrAccess.pilotMode}"/>
+  <input type="hidden" id="vietqr-visible-to-all"
+         th:if="${vietQrAccess != null}"
+         th:value="${vietQrAccess.visibleToAll}"/>
 
   <div id="notification" class="notification">
     <span id="notification-message"></span>
@@ -208,6 +245,19 @@
   <div th:replace="header :: footer"></div>
 </div><!--/wrapper -->
 
+  <script th:inline="javascript">
+    /*<![CDATA[*/
+    window.VIETQR_ACCESS = {
+      enabled: /*[[${vietQrEnabled}]]*/ false,
+      visibleToAll: /*[[${vietQrAccess != null ? vietQrAccess.visibleToAll : true}]]*/ true,
+      canUse: /*[[${vietQrAccess != null ? vietQrAccess.canUseVietQr : true}]]*/ true,
+      unlocked: /*[[${vietQrAccess != null ? vietQrAccess.unlocked : false}]]*/ false,
+      pilotMode: /*[[${vietQrAccess != null ? vietQrAccess.pilotMode : false}]]*/ false,
+      pilotMessage: /*[[${vietQrAccess != null && vietQrAccess.pilotMessage != null ? vietQrAccess.pilotMessage : 'Tính năng thanh toán VietQR đang trong giai đoạn pilot. Những khách hàng được admin cung cấp mật khẩu mới được sử dụng.'}]]*/ '',
+      wrongPasswordMessage: 'Tính năng chưa phát hành. Vui lòng đợi đến khi phát hành. Vui lòng chọn phương thức thanh toán khi nhận hàng (COD) và xác nhận lại.'
+    };
+    /*]]>*/
+  </script>
   <script th:src="@{/js/payment-detail/payment-detail.js}"></script>
   <script>
     (function() {
@@ -331,6 +381,68 @@
 
         .vietqr-secondary-btn:hover {
             background-color: #0069d9;
+        }
+
+        .vietqr-pilot-popup-content {
+            width: 380px;
+            max-width: 92vw;
+            text-align: left;
+        }
+
+        .vietqr-pilot-popup-lead {
+            font-size: 14px;
+            line-height: 1.6;
+            color: #555;
+            margin-bottom: 12px !important;
+        }
+
+        .vietqr-pilot-popup-guide {
+            font-size: 14px;
+            line-height: 1.6;
+            color: #333;
+            margin-bottom: 16px !important;
+            padding: 10px 12px;
+            background: #f8f9fa;
+            border-radius: 6px;
+            border-left: 3px solid #007bff;
+        }
+
+        .vietqr-pilot-popup-label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 6px;
+            color: #333;
+        }
+
+        .vietqr-pilot-popup-content .form-control {
+            width: 100%;
+            margin-bottom: 8px;
+        }
+
+        .vietqr-pilot-popup-error {
+            font-size: 13px;
+            color: #dc3545;
+            margin: 0 0 12px;
+        }
+
+        .vietqr-pilot-popup-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 8px;
+        }
+
+        .vietqr-pilot-popup-actions--stack {
+            flex-direction: column;
+        }
+
+        .vietqr-pilot-popup-actions .close-btn {
+            flex: 1;
+            margin-top: 0;
+            width: 100%;
+            font-size: 14px;
+            line-height: 1.35;
+            white-space: normal;
         }
 
         .popup-content h2 {

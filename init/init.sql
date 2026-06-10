@@ -620,3 +620,19 @@ CREATE INDEX IF NOT EXISTS idx_payment_log_order_code ON payment_transaction_log
 CREATE INDEX IF NOT EXISTS idx_payment_log_created ON payment_transaction_log (created DESC);
 
 alter table payment_transaction_log owner to dragun;
+
+CREATE TABLE IF NOT EXISTS vietqr_pilot_settings
+(
+    id                    smallint PRIMARY KEY DEFAULT 1,
+    visible_to_all        boolean      NOT NULL DEFAULT true,
+    pilot_password_hash   varchar(255),
+    updated               timestamp,
+    updater               varchar(100),
+    CONSTRAINT vietqr_pilot_settings_singleton CHECK (id = 1)
+);
+
+INSERT INTO vietqr_pilot_settings (id, visible_to_all)
+VALUES (1, true)
+ON CONFLICT (id) DO NOTHING;
+
+alter table vietqr_pilot_settings owner to dragun;

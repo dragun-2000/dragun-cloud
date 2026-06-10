@@ -9,10 +9,15 @@
     <div hidden ><input id="orderItems-default" th:value="${orderItems}"></div>
     <input type="hidden" id="hasActiveProvinces" th:value="${hasActiveProvinces}">
     <div class="wrap wrap--mw900">
+      <div id="cart-empty" class="cart-empty" style="display: none;">
+        <p class="cart-empty__message">Chưa có sản phẩm nào trong giỏ hàng</p>
+        <a class="btn btn-success cart-empty__btn" th:href="@{/}">Quay lại trang chủ</a>
+      </div>
+
       <div id="cart-info">
       </div>
 
-      <div class="order-totalsummary">
+      <div id="cart-checkout" class="order-totalsummary">
         <div class="order-cart">
           <ul>
             <li>
@@ -171,6 +176,26 @@
     position: absolute;
     top: 8px;
     right: 10px;
+  }
+
+  .cart-empty {
+    text-align: center;
+    padding: 48px 16px 32px;
+  }
+
+  .cart-empty__message {
+    font-size: 18px;
+    color: #333;
+    margin: 0 0 24px;
+    line-height: 1.5;
+  }
+
+  .cart-empty__btn {
+    display: inline-block;
+    min-width: 200px;
+    padding: 12px 24px;
+    font-size: 16px;
+    text-decoration: none;
   }
 </style>
 </body>

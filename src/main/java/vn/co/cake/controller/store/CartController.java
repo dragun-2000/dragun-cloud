@@ -20,6 +20,8 @@ import vn.co.cake.entity.Voucher;
 import vn.co.cake.enums.OrderStatus;
 import vn.co.cake.exception.CommonServletException;
 import vn.co.cake.payment.config.VietQrProperties;
+import vn.co.cake.payment.dto.VietQrAccessStatusResponse;
+import vn.co.cake.payment.service.VietQrPilotAccessService;
 import vn.co.cake.repository.OrderRepository;
 import vn.co.cake.repository.ProvinceRepository;
 import vn.co.cake.repository.VariationRepository;
@@ -55,6 +57,7 @@ public class CartController extends BaseController {
     private final VariationRepository variationRepository;
     private final OrderRepository orderRepository;
     private final VietQrProperties vietQrProperties;
+    private final VietQrPilotAccessService vietQrPilotAccessService;
 
     public CartController(CartService cartService,
                           AccountService accountService,
@@ -63,7 +66,8 @@ public class CartController extends BaseController {
                           OrderService orderService,
                           VariationRepository variationRepository,
                           OrderRepository orderRepository,
-                          VietQrProperties vietQrProperties) {
+                          VietQrProperties vietQrProperties,
+                          VietQrPilotAccessService vietQrPilotAccessService) {
         this.cartService = cartService;
         this.accountService = accountService;
         this.provinceRepository = provinceRepository;
@@ -72,6 +76,7 @@ public class CartController extends BaseController {
         this.variationRepository = variationRepository;
         this.orderRepository = orderRepository;
         this.vietQrProperties = vietQrProperties;
+        this.vietQrPilotAccessService = vietQrPilotAccessService;
     }
 
     @ModelAttribute("cartForm")
@@ -231,6 +236,9 @@ public class CartController extends BaseController {
         model.addAttribute("totalPriceDisplayFinal", BigDecimalUtil.formatMoney(this.getTotalPrice(orderItems, shippingFeeDefault)));
 
         model.addAttribute("sandboxSimulateEnabled", vietQrProperties.getCheckout().isSandboxSimulateEnabled());
+        VietQrAccessStatusResponse vietQrAccess = vietQrPilotAccessService.buildAccessStatus(session, loginInfo.getId());
+        model.addAttribute("vietQrAccess", vietQrAccess);
+        model.addAttribute("vietQrEnabled", vietQrProperties.isEnabled());
         FunctionUtil.updateCartQuantity(model, cartForm);
         return "payment-detail";
     }

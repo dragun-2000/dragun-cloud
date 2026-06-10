@@ -46,6 +46,9 @@ public final class PaymentConstants {
 
     public static final String DUPLICATE_IGNORED_MESSAGE = "DUPLICATE_IGNORED";
 
+    /** Session: accountId đã unlock VietQR pilot (gắn với user đăng nhập). */
+    public static final String SESSION_VIETQR_PILOT_ACCOUNT_ID = "VIETQR_PILOT_ACCOUNT_ID";
+
     private PaymentConstants() {
     }
 }

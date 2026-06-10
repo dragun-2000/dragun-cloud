@@ -1,3 +1,6 @@
+/* global jQuery */
+var $ = window.jQuery;
+
 const shippingPrice = document.getElementsByClassName('shipping-price');
 const totalBill = document.getElementById('totalPriceBill');
 const discountPrice = document.getElementById('final-price');
@@ -6,120 +9,176 @@ const totalBillDisplay = document.getElementById('final-price');
 var vietqrPollTimer = null;
 var vietqrActiveOrderId = null;
 var vietqrPaymentPageUrl = '';
+var vietqrCanUse = false;
+var vietqrPilotMode = false;
+var vietqrVisibleToAll = true;
+var vietqrSessionUnlocked = false;
+var vietqrWrongPasswordMessage =
+    'Tính năng chưa phát hành. Vui lòng đợi đến khi phát hành. Vui lòng chọn phương thức thanh toán khi nhận hàng (COD) và xác nhận lại.';
 
-$(function () {
+(function ($) {
     'use strict';
 
     $(function () {
-        $("#create-order").on('submit', function (event) {
-            const orderBtn = document.getElementById('order-btn');
-            const originalButtonText = orderBtn ? orderBtn.textContent : 'Đặt Hàng';
-
-            if (orderBtn && orderBtn.disabled) {
-                event.preventDefault();
-                event.stopPropagation();
-                return false;
-            }
-
-            if (orderBtn) {
-                orderBtn.disabled = true;
-                orderBtn.textContent = 'Đang xử lý...';
-                orderBtn.classList.add('disabled');
-            }
-
-            if (this.checkValidity() === false) {
-                event.preventDefault();
-                event.stopPropagation();
-                if (orderBtn) {
-                    orderBtn.disabled = false;
-                    orderBtn.textContent = originalButtonText;
-                    orderBtn.classList.remove('disabled');
-                }
-            } else {
-                const orderId = $('input[name=orderId]').val();
-                const fullName = $('input[name=fullName]').val();
-                const email = $('input[name=email]').val();
-                const phone = $('input[name=phone]').val();
-                const province = $('select[name=province]').val();
-                const district = $('select[name=district]').val();
-                const ward = $('select[name=ward]').val();
-                const address = $('input[name=address]').val();
-                const note = $('textarea[name=note]').val();
-                const voucher = $('input[name=voucher]').val();
-                const paymentMethod = document.querySelector('input[name="radio"]:checked').value;
-
-                const data = {
-                    orderId: orderId, fullName: fullName, email: email, phone: phone, paymentMethod: paymentMethod,
-                    province: province, district: district, ward: ward, address: address, note: note, voucher: voucher
-                };
-                $.ajax({
-                    type: "POST",
-                    contentType: "application/json",
-                    url: "/api/payment/create",
-                    data: JSON.stringify(data),
-                    headers: buildPaymentHeaders(),
-                    success: function (data) {
-                        if (data && data.resultType === 'QR_PAYMENT') {
-                            startVietQrCheckoutFlow(data, orderBtn, originalButtonText);
-                            return;
-                        }
-                        if (typeof updateHeaderBagCount === 'function') {
-                            updateHeaderBagCount(0);
-                        }
-                        if (orderBtn) {
-                            orderBtn.disabled = false;
-                            orderBtn.textContent = originalButtonText;
-                            orderBtn.classList.remove('disabled');
-                        }
-                        showPopup('success');
-                    },
-                    error: function (xhr) {
-                        console.error('payment/create failed', xhr.status, xhr.responseJSON || xhr.responseText);
-                        showPopup('fail', formatPaymentError(xhr));
-                        if (orderBtn) {
-                            orderBtn.disabled = false;
-                            orderBtn.textContent = originalButtonText;
-                            orderBtn.classList.remove('disabled');
-                        }
-                    }
-                });
-                event.preventDefault();
-            }
-            this.classList.add('was-validated');
-        });
-    });
-
-    $('#vietqr-reopen-btn').on('click', function () {
-        if (vietqrPaymentPageUrl) {
-            window.open(vietqrPaymentPageUrl, '_blank', 'noopener,noreferrer');
-        }
-    });
-
-    $('#vietqr-sandbox-btn').on('click', function () {
-        if (!vietqrActiveOrderId) {
+        if (!$ || !$.fn) {
+            console.error('payment-detail: jQuery is not loaded');
             return;
         }
-        var $btn = $(this);
-        $btn.prop('disabled', true);
-        $.ajax({
-            url: '/api/payment/sandbox-simulate/' + encodeURIComponent(vietqrActiveOrderId),
-            type: 'POST',
-            dataType: 'json',
-            xhrFields: { withCredentials: true }
-        }).done(function (data) {
-            handleVietQrStatus(data);
-        }).fail(function (xhr) {
-            var err = 'Không thể xác nhận thử.';
-            if (xhr.responseJSON && xhr.responseJSON.message) {
-                err = xhr.responseJSON.message;
+        initVietQrPilotGate();
+        bindOrderPlacementHandlers();
+        refreshVietQrAccessState();
+
+        $('#vietqr-reopen-btn').on('click', function () {
+            if (vietqrPaymentPageUrl) {
+                window.open(vietqrPaymentPageUrl, '_blank', 'noopener,noreferrer');
             }
-            setVietQrStatusMessage(err, 'error');
-            pollVietQrStatusOnce();
-        }).always(function () {
-            $btn.prop('disabled', false);
+        });
+
+        $('#vietqr-sandbox-btn').on('click', function () {
+            if (!vietqrActiveOrderId) {
+                return;
+            }
+            var $btn = $(this);
+            $btn.prop('disabled', true);
+            $.ajax({
+                url: '/api/payment/sandbox-simulate/' + encodeURIComponent(vietqrActiveOrderId),
+                type: 'POST',
+                dataType: 'json',
+                xhrFields: { withCredentials: true }
+            }).done(function (data) {
+                handleVietQrStatus(data);
+            }).fail(function (xhr) {
+                var err = 'Không thể xác nhận thử.';
+                if (xhr.responseJSON && xhr.responseJSON.message) {
+                    err = xhr.responseJSON.message;
+                }
+                setVietQrStatusMessage(err, 'error');
+                pollVietQrStatusOnce();
+            }).always(function () {
+                $btn.prop('disabled', false);
+            });
         });
     });
-});
+})(window.jQuery);
+
+function bindOrderPlacementHandlers() {
+    var $form = $('#create-order');
+    var $orderBtn = $('#order-btn');
+
+    $orderBtn.on('click', function (event) {
+        event.preventDefault();
+        handlePlaceOrderClick();
+    });
+
+    $form.on('submit', function (event) {
+        event.preventDefault();
+        handlePlaceOrderClick();
+    });
+}
+
+function handlePlaceOrderClick() {
+    try {
+        var form = document.getElementById('create-order');
+        var orderBtn = document.getElementById('order-btn');
+        var originalButtonText = 'Đặt Hàng';
+
+        if (!form || !orderBtn || orderBtn.disabled) {
+            return;
+        }
+
+        if (orderBtn.dataset.originalLabel) {
+            originalButtonText = orderBtn.dataset.originalLabel;
+        } else {
+            orderBtn.dataset.originalLabel = orderBtn.textContent.trim() || originalButtonText;
+            originalButtonText = orderBtn.dataset.originalLabel;
+        }
+
+        if (form.checkValidity() === false) {
+            form.classList.add('was-validated');
+            return;
+        }
+
+        var paymentMethod = getSelectedPaymentMethod();
+        if (!paymentMethod) {
+            return;
+        }
+
+        if (isVietQrPaymentMethod(paymentMethod) && shouldShowVietQrPilotPopup()) {
+            showVietQrPilotPopup(orderBtn, originalButtonText);
+            return;
+        }
+
+        setOrderButtonLoading(orderBtn, true, originalButtonText);
+        performCreateOrder(form, orderBtn, originalButtonText);
+    } catch (err) {
+        console.error('payment-detail: handlePlaceOrderClick failed', err);
+        showPopup('fail', 'Không thể xử lý đặt hàng. Vui lòng tải lại trang.');
+    }
+}
+
+function getSelectedPaymentMethod() {
+    var checked = document.querySelector('input[name="radio"]:checked');
+    return checked ? checked.value : '';
+}
+
+function setOrderButtonLoading(orderBtn, loading, originalButtonText) {
+    if (!orderBtn) {
+        return;
+    }
+    var termsCheckbox = document.getElementById('terms-accept');
+    if (loading) {
+        orderBtn.disabled = true;
+        orderBtn.textContent = 'Đang xử lý...';
+        orderBtn.classList.add('disabled');
+        return;
+    }
+    orderBtn.textContent = originalButtonText || 'Đặt Hàng';
+    orderBtn.classList.remove('disabled');
+    orderBtn.disabled = termsCheckbox ? !termsCheckbox.checked : false;
+}
+
+/**
+ * visible_to_all = true  → không hiện popup pilot
+ * visible_to_all = false → hiện popup nếu chưa unlock trong session
+ */
+function shouldShowVietQrPilotPopup() {
+    if (isVietQrVisibleToAll()) {
+        return false;
+    }
+    return !(vietqrSessionUnlocked || canUseVietQrNow());
+}
+
+function refreshVietQrAccessState() {
+    if (!window.VIETQR_ACCESS || !window.VIETQR_ACCESS.enabled) {
+        return;
+    }
+    $.ajax({
+        url: '/api/payment/vietqr-access',
+        type: 'GET',
+        dataType: 'json',
+        cache: false,
+        xhrFields: { withCredentials: true }
+    }).done(function (access) {
+        applyVietQrAccessState(access);
+    }).fail(function (xhr) {
+        console.warn('payment-detail: could not refresh VietQR access state', xhr.status);
+    });
+}
+
+function applyVietQrAccessState(access) {
+    if (!access) {
+        return;
+    }
+    vietqrVisibleToAll = access.visibleToAll === true;
+    vietqrCanUse = access.canUseVietQr === true;
+    vietqrPilotMode = access.pilotMode === true;
+    vietqrSessionUnlocked = access.unlocked === true || access.canUseVietQr === true;
+    if (access.pilotMessage) {
+        $('#vietqr-pilot-popup-message').text(access.pilotMessage);
+    }
+    $('#vietqr-can-use').val(access.canUseVietQr ? 'true' : 'false');
+    $('#vietqr-visible-to-all').val(access.visibleToAll ? 'true' : 'false');
+}
 
 function startVietQrCheckoutFlow(data, orderBtn, originalButtonText) {
     vietqrActiveOrderId = data.orderId || '';
@@ -359,30 +418,32 @@ function closePopup(popupId) {
     }
 }
 
-document.getElementById('apply-btn').addEventListener('click', function() {
-    let voucherCode = document.getElementById('voucher').value;
-    fetch('/payment/voucher?code=' + voucherCode, {
-        method: 'GET',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-    })
-    .then(response => {
-        if (!response.ok) {
-            showNotification('error', 'Mã giảm giá đã hết hạn')
-            return 0;
-        } else {
-            showNotification('success', 'Sử dụng mã giảm giá thành công')
-            return response.text();
-        }
-    })
-    .then(discountPrice => {
-        updateBill(discountPrice);
-    })
-    .catch((error) => {
-        console.error('Lỗi:', error);
+var applyBtn = document.getElementById('apply-btn');
+if (applyBtn) {
+    applyBtn.addEventListener('click', function () {
+        var voucherCode = document.getElementById('voucher').value;
+        fetch('/payment/voucher?code=' + voucherCode, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+            .then(function (response) {
+                if (!response.ok) {
+                    showNotification('error', 'Mã giảm giá đã hết hạn');
+                    return 0;
+                }
+                showNotification('success', 'Sử dụng mã giảm giá thành công');
+                return response.text();
+            })
+            .then(function (discountValue) {
+                updateBill(discountValue);
+            })
+            .catch(function (error) {
+                console.error('Lỗi:', error);
+            });
     });
-});
+}
 
 function updateBill(discount) {
     if (discount === 0) return;
@@ -419,4 +480,235 @@ function closeModal() {
     if (typeof modal !== 'undefined' && modal) {
         modal.classList.remove("show");
     }
+}
+
+function canUseVietQrNow() {
+    return vietqrCanUse === true || vietqrCanUse === 'true';
+}
+
+function isVietQrVisibleToAll() {
+    return vietqrVisibleToAll === true || vietqrVisibleToAll === 'true';
+}
+
+function isVietQrPaymentMethod(paymentMethod) {
+    return paymentMethod === 'VIETQR' || paymentMethod === 'TRANSFER';
+}
+
+function isVietQrPaymentSelected() {
+    var checked = document.querySelector('input[name="radio"]:checked');
+    return checked && isVietQrPaymentMethod(checked.value);
+}
+
+/**
+ * visible_to_all = true  → không chặn
+ * visible_to_all = false → chặn nếu chọn VietQR và chưa unlock session
+ */
+function needsVietQrPilotGate(paymentMethod) {
+    if (!isVietQrPaymentMethod(paymentMethod)) {
+        return false;
+    }
+    return shouldShowVietQrPilotPopup();
+}
+
+function getVietQrWrongPasswordMessage() {
+    if (window.VIETQR_ACCESS && window.VIETQR_ACCESS.wrongPasswordMessage) {
+        return window.VIETQR_ACCESS.wrongPasswordMessage;
+    }
+    return vietqrWrongPasswordMessage;
+}
+
+function isVietQrPilotError(message) {
+    if (!message) {
+        return false;
+    }
+    if (window.VIETQR_ACCESS && window.VIETQR_ACCESS.pilotMessage) {
+        if (message.indexOf(window.VIETQR_ACCESS.pilotMessage) >= 0) {
+            return true;
+        }
+    }
+    var lower = String(message).toLowerCase();
+    return lower.indexOf('pilot') >= 0
+        || lower.indexOf('password') >= 0
+        || lower.indexOf('mật khẩu') >= 0
+        || lower.indexOf('chờ tính năng') >= 0;
+}
+
+function performCreateOrder(formElement, orderBtn, originalButtonText) {
+    const orderId = $('input[name=orderId]').val();
+    const fullName = $('input[name=fullName]').val();
+    const email = $('input[name=email]').val();
+    const phone = $('input[name=phone]').val();
+    const province = $('select[name=province]').val();
+    const district = $('select[name=district]').val();
+    const ward = $('select[name=ward]').val();
+    const address = $('input[name=address]').val();
+    const note = $('textarea[name=note]').val();
+    const voucher = $('input[name=voucher]').val();
+    const paymentMethod = document.querySelector('input[name="radio"]:checked').value;
+
+    const data = {
+        orderId: orderId, fullName: fullName, email: email, phone: phone, paymentMethod: paymentMethod,
+        province: province, district: district, ward: ward, address: address, note: note, voucher: voucher
+    };
+
+    $.ajax({
+        type: 'POST',
+        contentType: 'application/json',
+        url: '/api/payment/create',
+        data: JSON.stringify(data),
+        headers: buildPaymentHeaders(),
+        success: function (response) {
+            if (response && response.resultType === 'QR_PAYMENT') {
+                startVietQrCheckoutFlow(response, orderBtn, originalButtonText);
+                return;
+            }
+            if (typeof updateHeaderBagCount === 'function') {
+                updateHeaderBagCount(0);
+            }
+            if (orderBtn) {
+                orderBtn.disabled = false;
+                orderBtn.textContent = originalButtonText;
+                orderBtn.classList.remove('disabled');
+            }
+            showPopup('success');
+        },
+        error: function (xhr) {
+            console.error('payment/create failed', xhr.status, xhr.responseJSON || xhr.responseText);
+            var errMsg = formatPaymentError(xhr);
+            if (isVietQrPaymentSelected() && (isVietQrPilotError(errMsg) || shouldShowVietQrPilotPopup())) {
+                setOrderButtonLoading(orderBtn, false, originalButtonText);
+                showVietQrPilotPopup(orderBtn, originalButtonText);
+                return;
+            }
+            showPopup('fail', errMsg);
+            setOrderButtonLoading(orderBtn, false, originalButtonText);
+        }
+    });
+
+    if (formElement) {
+        formElement.classList.add('was-validated');
+    }
+}
+
+function showVietQrPilotPopup(orderBtn, originalButtonText) {
+    $('#vietqr-pilot-popup-password').val('');
+    $('#vietqr-pilot-popup-error').hide().text('');
+    $('#vietqrPilotPopup').data('orderBtn', orderBtn);
+    $('#vietqrPilotPopup').data('originalButtonText', originalButtonText);
+    document.getElementById('vietqrPilotPopup').style.display = 'flex';
+    setTimeout(function () {
+        $('#vietqr-pilot-popup-password').trigger('focus');
+    }, 0);
+}
+
+function closeVietQrPilotPopup() {
+    document.getElementById('vietqrPilotPopup').style.display = 'none';
+    $('#vietqr-pilot-popup-password').val('');
+    $('#vietqr-pilot-popup-error').hide().text('');
+}
+
+function switchToCodPayment() {
+    closeVietQrPilotPopup();
+    $('#payment-vietqr').prop('checked', false);
+    $('#payment-cod').prop('checked', true);
+    var $section = $('.choosePayment');
+    if ($section.length) {
+        $('html, body').animate({ scrollTop: $section.offset().top - 80 }, 300);
+    }
+}
+
+function unlockVietQrPilotAndContinue() {
+    var password = ($('#vietqr-pilot-popup-password').val() || '').trim();
+    var $error = $('#vietqr-pilot-popup-error');
+    $error.hide().text('');
+
+    if (!password) {
+        $error.text('Vui lòng nhập mật khẩu pilot để sử dụng VietQR.').show();
+        return;
+    }
+
+    var $popup = $('#vietqrPilotPopup');
+    var orderBtn = $popup.data('orderBtn');
+    var originalButtonText = $popup.data('originalButtonText') || 'Đặt Hàng';
+    var $confirmBtn = $('#vietqr-pilot-popup-confirm');
+    $confirmBtn.prop('disabled', true).text('Đang xác nhận...');
+
+    $.ajax({
+        type: 'POST',
+        contentType: 'application/json',
+        url: '/api/payment/vietqr-access/unlock',
+        data: JSON.stringify({ password: password }),
+        headers: buildPaymentHeaders(),
+        success: function (data) {
+            if (data && data.canUseVietQr) {
+                applyVietQrAccessState(data);
+                vietqrSessionUnlocked = true;
+                closeVietQrPilotPopup();
+                if ($('#vietqr-info-box').length) {
+                    $('#vietqr-info-box').show();
+                }
+                if (orderBtn) {
+                    orderBtn.disabled = true;
+                    orderBtn.textContent = 'Đang xử lý...';
+                    orderBtn.classList.add('disabled');
+                }
+                performCreateOrder(document.getElementById('create-order'), orderBtn, originalButtonText);
+                return;
+            }
+            $error.text(getVietQrWrongPasswordMessage()).show();
+        },
+        error: function (xhr) {
+            if (xhr.status === 400) {
+                $error.text(getVietQrWrongPasswordMessage()).show();
+                return;
+            }
+            $error.text(formatPaymentError(xhr)).show();
+        },
+        complete: function () {
+            $confirmBtn.prop('disabled', false).text('Xác nhận');
+        }
+    });
+}
+
+function initVietQrPilotGate() {
+    var $form = $('#create-order');
+
+    if (window.VIETQR_ACCESS) {
+        applyVietQrAccessState({
+            visibleToAll: window.VIETQR_ACCESS.visibleToAll === true,
+            canUseVietQr: window.VIETQR_ACCESS.canUse === true,
+            pilotMode: window.VIETQR_ACCESS.pilotMode === true,
+            unlocked: window.VIETQR_ACCESS.unlocked === true || window.VIETQR_ACCESS.canUse === true,
+            pilotMessage: window.VIETQR_ACCESS.pilotMessage
+        });
+        if (window.VIETQR_ACCESS.wrongPasswordMessage) {
+            vietqrWrongPasswordMessage = window.VIETQR_ACCESS.wrongPasswordMessage;
+        }
+    } else if ($form.length) {
+        vietqrVisibleToAll = $form.data('vietqr-visible-to-all') === true
+            || $form.data('vietqrVisibleToAll') === true
+            || $form.attr('data-vietqr-visible-to-all') === 'true';
+        vietqrSessionUnlocked = $form.data('vietqr-unlocked') === true
+            || $form.attr('data-vietqr-unlocked') === 'true';
+        vietqrCanUse = vietqrVisibleToAll || vietqrSessionUnlocked;
+    } else {
+        var $visibleFlag = $('#vietqr-visible-to-all');
+        if ($visibleFlag.length) {
+            vietqrVisibleToAll = $visibleFlag.val() === 'true';
+        }
+        var $canUseFlag = $('#vietqr-can-use');
+        if ($canUseFlag.length) {
+            vietqrCanUse = $canUseFlag.val() === 'true';
+            vietqrSessionUnlocked = vietqrCanUse && !vietqrVisibleToAll;
+        }
+    }
+
+    $('#vietqr-pilot-popup-confirm').on('click', unlockVietQrPilotAndContinue);
+    $('#vietqr-pilot-popup-cancel').on('click', switchToCodPayment);
+    $('#vietqr-pilot-popup-password').on('keydown', function (event) {
+        if (event.key === 'Enter') {
+            event.preventDefault();
+            unlockVietQrPilotAndContinue();
+        }
+    });
 }

@@ -15,10 +15,42 @@ sessionStorage.setItem('orderItems', JSON.stringify(orderItems));
 //     paymentMomoItem.setAttribute('background', '#505050');
 // }
 
+function showEmptyCart() {
+    const emptyEl = document.getElementById('cart-empty');
+    const checkoutEl = document.getElementById('cart-checkout');
+    if (emptyEl) {
+        emptyEl.style.display = 'block';
+    }
+    if (checkoutEl) {
+        checkoutEl.style.display = 'none';
+    }
+    if (cartInfo) {
+        cartInfo.innerHTML = '';
+    }
+    if (typeof updateHeaderBagCount === 'function') {
+        updateHeaderBagCount(0);
+    }
+}
+
+function hideEmptyCart() {
+    const emptyEl = document.getElementById('cart-empty');
+    const checkoutEl = document.getElementById('cart-checkout');
+    if (emptyEl) {
+        emptyEl.style.display = 'none';
+    }
+    if (checkoutEl) {
+        checkoutEl.style.display = '';
+    }
+}
+
 function renderCartItems() {
     let item = sessionStorage.getItem('orderItems');
     let orderItems = JSON.parse(item);
-    if (orderItems.length === 0) return;
+    if (orderItems.length === 0) {
+        showEmptyCart();
+        return;
+    }
+    hideEmptyCart();
     const itemElement = document.createElement('div');
     const tableItem = document.createElement('table');
     const bodyItem = document.createElement('tbody');
@@ -172,7 +204,11 @@ function renderCartItems() {
             orderItems = orderItems.filter(orderItem => orderItem !== item);
             sessionStorage.setItem('orderItems', JSON.stringify(orderItems));
             bodyItem.removeChild(trElement);
-            updateTotalCartDetail();
+            if (orderItems.length === 0) {
+                showEmptyCart();
+            } else {
+                updateTotalCartDetail();
+            }
             addToCart();
         });
 

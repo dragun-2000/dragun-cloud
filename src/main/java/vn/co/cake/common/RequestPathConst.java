@@ -71,9 +71,13 @@ public class RequestPathConst {
     // AM010
     public static final String AM010 = "/AM/AM010";
     public static final String AM010_DETAIL = "/AM/AM010/detail/{id}";
-    public static final String AM010_ORDER_LOGS = "/AM/AM010/order-logs";
+  public static final String AM010_ORDER_LOGS = "/AM/AM010/order-logs";
 
-    // SA001
+  // AM011
+  public static final String AM011 = "/AM/AM011";
+  public static final String AM011_SAVE = "/AM/AM011/save";
+
+  // SA001
     public static final String SA001_01_REGISTER_VIEW = "/SA/SA001/register-view";
     public static final String SA001_LOGIN = "/SA/SA001/login";
     public static final String SA001_REGISTER = "/SA/SA001/register";
