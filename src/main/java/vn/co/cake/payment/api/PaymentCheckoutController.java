@@ -24,6 +24,7 @@ import vn.co.cake.payment.service.CodCheckoutService;
 import vn.co.cake.payment.service.VietQrCheckoutService;
 import vn.co.cake.payment.service.VietQrPilotAccessService;
 import vn.co.cake.payment.support.PaymentCheckoutFlowLog;
+import vn.co.cake.payment.support.PaymentOrderTotalCalculator;
 import vn.co.cake.request.OrderDetailRequest;
 import vn.co.cake.response.CommonResponse;
 import vn.co.cake.security.user.UserLoginInfo;
@@ -41,17 +42,20 @@ public class PaymentCheckoutController extends BaseController {
     private final CartService cartService;
     private final VietQrProperties vietQrProperties;
     private final VietQrPilotAccessService vietQrPilotAccessService;
+    private final PaymentOrderTotalCalculator paymentOrderTotalCalculator;
 
     public PaymentCheckoutController(CodCheckoutService codCheckoutService,
                                      VietQrCheckoutService vietQrCheckoutService,
                                      CartService cartService,
                                      VietQrProperties vietQrProperties,
-                                     VietQrPilotAccessService vietQrPilotAccessService) {
+                                     VietQrPilotAccessService vietQrPilotAccessService,
+                                     PaymentOrderTotalCalculator paymentOrderTotalCalculator) {
         this.codCheckoutService = codCheckoutService;
         this.vietQrCheckoutService = vietQrCheckoutService;
         this.cartService = cartService;
         this.vietQrProperties = vietQrProperties;
         this.vietQrPilotAccessService = vietQrPilotAccessService;
+        this.paymentOrderTotalCalculator = paymentOrderTotalCalculator;
     }
 
     @PostMapping("/create")
@@ -74,6 +78,7 @@ public class PaymentCheckoutController extends BaseController {
 
         try {
             if (PaymentConstants.METHOD_COD.equals(paymentMethod)) {
+                assertCodAllowed(cartForm, request);
                 PaymentCheckoutFlowLog.step("-", 1,
                         "API POST /api/payment/create — COD, accountId=%s", loginInfo.getId());
                 PaymentCheckoutResponse response = codCheckoutService.placeOrder(loginInfo.getId(), cartForm, request);
@@ -158,6 +163,16 @@ public class PaymentCheckoutController extends BaseController {
             return PaymentConstants.METHOD_VIETQR;
         }
         return paymentMethod;
+    }
+
+    private void assertCodAllowed(CartForm cartForm, OrderDetailRequest request) throws CommonServletException {
+        long grandTotal = paymentOrderTotalCalculator.calculateGrandTotalVnd(
+                cartForm.getOrderItems(), request.getVoucher());
+        if (!paymentOrderTotalCalculator.isCodAllowed(cartForm.getOrderItems(), request.getVoucher())) {
+            log.warn("COD rejected: grandTotal={} > max={}", grandTotal, PaymentConstants.COD_MAX_ORDER_TOTAL_VND);
+            throw new CommonServletException(
+                    "Đơn hàng trên 1.500.000 VND chỉ được thanh toán qua VietQR. Vui lòng chọn phương thức VietQR.");
+        }
     }
 
     private static String resolveErrorMessage(Exception ex) {
