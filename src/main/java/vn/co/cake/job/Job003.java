@@ -9,6 +9,7 @@ import vn.co.cake.service.external.PancakePosService;
 /**
  * Đồng bộ trạng thái / tracking từ Pancake POS vào bảng orders mỗi giờ
  * (màn /order-history chỉ đọc DB, không gọi Pancake).
+ * Bỏ qua đơn đã có pancake_status_name = shipped hoặc canceled.
  */
 @Component
 @Slf4j
