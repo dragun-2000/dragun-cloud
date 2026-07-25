@@ -2,7 +2,6 @@
 var $ = window.jQuery;
 
 const shippingPrice = document.getElementsByClassName('shipping-price');
-const totalBill = document.getElementById('totalPriceBill');
 const discountPrice = document.getElementById('final-price');
 const totalBillDisplay = document.getElementById('final-price');
 
@@ -15,6 +14,7 @@ var vietqrVisibleToAll = true;
 var vietqrSessionUnlocked = false;
 var vietqrWrongPasswordMessage =
     'Tính năng chưa phát hành. Vui lòng đợi đến khi phát hành. Vui lòng chọn phương thức thanh toán khi nhận hàng (COD) và xác nhận lại.';
+var appliedVoucherDiscountPercent = 0;
 
 (function ($) {
     'use strict';
@@ -27,6 +27,7 @@ var vietqrWrongPasswordMessage =
         initVietQrPilotGate();
         bindOrderPlacementHandlers();
         refreshVietQrAccessState();
+        applyPaymentMethodRules();
 
         $('#vietqr-reopen-btn').on('click', function () {
             if (vietqrPaymentPageUrl) {
@@ -103,6 +104,12 @@ function handlePlaceOrderClick() {
             return;
         }
 
+        if (paymentMethod === 'COD' && !isCodAllowedForCurrentOrder()) {
+            showPopup('fail', 'Đơn hàng trên 1.500.000 VND chỉ được thanh toán qua VietQR. Vui lòng chọn phương thức VietQR.');
+            applyPaymentMethodRules();
+            return;
+        }
+
         if (isVietQrPaymentMethod(paymentMethod) && shouldShowVietQrPilotPopup()) {
             showVietQrPilotPopup(orderBtn, originalButtonText);
             return;
@@ -118,7 +125,11 @@ function handlePlaceOrderClick() {
 
 function getSelectedPaymentMethod() {
     var checked = document.querySelector('input[name="radio"]:checked');
-    return checked ? checked.value : '';
+    if (checked && !checked.disabled) {
+        return checked.value;
+    }
+    var enabled = document.querySelector('input[name="radio"]:enabled:checked');
+    return enabled ? enabled.value : '';
 }
 
 function setOrderButtonLoading(orderBtn, loading, originalButtonText) {
@@ -452,11 +463,153 @@ if (applyBtn) {
     });
 }
 
-function updateBill(discount) {
-    if (discount === 0) return;
-    let tempPrice = totalBill.value;
-    discountPrice.textContent = formatMoney(parseInt(discount)) + ' VND';
-    totalBillDisplay.textContent = formatMoney(parseInt(tempPrice) - parseInt(discount) + 35000) + ' VND';
+function parseMoneyInt(raw) {
+    if (raw == null || raw === '') {
+        return 0;
+    }
+    var digits = String(raw).replace(/[^\d]/g, '');
+    if (!digits) {
+        return 0;
+    }
+    var value = parseInt(digits, 10);
+    return isNaN(value) ? 0 : value;
+}
+
+function getSubtotalAmount() {
+    var totalBillEl = document.getElementById('totalPriceBill');
+    return parseMoneyInt(totalBillEl && totalBillEl.value);
+}
+
+function setOrderGrandTotalValue(grandTotal) {
+    var el = document.getElementById('order-grand-total');
+    if (el) {
+        el.value = String(grandTotal);
+    }
+}
+
+function updateBill(discountPercent) {
+    if (!discountPercent || discountPercent === 0) {
+        return;
+    }
+    appliedVoucherDiscountPercent = parseInt(discountPercent, 10) || 0;
+    var subtotal = getSubtotalAmount();
+    var discountAmount = Math.floor(subtotal * appliedVoucherDiscountPercent / 100);
+    var shippingFee = getShippingFeeAmount();
+    var grandTotal = subtotal - discountAmount + shippingFee;
+
+    var discountDisplay = document.getElementById('discount-price');
+    if (discountDisplay) {
+        discountDisplay.textContent = formatMoney(discountAmount) + ' VND';
+    }
+    if (totalBillDisplay) {
+        totalBillDisplay.textContent = formatMoney(grandTotal) + ' VND';
+    }
+    setOrderGrandTotalValue(grandTotal);
+    applyPaymentMethodRules();
+}
+
+function getCodMaxOrderTotal() {
+    if (window.PAYMENT_RULES && window.PAYMENT_RULES.codMaxOrderTotal != null) {
+        return parseMoneyInt(window.PAYMENT_RULES.codMaxOrderTotal);
+    }
+    var el = document.getElementById('cod-max-order-total');
+    if (el && el.value) {
+        return parseMoneyInt(el.value);
+    }
+    return 1500000;
+}
+
+function getShippingFeeAmount() {
+    var el = document.getElementById('shipping-fee-amount');
+    if (el && el.value !== '') {
+        return parseMoneyInt(el.value);
+    }
+    if (shippingPrice && shippingPrice.length > 0) {
+        return parseMoneyInt(shippingPrice[0].textContent);
+    }
+    return 0;
+}
+
+function getOrderGrandTotal() {
+    var grandTotalEl = document.getElementById('order-grand-total');
+    if (grandTotalEl && grandTotalEl.value !== '') {
+        return parseMoneyInt(grandTotalEl.value);
+    }
+    var subtotal = getSubtotalAmount();
+    var discountAmount = Math.floor(subtotal * (appliedVoucherDiscountPercent || 0) / 100);
+    return subtotal - discountAmount + getShippingFeeAmount();
+}
+
+function isCodAllowedForCurrentOrder() {
+    return getOrderGrandTotal() <= getCodMaxOrderTotal();
+}
+
+function isVietQrPaymentEnabled() {
+    if (window.PAYMENT_RULES && window.PAYMENT_RULES.vietQrEnabled != null) {
+        return window.PAYMENT_RULES.vietQrEnabled === true || window.PAYMENT_RULES.vietQrEnabled === 'true';
+    }
+    var el = document.getElementById('vietqr-payment-enabled');
+    return el && el.value === 'true';
+}
+
+function applyPaymentMethodRules() {
+    var codAllowed = isCodAllowedForCurrentOrder();
+    var vietQrEnabled = isVietQrPaymentEnabled();
+    var $codItem = $('#payment-cod-item');
+    var $codInput = $('#payment-cod');
+    var $vietQrInput = $('#payment-vietqr');
+    var $restrictionNotice = $('#cod-restriction-notice');
+    var $vietQrRequiredNotice = $('#cod-vietqr-required-notice');
+    var $pilotCodBtn = $('#vietqr-pilot-popup-cancel');
+
+    if ($codItem.length) {
+        $codItem.toggleClass('payment-method--disabled', !codAllowed);
+    }
+    if ($codInput.length) {
+        $codInput.prop('disabled', !codAllowed);
+        if (!codAllowed) {
+            $codInput.prop('checked', false);
+        }
+    }
+
+    if (!codAllowed) {
+        if ($restrictionNotice.length) {
+            $restrictionNotice.show();
+        }
+        if (vietQrEnabled && $vietQrInput.length) {
+            $vietQrInput.prop('checked', true);
+        }
+    } else if ($restrictionNotice.length) {
+        $restrictionNotice.hide();
+        if ($codInput.length && !getSelectedPaymentMethod()) {
+            $codInput.prop('checked', true);
+        }
+    }
+
+    var checkoutBlocked = !codAllowed && !vietQrEnabled;
+    if ($vietQrRequiredNotice.length) {
+        $vietQrRequiredNotice.toggle(checkoutBlocked);
+    }
+    if ($pilotCodBtn.length) {
+        $pilotCodBtn.toggle(codAllowed);
+    }
+
+    syncOrderButtonForPaymentRules(checkoutBlocked);
+}
+
+function syncOrderButtonForPaymentRules(checkoutBlocked) {
+    var orderBtn = document.getElementById('order-btn');
+    var termsCheckbox = document.getElementById('terms-accept');
+    if (!orderBtn) {
+        return;
+    }
+    if (checkoutBlocked) {
+        orderBtn.disabled = true;
+        orderBtn.title = 'Đơn hàng trên 1.500.000 VND yêu cầu thanh toán VietQR.';
+        return;
+    }
+    orderBtn.title = '';
+    orderBtn.disabled = termsCheckbox ? !termsCheckbox.checked : false;
 }
 
 function formatMoney(value) {
@@ -551,7 +704,12 @@ function performCreateOrder(formElement, orderBtn, originalButtonText) {
     const address = $('input[name=address]').val();
     const note = $('textarea[name=note]').val();
     const voucher = $('input[name=voucher]').val();
-    const paymentMethod = document.querySelector('input[name="radio"]:checked').value;
+    const paymentMethod = getSelectedPaymentMethod();
+    if (!paymentMethod) {
+        showPopup('fail', 'Vui lòng chọn phương thức thanh toán.');
+        setOrderButtonLoading(orderBtn, false, originalButtonText);
+        return;
+    }
 
     const data = {
         orderId: orderId, fullName: fullName, email: email, phone: phone, paymentMethod: paymentMethod,
@@ -615,6 +773,12 @@ function closeVietQrPilotPopup() {
 }
 
 function switchToCodPayment() {
+    if (!isCodAllowedForCurrentOrder()) {
+        closeVietQrPilotPopup();
+        showPopup('fail', 'Đơn hàng trên 1.500.000 VND chỉ được thanh toán qua VietQR.');
+        applyPaymentMethodRules();
+        return;
+    }
     closeVietQrPilotPopup();
     $('#payment-vietqr').prop('checked', false);
     $('#payment-cod').prop('checked', true);

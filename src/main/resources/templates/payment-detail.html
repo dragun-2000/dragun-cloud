@@ -9,7 +9,13 @@
           th:attr="data-vietqr-visible-to-all=${vietQrAccess != null ? vietQrAccess.visibleToAll : true},
                    data-vietqr-unlocked=${vietQrAccess != null ? vietQrAccess.unlocked : false}">
       <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
-      <div hidden ><input id="totalPriceBill" th:value="${totalPrice}"></div>
+      <div hidden>
+        <input id="totalPriceBill" type="hidden" th:value="${totalPrice}">
+        <input type="hidden" id="shipping-fee-amount" th:value="${shippingFee}">
+        <input type="hidden" id="cod-max-order-total" th:value="${codMaxOrderTotal}">
+        <input type="hidden" id="order-grand-total" th:value="${orderGrandTotal}">
+        <input type="hidden" id="vietqr-payment-enabled" th:value="${vietQrEnabled}">
+      </div>
       <div class="wrap wrap--mw900">
         <h2 class="delivery-title">Thông tin giao hàng</h2>
         <div class="delivery-form">
@@ -17,10 +23,19 @@
             <label class="delivery-label">Phương thức thanh toán</label>
           </div>
           <div class="choosePayment">
+            <p id="cod-restriction-notice" class="payment-method-notice"
+               th:style="${!codAllowed} ? 'display:block' : 'display:none'">
+              Đơn hàng trên 1.500.000 VND chỉ được thanh toán qua VietQR.
+            </p>
+            <p id="cod-vietqr-required-notice" class="payment-method-notice payment-method-notice--error"
+               style="display:none">
+              Đơn hàng trên 1.500.000 VND yêu cầu thanh toán VietQR, nhưng VietQR hiện chưa khả dụng. Vui lòng liên hệ hỗ trợ.
+            </p>
             <ul>
-              <li>
+              <li id="payment-cod-item" th:classappend="${!codAllowed} ? 'payment-method--disabled' : ''">
                 <label class="custom-control custom-radio">
-                  <input class="custom-control-input" type="radio" name="radio" checked="checked" id="payment-cod" value="COD">
+                  <input class="custom-control-input" type="radio" name="radio" id="payment-cod" value="COD"
+                         th:checked="${codAllowed}" th:disabled="${!codAllowed}">
                   <span class="custom-control-indicator"></span>
                   <span class="custom-control-description">
                     <span class="custom-icon">
@@ -34,7 +49,8 @@
               </li>
               <li th:if="${vietQrEnabled}">
                 <label class="custom-control custom-radio">
-                  <input class="custom-control-input" type="radio" name="radio" id="payment-vietqr" value="VIETQR">
+                  <input class="custom-control-input" type="radio" name="radio" id="payment-vietqr" value="VIETQR"
+                         th:checked="${!codAllowed}">
                   <span class="custom-control-indicator"></span>
                   <span class="custom-control-description">
                     <span class="custom-icon">
@@ -256,6 +272,11 @@
       pilotMessage: /*[[${vietQrAccess != null && vietQrAccess.pilotMessage != null ? vietQrAccess.pilotMessage : 'Tính năng thanh toán VietQR đang trong giai đoạn pilot. Những khách hàng được admin cung cấp mật khẩu mới được sử dụng.'}]]*/ '',
       wrongPasswordMessage: 'Tính năng chưa phát hành. Vui lòng đợi đến khi phát hành. Vui lòng chọn phương thức thanh toán khi nhận hàng (COD) và xác nhận lại.'
     };
+    window.PAYMENT_RULES = {
+      codMaxOrderTotal: /*[[${codMaxOrderTotal}]]*/ 1500000,
+      codAllowed: /*[[${codAllowed}]]*/ true,
+      vietQrEnabled: /*[[${vietQrEnabled}]]*/ false
+    };
     /*]]>*/
   </script>
   <script th:src="@{/js/payment-detail/payment-detail.js}"></script>
@@ -265,6 +286,14 @@
       var orderBtn = document.getElementById('order-btn');
       if (checkbox && orderBtn) {
         function updateButtonState() {
+          if (typeof syncOrderButtonForPaymentRules === 'function') {
+            var blocked = !isCodAllowedForCurrentOrder() && !isVietQrPaymentEnabled();
+            syncOrderButtonForPaymentRules(blocked);
+            if (!blocked) {
+              orderBtn.disabled = !checkbox.checked;
+            }
+            return;
+          }
           orderBtn.disabled = !checkbox.checked;
         }
         checkbox.addEventListener('change', updateButtonState);
@@ -555,6 +584,32 @@
           font-size: 36px;
           font-weight: bold;
           cursor: pointer;
+        }
+
+        .payment-method-notice {
+          font-size: 14px;
+          line-height: 1.5;
+          color: #856404;
+          background: #fff3cd;
+          border: 1px solid #ffeeba;
+          border-radius: 6px;
+          padding: 10px 12px;
+          margin-bottom: 12px;
+        }
+
+        .payment-method-notice--error {
+          color: #721c24;
+          background: #f8d7da;
+          border-color: #f5c6cb;
+        }
+
+        .payment-method--disabled {
+          opacity: 0.55;
+          pointer-events: none;
+        }
+
+        .payment-method--disabled .custom-control-input:disabled + .custom-control-indicator {
+          cursor: not-allowed;
         }
     </style>
 </body>

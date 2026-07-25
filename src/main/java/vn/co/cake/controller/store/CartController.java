@@ -19,9 +19,11 @@ import vn.co.cake.entity.Province;
 import vn.co.cake.entity.Voucher;
 import vn.co.cake.enums.OrderStatus;
 import vn.co.cake.exception.CommonServletException;
+import vn.co.cake.payment.PaymentConstants;
 import vn.co.cake.payment.config.VietQrProperties;
 import vn.co.cake.payment.dto.VietQrAccessStatusResponse;
 import vn.co.cake.payment.service.VietQrPilotAccessService;
+import vn.co.cake.payment.support.PaymentOrderTotalCalculator;
 import vn.co.cake.repository.OrderRepository;
 import vn.co.cake.repository.ProvinceRepository;
 import vn.co.cake.repository.VariationRepository;
@@ -58,6 +60,7 @@ public class CartController extends BaseController {
     private final OrderRepository orderRepository;
     private final VietQrProperties vietQrProperties;
     private final VietQrPilotAccessService vietQrPilotAccessService;
+    private final PaymentOrderTotalCalculator paymentOrderTotalCalculator;
 
     public CartController(CartService cartService,
                           AccountService accountService,
@@ -67,7 +70,8 @@ public class CartController extends BaseController {
                           VariationRepository variationRepository,
                           OrderRepository orderRepository,
                           VietQrProperties vietQrProperties,
-                          VietQrPilotAccessService vietQrPilotAccessService) {
+                          VietQrPilotAccessService vietQrPilotAccessService,
+                          PaymentOrderTotalCalculator paymentOrderTotalCalculator) {
         this.cartService = cartService;
         this.accountService = accountService;
         this.provinceRepository = provinceRepository;
@@ -77,6 +81,7 @@ public class CartController extends BaseController {
         this.orderRepository = orderRepository;
         this.vietQrProperties = vietQrProperties;
         this.vietQrPilotAccessService = vietQrPilotAccessService;
+        this.paymentOrderTotalCalculator = paymentOrderTotalCalculator;
     }
 
     @ModelAttribute("cartForm")
@@ -234,6 +239,12 @@ public class CartController extends BaseController {
         }
         model.addAttribute("shippingFee", shippingFeeDefault);
         model.addAttribute("totalPriceDisplayFinal", BigDecimalUtil.formatMoney(this.getTotalPrice(orderItems, shippingFeeDefault)));
+
+        long orderGrandTotal = paymentOrderTotalCalculator.calculateGrandTotalVnd(orderItems, null);
+        boolean codAllowed = paymentOrderTotalCalculator.isCodAllowed(orderItems, null);
+        model.addAttribute("orderGrandTotal", orderGrandTotal);
+        model.addAttribute("codAllowed", codAllowed);
+        model.addAttribute("codMaxOrderTotal", PaymentConstants.COD_MAX_ORDER_TOTAL_VND);
 
         model.addAttribute("sandboxSimulateEnabled", vietQrProperties.getCheckout().isSandboxSimulateEnabled());
         VietQrAccessStatusResponse vietQrAccess = vietQrPilotAccessService.buildAccessStatus(session, loginInfo.getId());

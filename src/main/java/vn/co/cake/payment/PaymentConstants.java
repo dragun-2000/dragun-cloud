@@ -57,6 +57,9 @@ public final class PaymentConstants {
     /** Session: accountId đã unlock VietQR pilot (gắn với user đăng nhập). */
     public static final String SESSION_VIETQR_PILOT_ACCOUNT_ID = "VIETQR_PILOT_ACCOUNT_ID";
 
+    /** Đơn lớn hơn mức này (VND) không được thanh toán COD — bắt buộc VietQR. */
+    public static final long COD_MAX_ORDER_TOTAL_VND = 1_500_000L;
+
     private PaymentConstants() {
     }
 }

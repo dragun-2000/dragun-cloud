@@ -40,6 +40,7 @@ public interface OrderRepository extends JpaRepository<Order, Long>, CustomOrder
         value = "SELECT * FROM orders o WHERE o.deleted = false "
                 + "AND o.status NOT IN ('AWAITING_PAYMENT', 'CANCELLED', 'shipped') "
                 + "AND o.phone IS NOT NULL AND TRIM(o.phone) <> '' "
+                + "AND (o.pancake_status_name IS NULL OR LOWER(TRIM(o.pancake_status_name)) NOT IN ('shipped', 'canceled')) "
                 + "AND (o.pancake_synced_at IS NULL OR o.pancake_synced_at < NOW() - INTERVAL '1 hour') "
                 + "ORDER BY CASE WHEN o.pancake_synced_at IS NULL THEN 0 ELSE 1 END, o.created DESC "
                 + "LIMIT :limit",
