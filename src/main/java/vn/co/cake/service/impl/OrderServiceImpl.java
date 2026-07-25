@@ -11,6 +11,7 @@ import vn.co.cake.constants.OrderConstants;
 import vn.co.cake.entity.*;
 import vn.co.cake.enums.OrderStatus;
 import vn.co.cake.exception.CommonServletException;
+import vn.co.cake.payment.repository.InventoryReservationRepository;
 import vn.co.cake.repository.*;
 import vn.co.cake.request.OrderDetailRequest;
 import vn.co.cake.request.SearchRequest;
@@ -21,6 +22,7 @@ import vn.co.cake.utils.StringUtil;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -40,6 +42,7 @@ public class OrderServiceImpl implements OrderService {
     private final WardRepository wardRepository;
     private final VoucherRepository voucherRepository;
     private final VariationRepository variationRepository;
+    private final InventoryReservationRepository inventoryReservationRepository;
 
     public OrderServiceImpl(OrderRepository orderRepository,
                             AccountRepository accountRepository,
@@ -51,7 +54,8 @@ public class OrderServiceImpl implements OrderService {
                             DistrictRepository districtRepository,
                             WardRepository wardRepository,
                             VoucherRepository voucherRepository,
-                            VariationRepository variationRepository) {
+                            VariationRepository variationRepository,
+                            InventoryReservationRepository inventoryReservationRepository) {
         this.orderRepository = orderRepository;
         this.accountRepository = accountRepository;
         this.cartRepository = cartRepository;
@@ -63,6 +67,7 @@ public class OrderServiceImpl implements OrderService {
         this.wardRepository = wardRepository;
         this.voucherRepository = voucherRepository;
         this.variationRepository = variationRepository;
+        this.inventoryReservationRepository = inventoryReservationRepository;
     }
     @Override
     public Page<Order> findAllByCondition(SearchRequest searchForm, Pageable pageable) {
@@ -175,7 +180,10 @@ public class OrderServiceImpl implements OrderService {
                 throw new CommonServletException("Sản phẩm order không tồn tại!");
             }
 
-            if (variation.getRemainQuantity() < cartItemRequest.getQuantity()) {
+            long remain = variation.getRemainQuantity() != null ? variation.getRemainQuantity() : 0L;
+            long reserved = inventoryReservationRepository.sumActiveQuantityExcludingOrder(
+                    variation.getId(), 0L, new Date());
+            if (remain - reserved < cartItemRequest.getQuantity()) {
                 newOrderItems.remove(cartItemRequest);
                 throw new CommonServletException(String.format("Sản phẩm [%s] đã bán hết! Chúng tôi sẽ xóa khỏi gi hàng của bạn", variation.getName()));
             }

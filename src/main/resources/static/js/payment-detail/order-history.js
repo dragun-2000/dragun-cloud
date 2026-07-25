@@ -199,6 +199,14 @@ function initVietQrPendingPayment() {
             $('#vietqr-wait-status-hint').text('');
             return;
         }
+        if (status === 'PAID_ISSUE') {
+            stopPolling();
+            $('#vietqr-wait-status-msg').removeClass('text-muted text-success').addClass('text-danger')
+                .text(msg || 'Đã nhận thanh toán. Đơn hàng đang cần hỗ trợ xử lý tồn kho.');
+            $('#vietqr-wait-status-hint').text('Bộ phận chăm sóc khách hàng sẽ liên hệ với bạn.');
+            $('#vietqr-sandbox-simulate-btn').addClass('d-none');
+            return;
+        }
 
         $('#vietqr-wait-status-msg').removeClass('text-danger text-success').addClass('text-muted')
             .text('Đang chờ xác nhận thanh toán...');

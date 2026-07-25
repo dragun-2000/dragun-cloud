@@ -19,7 +19,7 @@
 
       <div class="main-content-container container-fluid">
         <div class="page-header text-center no-gutters py-4">
-          <h3 class="page-title font-weight-bold">Đơn Hàng Lỗi Sync</h3>
+          <h3 class="page-title font-weight-bold">Đơn Hàng Cần Xử Lý / Lỗi Sync</h3>
         </div>
 
         <div class="info-fr-1400 w-1200 mt-5">
@@ -116,7 +116,10 @@
                               class="btn btn-sm btn-primary retry-sync-btn" 
                               th:data-code="${order.code}"
                               th:data-order-id="${order.code}">
-                        <span class="btn-text">Đồng Bộ Lại</span>
+                        <span class="btn-text"
+                              th:text="${order.status == 'PAYMENT_RECEIVED_UNFULFILLABLE' ? 'Tạo lại đơn' : 'Đồng Bộ Lại'}">
+                          Đồng Bộ Lại
+                        </span>
                         <span class="btn-loading" style="display: none;">
                           <i class="fas fa-spinner fa-spin"></i> Đang xử lý...
                         </span>
@@ -192,7 +195,7 @@
                 headers: {"X-CSRF-TOKEN": $("input[name='_csrf']").val()},
                 success: function(response) {
                     if (response.success) {
-                        alert('Đồng bộ thành công!');
+                        alert(response.message || 'Xử lý đơn thành công!');
                         // Reload page after 1 second to show updated status
                         setTimeout(function() {
                             location.reload();

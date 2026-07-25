@@ -14,6 +14,7 @@ public final class PaymentConstants {
 
     public static final String CHECKOUT_STATUS_PENDING = "PENDING";
     public static final String CHECKOUT_STATUS_PAID = "PAID";
+    public static final String CHECKOUT_STATUS_PAID_ISSUE = "PAID_ISSUE";
     public static final String CHECKOUT_STATUS_EXPIRED = "EXPIRED";
 
     public static final String LOG_STATUS_SUCCESS = "SUCCESS";
@@ -28,7 +29,14 @@ public final class PaymentConstants {
     public static final String EVENT_VIETQR_WEBHOOK_SYNC = "VIETQR_WEBHOOK_SYNC";
     public static final String EVENT_VIETQR_PARTNER_GET_TOKEN = "VIETQR_PARTNER_GET_TOKEN";
     public static final String EVENT_ORDER_CREATED_AFTER_PAYMENT = "ORDER_CREATED_AFTER_PAYMENT";
+    public static final String EVENT_PAYMENT_REQUIRES_FULFILLMENT = "PAYMENT_REQUIRES_FULFILLMENT";
+    public static final String EVENT_ADMIN_RECREATE_ORDER = "ADMIN_RECREATE_ORDER";
     public static final String EVENT_PANCAKE_SYNC = "PANCAKE_SYNC";
+
+    public static final String RESERVATION_STATUS_HELD = "HELD";
+    public static final String RESERVATION_STATUS_CONFIRMED = "CONFIRMED";
+    public static final String RESERVATION_STATUS_CONSUMED = "CONSUMED";
+    public static final String RESERVATION_STATUS_RELEASED = "RELEASED";
 
     public static final String PAYMENT_STATUS_SUCCESS = "SUCCESS";
 

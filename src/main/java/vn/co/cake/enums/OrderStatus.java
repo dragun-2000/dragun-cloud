@@ -9,7 +9,10 @@ public enum OrderStatus {
 
     NEW(OrderConstants.STATUS_NEW),
     SYNC_FAIL(OrderConstants.STATUS_SYNC_FAIL),
-    PENDING_SYNC(OrderConstants.STATUS_PENDING_SYNC);
+    PENDING_SYNC(OrderConstants.STATUS_PENDING_SYNC),
+    AWAITING_PAYMENT(OrderConstants.STATUS_AWAITING_PAYMENT),
+    PAYMENT_RECEIVED_UNFULFILLABLE(OrderConstants.STATUS_PAYMENT_RECEIVED_UNFULFILLABLE),
+    CANCELLED(OrderConstants.STATUS_CANCELLED);
 
     private final String value;
 

@@ -45,6 +45,8 @@ public class VietQrProperties {
     @Data
     public static class Checkout {
         private int expireHours = 24;
+        /** Thời gian giữ kho/hiệu lực checkout. Ưu tiên cấu hình này thay cho expireHours cũ. */
+        private int expireMinutes = 15;
         /** Dev: nút mô phỏng webhook khi chạy localhost (VietQR không gọi được Transaction Sync). */
         private boolean sandboxSimulateEnabled = false;
         /** Trang thanh toán VietQR Pro (mở tab mới), token nối vào cuối URL. */

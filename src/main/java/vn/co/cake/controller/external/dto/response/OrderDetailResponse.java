@@ -132,6 +132,8 @@ public class OrderDetailResponse {
 
         this.paymentMethod = order.getPaymentMethod();
 
+        this.prepaid = order.getPrepaid();
+
         this.shippingPartner = resolveShippingPartner(order);
 
         this.fullName = order.getFullName();
@@ -191,6 +193,24 @@ public class OrderDetailResponse {
         if (OrderStatus.PENDING_SYNC.getValue().equals(status)) {
 
             return "Chờ đồng bộ Pancake";
+
+        }
+
+        if (OrderStatus.AWAITING_PAYMENT.getValue().equals(status)) {
+
+            return "Chờ thanh toán";
+
+        }
+
+        if (OrderStatus.PAYMENT_RECEIVED_UNFULFILLABLE.getValue().equals(status)) {
+
+            return "Đã nhận tiền - cần xử lý tồn kho";
+
+        }
+
+        if (OrderStatus.CANCELLED.getValue().equals(status)) {
+
+            return "Đã hủy do hết hạn thanh toán";
 
         }
 

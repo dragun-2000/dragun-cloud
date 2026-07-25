@@ -43,8 +43,9 @@ public class Job002 {
                 log.info("Job002: Found 1.1 failed getOrderItems to retry");
                 boolean success = pancakePosService.createOrder(order);
                 if (!success) {
-                    log.info("Job002: Fail retry");
-                    return;
+                    log.info("Job002: Fail retry for order {} — continue next order",
+                            order.getCode() != null ? order.getCode() : order.getId());
+                    continue;
                 }
             } catch (Exception e) {
                 String orderCode = order.getCode() != null ? order.getCode() : "ID:" + order.getId();

@@ -259,7 +259,7 @@ function normalizeVietQrPaymentStatus(status) {
 function handleVietQrStatus(data) {
     var details = typeof data === 'string' ? { status: data } : (data || {});
     details.status = normalizeVietQrPaymentStatus(details.status);
-    if (details.orderCreated === true && details.status !== 'EXPIRED') {
+    if (details.orderCreated === true && details.status === 'PENDING') {
         details.status = 'PAID';
     }
     if (details.qrLink) {
@@ -286,6 +286,13 @@ function handleVietQrStatus(data) {
     if (details.status === 'EXPIRED') {
         stopVietQrPolling();
         setVietQrStatusMessage(details.message || 'Phiên thanh toán đã hết hạn. Vui lòng đặt hàng lại.', 'error');
+        $('#vietqr-sandbox-btn').hide();
+        return;
+    }
+    if (details.status === 'PAID_ISSUE') {
+        stopVietQrPolling();
+        setVietQrStatusMessage(details.message ||
+            'Đã nhận thanh toán. Đơn hàng đang cần hỗ trợ xử lý tồn kho; chúng tôi sẽ liên hệ với bạn.', 'error');
         $('#vietqr-sandbox-btn').hide();
         return;
     }

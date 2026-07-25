@@ -273,7 +273,7 @@ public class CartController extends BaseController {
             
             log.info("Loading order history for account ID: {}, phone: {}", account.getId(), phone);
 
-            List<Order> dbOrders = orderRepository.findByPhoneAndDeletedFalseOrderByCreatedDesc(phone);
+            List<Order> dbOrders = orderRepository.findVisibleOrderHistoryByPhone(phone);
             log.info("Found {} orders in database for phone: {}", dbOrders.size(), phone);
 
             List<OrderPancakeResponse> allOrders = dbOrders.stream()

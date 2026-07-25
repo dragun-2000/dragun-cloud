@@ -24,6 +24,7 @@ import vn.co.cake.payment.dto.PaymentCheckoutStatusResponse;
 import vn.co.cake.payment.dto.VietQrGenerateResponse;
 import vn.co.cake.payment.dto.VietQrTransactionSyncRequest;
 import vn.co.cake.entity.Order;
+import vn.co.cake.enums.OrderStatus;
 import vn.co.cake.payment.entity.CheckoutPending;
 import vn.co.cake.payment.repository.CheckoutPendingRepository;
 import vn.co.cake.repository.OrderRepository;
@@ -44,6 +45,7 @@ public class VietQrCheckoutService {
     private final VietQrProperties vietQrProperties;
     private final PaymentTransactionLogService paymentTransactionLogService;
     private final VietQrWebhookService vietQrWebhookService;
+    private final InventoryReservationService inventoryReservationService;
     private final ObjectMapper objectMapper;
 
     public VietQrCheckoutService(OrderService orderService,
@@ -53,6 +55,7 @@ public class VietQrCheckoutService {
                                  VietQrProperties vietQrProperties,
                                  PaymentTransactionLogService paymentTransactionLogService,
                                  VietQrWebhookService vietQrWebhookService,
+                                 InventoryReservationService inventoryReservationService,
                                  ObjectMapper objectMapper) {
         this.orderService = orderService;
         this.orderRepository = orderRepository;
@@ -61,6 +64,7 @@ public class VietQrCheckoutService {
         this.vietQrProperties = vietQrProperties;
         this.paymentTransactionLogService = paymentTransactionLogService;
         this.vietQrWebhookService = vietQrWebhookService;
+        this.inventoryReservationService = inventoryReservationService;
         this.objectMapper = objectMapper;
     }
 
@@ -77,11 +81,18 @@ public class VietQrCheckoutService {
         String vietqrOrderId = orderService.generateOrderCode();
         BigDecimal grandTotal = orderService.calculateGrandTotal(cartItems);
         String content = VietQrContentNormalizer.normalizeOrderContent(vietqrOrderId);
+        Date expiresAt = calculateExpiresAt();
 
         CheckoutPendingSnapshot snapshot = new CheckoutPendingSnapshot();
         request.setPaymentMethod(PaymentConstants.METHOD_VIETQR);
         snapshot.setOrderDetailRequest(request);
         snapshot.setCartItems(cartItems);
+
+        Order draftOrder = orderService.createWithOrderCode(accountId, cartItems, request, vietqrOrderId);
+        draftOrder.setStatus(OrderStatus.AWAITING_PAYMENT.getValue());
+        draftOrder.setPrepaid(BigDecimal.ZERO);
+        orderRepository.save(draftOrder);
+        inventoryReservationService.reserve(draftOrder, expiresAt);
 
         CheckoutPending pending = new CheckoutPending();
         pending.setVietqrOrderId(vietqrOrderId);
@@ -90,7 +101,7 @@ public class VietQrCheckoutService {
         pending.setContent(content);
         pending.setStatus(PaymentConstants.CHECKOUT_STATUS_PENDING);
         pending.setRequestJson(objectMapper.writeValueAsString(snapshot));
-        pending.setExpiresAt(calculateExpiresAt());
+        pending.setExpiresAt(expiresAt);
         checkoutPendingRepository.save(pending);
 
         PaymentCheckoutFlowLog.step(vietqrOrderId, 1,
@@ -134,7 +145,15 @@ public class VietQrCheckoutService {
         CheckoutPending pending = findPendingOrNull(normalizedId);
         if (pending == null) {
             Order order = orderRepository.findFirstByCode(normalizedId);
-            if (order != null) {
+            if (order != null && OrderStatus.PAYMENT_RECEIVED_UNFULFILLABLE.getValue().equals(order.getStatus())) {
+                PaymentCheckoutStatusResponse issue = buildPaidStatusResponse(normalizedId, order,
+                        "Đã nhận thanh toán. Đơn hàng đang cần hỗ trợ xử lý tồn kho; "
+                                + "bộ phận chăm sóc khách hàng sẽ liên hệ với bạn.");
+                issue.setStatus(PaymentConstants.CHECKOUT_STATUS_PAID_ISSUE);
+                return issue;
+            }
+            if (order != null && !OrderStatus.AWAITING_PAYMENT.getValue().equals(order.getStatus())
+                    && !OrderStatus.CANCELLED.getValue().equals(order.getStatus())) {
                 return buildPaidStatusResponse(normalizedId, order, "Thanh toán thành công — đơn đã được tạo");
             }
             throw new CommonServletException("Không tìm thấy phiên thanh toán");
@@ -186,13 +205,14 @@ public class VietQrCheckoutService {
         return checkoutPendingRepository.findFirstByVietqrOrderId(vietqrOrderId.trim()).orElse(null);
     }
 
-    /** Đồng bộ PAID nếu đơn đã tồn tại nhưng checkout_pending còn PENDING (webhook đã chạy nhưng poll đọc stale). */
+    /** Đồng bộ PAID chỉ khi draft đã thực sự được thanh toán/xử lý. */
     private void syncCheckoutPendingWithExistingOrder(CheckoutPending pending) {
         if (pending == null || !PaymentConstants.CHECKOUT_STATUS_PENDING.equals(pending.getStatus())) {
             return;
         }
         Order order = orderRepository.findFirstByCode(pending.getVietqrOrderId());
-        if (order != null) {
+        if (order != null && !OrderStatus.AWAITING_PAYMENT.getValue().equals(order.getStatus())
+                && !OrderStatus.CANCELLED.getValue().equals(order.getStatus())) {
             pending.setStatus(PaymentConstants.CHECKOUT_STATUS_PAID);
             checkoutPendingRepository.save(pending);
             PaymentCheckoutFlowLog.step(pending.getVietqrOrderId(), 1,
@@ -226,6 +246,13 @@ public class VietQrCheckoutService {
                 && pending.getExpiresAt().before(new Date())) {
             pending.setStatus(PaymentConstants.CHECKOUT_STATUS_EXPIRED);
             checkoutPendingRepository.save(pending);
+            Order order = orderRepository.findFirstByCode(pending.getVietqrOrderId());
+            if (order != null && OrderStatus.AWAITING_PAYMENT.getValue().equals(order.getStatus())) {
+                inventoryReservationService.release(order.getId());
+                order.setStatus(OrderStatus.CANCELLED.getValue());
+                order.setMessageError("Phiên thanh toán VietQR đã hết hạn");
+                orderRepository.save(order);
+            }
         }
         return pending.getStatus();
     }
@@ -238,7 +265,10 @@ public class VietQrCheckoutService {
             return response;
         }
         String status = resolveCheckoutStatus(pending);
-        boolean orderCreated = orderRepository.findFirstByCode(pending.getVietqrOrderId()) != null;
+        Order order = orderRepository.findFirstByCode(pending.getVietqrOrderId());
+        boolean orderCreated = order != null
+                && !OrderStatus.AWAITING_PAYMENT.getValue().equals(order.getStatus())
+                && !OrderStatus.CANCELLED.getValue().equals(order.getStatus());
         response.setStatus(status);
         response.setOrderId(pending.getVietqrOrderId());
         response.setAmount(pending.getAmount());
@@ -255,6 +285,11 @@ public class VietQrCheckoutService {
             response.setMessage("Thanh toán thành công");
             response.setOrderCreated(true);
             response.setAwaitingPayment(false);
+        } else if (PaymentConstants.CHECKOUT_STATUS_PAID_ISSUE.equals(status)) {
+            response.setMessage("Đã nhận thanh toán. Đơn hàng đang cần hỗ trợ xử lý tồn kho; "
+                    + "bộ phận chăm sóc khách hàng sẽ liên hệ với bạn.");
+            response.setOrderCreated(true);
+            response.setAwaitingPayment(false);
         } else if (PaymentConstants.CHECKOUT_STATUS_EXPIRED.equals(status)) {
             response.setMessage("Phiên thanh toán đã hết hạn");
         }
@@ -263,7 +298,8 @@ public class VietQrCheckoutService {
 
     private Date calculateExpiresAt() {
         Calendar calendar = Calendar.getInstance();
-        calendar.add(Calendar.HOUR_OF_DAY, vietQrProperties.getCheckout().getExpireHours());
+        int expireMinutes = Math.max(vietQrProperties.getCheckout().getExpireMinutes(), 1);
+        calendar.add(Calendar.MINUTE, expireMinutes);
         return calendar.getTime();
     }
 }

@@ -21,8 +21,13 @@ public interface OrderRepository extends JpaRepository<Order, Long>, CustomOrder
     List<Order> findByStatusAndCountErrorLessThanAndDeletedFalse(String status, int maxCountError);
     List<Order> findByPhoneAndDeletedFalseOrderByCreatedDesc(String phone);
 
+    @Query("select o from Order o where o.phone = :phone and o.deleted = false "
+            + "and o.status not in ('AWAITING_PAYMENT', 'CANCELLED') order by o.created desc")
+    List<Order> findVisibleOrderHistoryByPhone(@Param("phone") String phone);
+
     @Query(
         value = "SELECT * FROM orders o WHERE o.deleted = false "
+                + "AND o.status NOT IN ('AWAITING_PAYMENT', 'CANCELLED') "
                 + "AND o.phone IS NOT NULL AND TRIM(o.phone) <> '' "
                 + "AND (o.pancake_status_name IS NULL OR TRIM(o.pancake_status_name) = '' "
                 + "OR o.shipping_partner IS NULL OR TRIM(o.shipping_partner) = '') "
@@ -33,6 +38,7 @@ public interface OrderRepository extends JpaRepository<Order, Long>, CustomOrder
 
     @Query(
         value = "SELECT * FROM orders o WHERE o.deleted = false "
+                + "AND o.status NOT IN ('AWAITING_PAYMENT', 'CANCELLED', 'shipped') "
                 + "AND o.phone IS NOT NULL AND TRIM(o.phone) <> '' "
                 + "AND (o.pancake_synced_at IS NULL OR o.pancake_synced_at < NOW() - INTERVAL '1 hour') "
                 + "ORDER BY CASE WHEN o.pancake_synced_at IS NULL THEN 0 ELSE 1 END, o.created DESC "

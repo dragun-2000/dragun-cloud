@@ -74,7 +74,9 @@ public class CustomOrderRepositoryImpl extends BaseRepository implements CustomO
 
         BooleanBuilder where = new BooleanBuilder();
         where.and(qOrder.deleted.eq(false));
-        where.and(qOrder.status.eq(OrderStatus.SYNC_FAIL.getValue()));
+        where.and(qOrder.status.in(
+                OrderStatus.SYNC_FAIL.getValue(),
+                OrderStatus.PAYMENT_RECEIVED_UNFULFILLABLE.getValue()));
         
         if (StringUtils.isNotEmpty(searchRequest.getCode())) {
             where.and(qOrder.code.containsIgnoreCase(searchRequest.getCode()));

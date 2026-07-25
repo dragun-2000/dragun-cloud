@@ -4,10 +4,39 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="a5e999e8-a3db-4f03-91f7-fa5e14c40d35" name="Changes" comment="fix bug calculate discount pancake order">
-      <change afterPath="$PROJECT_DIR$/docs/vietqr-partner-callback-api.md" afterDir="false" />
+    <list default="true" id="a5e999e8-a3db-4f03-91f7-fa5e14c40d35" name="Changes" comment="fix bug order VietQR">
+      <change afterPath="$PROJECT_DIR$/init/migration_add_inventory_reservation.sql" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/vn/co/cake/job/Job004.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/vn/co/cake/payment/entity/InventoryReservation.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/vn/co/cake/payment/repository/InventoryReservationRepository.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/vn/co/cake/payment/service/InventoryReservationService.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/vn/co/cake/payment/support/PaymentFulfillmentAlertScheduler.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/init/init.sql" beforeDir="false" afterPath="$PROJECT_DIR$/init/init.sql" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/vn/co/cake/constants/OrderConstants.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/vn/co/cake/constants/OrderConstants.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/vn/co/cake/controller/AM006/AM006Controller.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/vn/co/cake/controller/AM006/AM006Controller.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/vn/co/cake/controller/external/dto/response/OrderDetailResponse.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/vn/co/cake/controller/external/dto/response/OrderDetailResponse.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/vn/co/cake/controller/store/CartController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/vn/co/cake/controller/store/CartController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/vn/co/cake/enums/OrderStatus.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/vn/co/cake/enums/OrderStatus.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/vn/co/cake/job/Job002.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/vn/co/cake/job/Job002.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/vn/co/cake/payment/PaymentConstants.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/vn/co/cake/payment/PaymentConstants.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/vn/co/cake/payment/config/VietQrProperties.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/vn/co/cake/payment/config/VietQrProperties.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/vn/co/cake/payment/service/CodCheckoutService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/vn/co/cake/payment/service/CodCheckoutService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/vn/co/cake/payment/service/VietQrCheckoutService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/vn/co/cake/payment/service/VietQrCheckoutService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/vn/co/cake/payment/service/VietQrWebhookService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/vn/co/cake/payment/service/VietQrWebhookService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/vn/co/cake/repository/OrderRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/vn/co/cake/repository/OrderRepository.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/vn/co/cake/repository/PaymentRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/vn/co/cake/repository/PaymentRepository.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/vn/co/cake/repository/VariationRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/vn/co/cake/repository/VariationRepository.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/vn/co/cake/repository/impl/CustomOrderRepositoryImpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/vn/co/cake/repository/impl/CustomOrderRepositoryImpl.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/vn/co/cake/service/external/PancakePosService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/vn/co/cake/service/external/PancakePosService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/vn/co/cake/service/impl/OrderServiceImpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/vn/co/cake/service/impl/OrderServiceImpl.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/application-development.properties" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/application-development.properties" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/resources/application-production.properties" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/application-production.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/application.properties" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/application.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/static/js/payment-detail/order-history.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/static/js/payment-detail/order-history.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/static/js/payment-detail/payment-detail.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/static/js/payment-detail/payment-detail.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/static/js/payment-detail/vietqr-checkout.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/static/js/payment-detail/vietqr-checkout.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/templates/AM006/AM006.html" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/templates/AM006/AM006.html" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -199,7 +228,8 @@
     <MESSAGE value="refactor code" />
     <MESSAGE value="Integration VietQR to debase app" />
     <MESSAGE value="fix bug calculate discount pancake order" />
-    <option name="LAST_COMMIT_MESSAGE" value="fix bug calculate discount pancake order" />
+    <MESSAGE value="fix bug order VietQR" />
+    <option name="LAST_COMMIT_MESSAGE" value="fix bug order VietQR" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>

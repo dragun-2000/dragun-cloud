@@ -25,6 +25,7 @@ import vn.co.cake.dto.UpdateStockResponse;
 import vn.co.cake.entity.*;
 import vn.co.cake.enums.OrderStatus;
 import vn.co.cake.payment.support.PaymentCheckoutFlowLog;
+import vn.co.cake.payment.service.InventoryReservationService;
 import vn.co.cake.repository.*;
 
 import java.nio.charset.StandardCharsets;
@@ -65,6 +66,7 @@ public class PancakePosService {
     private final OrderItemRepository orderItemRepository;
     private final RestTemplate restTemplate;
     private final EmailService emailService;
+    private final InventoryReservationService inventoryReservationService;
 
     public PancakePosService(RestTemplateBuilder restTemplateBuilder,
                              PancakePropertyRepository pancakePropertyRepository,
@@ -74,7 +76,8 @@ public class PancakePosService {
                              OrderRepository orderRepository,
                              OrderItemRepository orderItemRepository,
                              @Qualifier("pancakeRestTemplate") RestTemplate restTemplate,
-                             EmailService emailService) {
+                             EmailService emailService,
+                             InventoryReservationService inventoryReservationService) {
         this.pancakePropertyRepository = pancakePropertyRepository;
         this.productRepository = productRepository;
         this.variationRepository = variationRepository;
@@ -83,6 +86,7 @@ public class PancakePosService {
         this.orderItemRepository = orderItemRepository;
         this.restTemplate = restTemplate;
         this.emailService = emailService;
+        this.inventoryReservationService = inventoryReservationService;
     }
 
     public void saveWebhookHistory(String payload) {
@@ -190,6 +194,18 @@ public class PancakePosService {
                     "LỖI: không load được đơn + items từ DB — orderId=%s", inputOrder.getId());
             log.error("Order not found, id={}", inputOrder.getId());
             return false;
+        }
+        if (StringUtils.isNotBlank(order.getPancakeOrderId())) {
+            PaymentCheckoutFlowLog.step(traceId, 12,
+                    "Bỏ qua createOrder — đơn đã có pancakeOrderId=%s (idempotent)",
+                    order.getPancakeOrderId());
+            if (!OrderStatus.NEW.getValue().equals(order.getStatus())) {
+                order.setStatus(OrderStatus.NEW.getValue());
+                order.setCountError(0);
+                order.setMessageError(null);
+                orderRepository.save(order);
+            }
+            return true;
         }
 
         List<OrderItem> orderItems = orderItemRepository.findAllByOrderId(order.getId());
@@ -386,6 +402,7 @@ public class PancakePosService {
         freshOrder.setCountError(0);
         freshOrder.setMessageError(null);
         orderRepository.save(freshOrder);
+        inventoryReservationService.consume(freshOrder.getId());
     }
 
     private void enrichOrderFromPancakeList(Order order) {

@@ -18,7 +18,12 @@ import vn.co.cake.common.ScreenPathConst;
 import vn.co.cake.controller.BaseController;
 import vn.co.cake.controller.external.dto.response.OrderDetailResponse;
 import vn.co.cake.entity.Order;
+import vn.co.cake.enums.OrderStatus;
+import vn.co.cake.payment.PaymentConstants;
+import vn.co.cake.payment.service.InventoryReservationService;
+import vn.co.cake.payment.service.PaymentTransactionLogService;
 import vn.co.cake.request.SearchRequest;
+import vn.co.cake.repository.OrderRepository;
 import vn.co.cake.security.admin.AdminLoginInfo;
 import vn.co.cake.exception.CommonServletException;
 import vn.co.cake.service.AccountService;
@@ -28,6 +33,7 @@ import vn.co.cake.utils.PageUtil;
 
 import javax.servlet.http.HttpSession;
 import java.util.HashMap;
+import java.util.Calendar;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -45,13 +51,22 @@ public class AM006Controller extends BaseController {
     private final AccountService accountService;
     private final OrderService orderService;
     private final PancakePosService pancakePosService;
+    private final InventoryReservationService inventoryReservationService;
+    private final OrderRepository orderRepository;
+    private final PaymentTransactionLogService paymentTransactionLogService;
 
     public AM006Controller(AccountService accountService,
                            OrderService orderService,
-                           PancakePosService pancakePosService) {
+                           PancakePosService pancakePosService,
+                           InventoryReservationService inventoryReservationService,
+                           OrderRepository orderRepository,
+                           PaymentTransactionLogService paymentTransactionLogService) {
         this.accountService = accountService;
         this.orderService = orderService;
         this.pancakePosService = pancakePosService;
+        this.inventoryReservationService = inventoryReservationService;
+        this.orderRepository = orderRepository;
+        this.paymentTransactionLogService = paymentTransactionLogService;
     }
 
     @GetMapping(RequestPathConst.AM006)
@@ -102,13 +117,44 @@ public class AM006Controller extends BaseController {
                 log.error("AM006: Order not found with code: {}", code);
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Order not found");
             }
+            order = orderRepository.findWithItemsAndVariationsById(order.getId()).orElse(order);
+            boolean recreatePaidOrder = OrderStatus.PAYMENT_RECEIVED_UNFULFILLABLE.getValue()
+                    .equals(order.getStatus());
+            if (!recreatePaidOrder && !OrderStatus.SYNC_FAIL.getValue().equals(order.getStatus())) {
+                return ResponseEntity.status(HttpStatus.CONFLICT)
+                        .body(Map.of("success", false, "message", "Trạng thái đơn không cho phép tạo lại"));
+            }
+
+            if (recreatePaidOrder) {
+                Calendar deadline = Calendar.getInstance();
+                deadline.add(Calendar.MINUTE, 10);
+                try {
+                    inventoryReservationService.reserveAndConfirmInNewTransaction(
+                            order.getId(), deadline.getTime());
+                } catch (CommonServletException stockError) {
+                    return ResponseEntity.status(HttpStatus.CONFLICT)
+                            .body(Map.of("success", false,
+                                    "message", "Chưa thể tạo lại đơn. Admin cần restock sản phẩm trước: "
+                                            + stockError.getMessage()));
+                }
+                order.setStatus(OrderStatus.PENDING_SYNC.getValue());
+                order.setMessageError(null);
+                orderRepository.save(order);
+            }
 
             log.info("AM006: Admin {} retrying sync for order {}", adminLoginInfo.getUsername(), code);
             boolean success = pancakePosService.createOrder(order);
 
             if (success) {
+                Long accountId = order.getAccount() != null ? order.getAccount().getId() : null;
+                paymentTransactionLogService.logSuccess(PaymentConstants.METHOD_VIETQR,
+                        PaymentConstants.EVENT_ADMIN_RECREATE_ORDER, order.getCode(), order.getId(),
+                        order.getCode(), accountId, null, null, order.getPrepaid(),
+                        null, "Admin " + adminLoginInfo.getUsername() + " tạo lại đơn thành công",
+                        200, null);
                 log.info("AM006: Successfully synced order {} to Pancake POS", code);
-                return ResponseEntity.ok(Map.of("success", true, "message", "Đồng bộ thành công"));
+                String okMessage = recreatePaidOrder ? "Tạo lại đơn thành công" : "Đồng bộ thành công";
+                return ResponseEntity.ok(Map.of("success", true, "message", okMessage));
             } else {
                 // Reload order to get updated error info
                 Order updatedOrder = orderService.detail(code);

@@ -2,6 +2,7 @@ package vn.co.cake.payment.service;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.Calendar;
 import java.util.Locale;
 import java.util.Objects;
 
@@ -10,61 +11,57 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-
-import vn.co.cake.dto.OrderItem;
 import vn.co.cake.entity.Order;
 import vn.co.cake.entity.Payment;
+import vn.co.cake.enums.OrderStatus;
 import vn.co.cake.exception.CommonServletException;
 import vn.co.cake.payment.PaymentConstants;
-import vn.co.cake.payment.dto.CheckoutPendingSnapshot;
 import vn.co.cake.payment.dto.VietQrTransactionSyncRequest;
 import vn.co.cake.payment.entity.CheckoutPending;
 import vn.co.cake.payment.repository.CheckoutPendingRepository;
 import vn.co.cake.payment.repository.PaymentTransactionLogRepository;
 import vn.co.cake.repository.OrderRepository;
 import vn.co.cake.repository.PaymentRepository;
-import vn.co.cake.request.OrderDetailRequest;
 import vn.co.cake.payment.support.OrderConfirmationMailScheduler;
+import vn.co.cake.payment.support.PaymentFulfillmentAlertScheduler;
 import vn.co.cake.payment.support.PancakeSyncScheduler;
 import vn.co.cake.payment.support.PaymentCheckoutFlowLog;
 import vn.co.cake.service.CartService;
-import vn.co.cake.service.OrderService;
 
 @Service
 public class VietQrWebhookService {
 
     private final CheckoutPendingRepository checkoutPendingRepository;
-    private final OrderService orderService;
     private final CartService cartService;
     private final PancakeSyncScheduler pancakeSyncScheduler;
     private final OrderConfirmationMailScheduler orderConfirmationMailScheduler;
+    private final InventoryReservationService inventoryReservationService;
+    private final PaymentFulfillmentAlertScheduler paymentFulfillmentAlertScheduler;
     private final PaymentRepository paymentRepository;
     private final OrderRepository orderRepository;
     private final PaymentTransactionLogRepository paymentTransactionLogRepository;
     private final PaymentTransactionLogService paymentTransactionLogService;
-    private final ObjectMapper objectMapper;
 
     public VietQrWebhookService(CheckoutPendingRepository checkoutPendingRepository,
-                                OrderService orderService,
                                 CartService cartService,
                                 PancakeSyncScheduler pancakeSyncScheduler,
                                 OrderConfirmationMailScheduler orderConfirmationMailScheduler,
+                                InventoryReservationService inventoryReservationService,
+                                PaymentFulfillmentAlertScheduler paymentFulfillmentAlertScheduler,
                                 PaymentRepository paymentRepository,
                                 OrderRepository orderRepository,
                                 PaymentTransactionLogRepository paymentTransactionLogRepository,
-                                PaymentTransactionLogService paymentTransactionLogService,
-                                ObjectMapper objectMapper) {
+                                PaymentTransactionLogService paymentTransactionLogService) {
         this.checkoutPendingRepository = checkoutPendingRepository;
-        this.orderService = orderService;
         this.cartService = cartService;
         this.pancakeSyncScheduler = pancakeSyncScheduler;
         this.orderConfirmationMailScheduler = orderConfirmationMailScheduler;
+        this.inventoryReservationService = inventoryReservationService;
+        this.paymentFulfillmentAlertScheduler = paymentFulfillmentAlertScheduler;
         this.paymentRepository = paymentRepository;
         this.orderRepository = orderRepository;
         this.paymentTransactionLogRepository = paymentTransactionLogRepository;
         this.paymentTransactionLogService = paymentTransactionLogService;
-        this.objectMapper = objectMapper;
     }
 
     @Transactional(propagation = Propagation.REQUIRES_NEW, rollbackFor = Exception.class)
@@ -76,7 +73,8 @@ public class VietQrWebhookService {
                 payload.getTransType(), payload.getAmount(), payload.getTransactionId());
 
         CheckoutPending existing = checkoutPendingRepository.findFirstByVietqrOrderId(orderId).orElse(null);
-        if (existing != null && PaymentConstants.CHECKOUT_STATUS_PAID.equals(existing.getStatus())) {
+        if (existing != null && (PaymentConstants.CHECKOUT_STATUS_PAID.equals(existing.getStatus())
+                || PaymentConstants.CHECKOUT_STATUS_PAID_ISSUE.equals(existing.getStatus()))) {
             PaymentCheckoutFlowLog.step(orderId, 3, "Đã PAID — bỏ qua webhook trùng (idempotent)");
             return;
         }
@@ -102,18 +100,8 @@ public class VietQrWebhookService {
             }
         }
 
-        CheckoutPending pending = checkoutPendingRepository
-                .findFirstByVietqrOrderIdAndStatus(orderId, PaymentConstants.CHECKOUT_STATUS_PENDING)
-                .orElse(null);
+        CheckoutPending pending = existing;
         if (pending == null) {
-            Order existingOrder = orderRepository.findFirstByCode(orderId);
-            if (existingOrder != null && existing != null
-                    && PaymentConstants.CHECKOUT_STATUS_PENDING.equals(existing.getStatus())) {
-                markCheckoutPaid(existing, existingOrder, payload);
-                PaymentCheckoutFlowLog.step(orderId, 3,
-                        "Khôi phục checkout_pending=PAID từ đơn đã tồn tại — orderId=%s", existingOrder.getId());
-                return;
-            }
             PaymentCheckoutFlowLog.step(orderId, 3, "LỖI: không tìm thấy checkout_pending PENDING cho vietqrOrderId=%s", orderId);
             paymentTransactionLogService.logFailure(PaymentConstants.METHOD_VIETQR,
                     PaymentConstants.EVENT_VIETQR_WEBHOOK_SYNC, orderId, null, orderId, null,
@@ -145,41 +133,36 @@ public class VietQrWebhookService {
                     requestJson, null, 200, null);
             throw new CommonServletException("Amount mismatch");
         }
-        PaymentCheckoutFlowLog.step(orderId, 4, "Xác thực webhook hợp lệ — bắt đầu tạo đơn DB");
+        PaymentCheckoutFlowLog.step(orderId, 4, "Xác thực webhook hợp lệ — xác nhận draft order và giữ kho");
+
+        Order orderByCode = orderRepository.findFirstByCode(orderId);
+        if (orderByCode == null) {
+            PaymentCheckoutFlowLog.step(orderId, 5,
+                    "LỖI: không tìm thấy draft order cho phiên thanh toán");
+            throw new CommonServletException("Draft order not found");
+        }
+        Order order = orderRepository.findWithItemsAndVariationsById(orderByCode.getId())
+                .orElse(orderByCode);
+
+        BigDecimal grandTotal = order.getTotalAmount().add(order.getShippingFee());
+        createPaymentIfAbsent(order, grandTotal, payload);
+        order.setPrepaid(grandTotal);
 
         try {
-            CheckoutPendingSnapshot snapshot = objectMapper.readValue(pending.getRequestJson(), CheckoutPendingSnapshot.class);
-            OrderDetailRequest orderRequest = snapshot.getOrderDetailRequest();
-            orderRequest.setPaymentMethod(PaymentConstants.METHOD_VIETQR);
-            java.util.List<OrderItem> cartItems = snapshot.getCartItems();
+            Calendar reservationDeadline = Calendar.getInstance();
+            reservationDeadline.add(Calendar.MINUTE, 10);
+            inventoryReservationService.reserveAndConfirmInNewTransaction(
+                    order.getId(), reservationDeadline.getTime());
 
-            PaymentCheckoutFlowLog.step(orderId, 5,
-                    "Tạo đơn DB — accountId=%s, cartItems=%s", pending.getAccountId(),
-                    cartItems != null ? cartItems.size() : 0);
-
-            Order order = orderService.createWithOrderCode(
-                    pending.getAccountId(), cartItems, orderRequest, pending.getVietqrOrderId());
-            BigDecimal grandTotal = order.getTotalAmount().add(order.getShippingFee());
-            order.setPrepaid(grandTotal);
+            order.setStatus(OrderStatus.PENDING_SYNC.getValue());
+            order.setMessageError(null);
             orderRepository.save(order);
-
-            PaymentCheckoutFlowLog.step(orderId, 6,
-                    "Đơn DB đã lưu — orderId=%s, orderCode=%s, grandTotal=%s",
-                    order.getId(), order.getCode(), grandTotal);
-
-            Payment payment = new Payment();
-            payment.setOrder(order);
-            payment.setAmount(grandTotal.doubleValue());
-            payment.setPaymentMethod(PaymentConstants.METHOD_VIETQR);
-            payment.setPaymentStatus(PaymentConstants.PAYMENT_STATUS_SUCCESS);
-            payment.setTransactionId(payload.getTransactionId());
-            paymentRepository.save(payment);
-
             pending.setStatus(PaymentConstants.CHECKOUT_STATUS_PAID);
             checkoutPendingRepository.save(pending);
 
             PaymentCheckoutFlowLog.step(orderId, 7,
-                    "Thanh toán ghi nhận — paymentId txn=%s, checkout_pending=PAID", payload.getTransactionId());
+                    "Thanh toán ghi nhận — txn=%s, reservation=CONFIRMED, checkout_pending=PAID",
+                    payload.getTransactionId());
 
             cartService.deletedCartByAccount(pending.getAccountId());
             PaymentCheckoutFlowLog.step(orderId, 8, "Đã xóa giỏ hàng — accountId=%s", pending.getAccountId());
@@ -200,43 +183,65 @@ public class VietQrWebhookService {
             PaymentCheckoutFlowLog.step(orderId, 9,
                     "Hoàn tất xử lý webhook trong transaction — chờ commit rồi sync Pancake (orderCode=%s)",
                     order.getCode());
-        } catch (Exception ex) {
-            PaymentCheckoutFlowLog.step(orderId, 5, "LỖI khi tạo đơn sau thanh toán: %s", ex.getMessage());
-            paymentTransactionLogService.logFailure(PaymentConstants.METHOD_VIETQR,
-                    PaymentConstants.EVENT_VIETQR_WEBHOOK_SYNC, orderId, null, orderId, pending.getAccountId(),
-                    receivedAmount, "CONFIRM_ERROR", ex.getMessage(), requestJson, null, 500, null);
-            if (ex instanceof CommonServletException) {
-                throw (CommonServletException) ex;
-            }
-            throw new CommonServletException(ex.getMessage());
+        } catch (Exception fulfillError) {
+            String reason = fulfillError.getMessage() != null
+                    ? fulfillError.getMessage()
+                    : fulfillError.getClass().getSimpleName();
+            markPaidButUnfulfillable(pending, order, payload, receivedAmount, requestJson, reason);
         }
+    }
+
+    private void createPaymentIfAbsent(Order order, BigDecimal grandTotal,
+                                       VietQrTransactionSyncRequest payload) {
+        Payment payment = paymentRepository.findFirstByOrder_Id(order.getId());
+        if (payment == null) {
+            if (payload.getTransactionId() != null
+                    && paymentRepository.existsByTransactionId(payload.getTransactionId())) {
+                return;
+            }
+            payment = new Payment();
+            payment.setOrder(order);
+        }
+        payment.setAmount(grandTotal.doubleValue());
+        payment.setPaymentMethod(PaymentConstants.METHOD_VIETQR);
+        payment.setPaymentStatus(PaymentConstants.PAYMENT_STATUS_SUCCESS);
+        payment.setTransactionId(payload.getTransactionId());
+        paymentRepository.save(payment);
+    }
+
+    private void markPaidButUnfulfillable(CheckoutPending pending, Order order,
+                                          VietQrTransactionSyncRequest payload,
+                                          BigDecimal receivedAmount, String requestJson,
+                                          String reason) {
+        order.setStatus(OrderStatus.PAYMENT_RECEIVED_UNFULFILLABLE.getValue());
+        order.setMessageError(reason);
+        orderRepository.save(order);
+        pending.setStatus(PaymentConstants.CHECKOUT_STATUS_PAID_ISSUE);
+        checkoutPendingRepository.save(pending);
+        cartService.deletedCartByAccount(pending.getAccountId());
+
+        paymentTransactionLogService.logSuccess(PaymentConstants.METHOD_VIETQR,
+                PaymentConstants.EVENT_VIETQR_WEBHOOK_SYNC, pending.getVietqrOrderId(),
+                order.getId(), order.getCode(), pending.getAccountId(), payload.getTransactionId(),
+                payload.getReferencenumber(), receivedAmount, requestJson,
+                "PAYMENT_RECEIVED_FULFILLMENT_REQUIRED", 200, null);
+        paymentTransactionLogService.logFailure(PaymentConstants.METHOD_VIETQR,
+                PaymentConstants.EVENT_PAYMENT_REQUIRES_FULFILLMENT, pending.getVietqrOrderId(),
+                order.getId(), order.getCode(), pending.getAccountId(), receivedAmount,
+                "INSUFFICIENT_RESERVED_STOCK", reason, requestJson, null, 200, null);
+        paymentFulfillmentAlertScheduler.scheduleAfterCommit(order, reason);
+        PaymentCheckoutFlowLog.step(pending.getVietqrOrderId(), 7,
+                "ĐÃ NHẬN TIỀN nhưng chưa thể giữ kho — chuyển xử lý admin: %s", reason);
     }
 
     private boolean reconcileCheckoutAfterDuplicateWebhook(String orderId, CheckoutPending pending,
                                                            VietQrTransactionSyncRequest payload,
                                                            String requestJson) {
-        if (pending != null && PaymentConstants.CHECKOUT_STATUS_PAID.equals(pending.getStatus())) {
-            return true;
-        }
-        Order existingOrder = orderRepository.findFirstByCode(orderId);
-        if (existingOrder != null && pending != null
-                && PaymentConstants.CHECKOUT_STATUS_PENDING.equals(pending.getStatus())) {
-            markCheckoutPaid(pending, existingOrder, payload);
-            PaymentCheckoutFlowLog.step(orderId, 3,
-                    "Webhook trùng txn nhưng checkout vẫn PENDING — đã đồng bộ PAID với đơn orderId=%s",
-                    existingOrder.getId());
+        if (pending != null && (PaymentConstants.CHECKOUT_STATUS_PAID.equals(pending.getStatus())
+                || PaymentConstants.CHECKOUT_STATUS_PAID_ISSUE.equals(pending.getStatus()))) {
             return true;
         }
         return false;
-    }
-
-    private void markCheckoutPaid(CheckoutPending pending, Order order, VietQrTransactionSyncRequest payload) {
-        pending.setStatus(PaymentConstants.CHECKOUT_STATUS_PAID);
-        checkoutPendingRepository.save(pending);
-        cartService.deletedCartByAccount(pending.getAccountId());
-        pancakeSyncScheduler.scheduleSyncAfterCommit(order.getId(), order.getCode());
-        PaymentCheckoutFlowLog.step(pending.getVietqrOrderId(), 7,
-                "checkout_pending=PAID (khôi phục) — orderCode=%s", order.getCode());
     }
 
     /** VND — so sánh theo số nguyên, tránh lệch scale BigDecimal. */

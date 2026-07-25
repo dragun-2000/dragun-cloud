@@ -4,6 +4,8 @@ package vn.co.cake.payment.service;
 
 import java.util.ArrayList;
 
+import java.util.Calendar;
+
 import java.util.List;
 
 
@@ -59,6 +61,8 @@ public class CodCheckoutService {
 
     private final PaymentTransactionLogService paymentTransactionLogService;
 
+    private final InventoryReservationService inventoryReservationService;
+
 
 
     public CodCheckoutService(OrderService orderService,
@@ -69,7 +73,9 @@ public class CodCheckoutService {
 
                               CartService cartService,
 
-                              PaymentTransactionLogService paymentTransactionLogService) {
+                              PaymentTransactionLogService paymentTransactionLogService,
+
+                              InventoryReservationService inventoryReservationService) {
 
         this.orderService = orderService;
 
@@ -80,6 +86,8 @@ public class CodCheckoutService {
         this.cartService = cartService;
 
         this.paymentTransactionLogService = paymentTransactionLogService;
+
+        this.inventoryReservationService = inventoryReservationService;
 
     }
 
@@ -100,6 +108,14 @@ public class CodCheckoutService {
 
 
         Order order = orderService.create(accountId, cartItems, request);
+
+        Calendar reservationDeadline = Calendar.getInstance();
+
+        reservationDeadline.add(Calendar.MINUTE, 10);
+
+        inventoryReservationService.reserve(order, reservationDeadline.getTime());
+
+        inventoryReservationService.confirm(order.getId());
 
         String traceId = order.getCode();
 
