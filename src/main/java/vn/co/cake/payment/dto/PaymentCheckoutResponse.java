@@ -14,4 +14,6 @@ public class PaymentCheckoutResponse {
     private String qrLink;
     private BigDecimal amount;
     private String content;
+    /** Epoch millis — hết hạn phiên VietQR (đếm ngược trên UI). */
+    private Long expiresAt;
 }

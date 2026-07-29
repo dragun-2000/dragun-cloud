@@ -6,6 +6,9 @@ const discountPrice = document.getElementById('final-price');
 const totalBillDisplay = document.getElementById('final-price');
 
 var vietqrPollTimer = null;
+var vietqrCountdownTimer = null;
+var vietqrExpireAtMs = null;
+var vietqrLocallyExpired = false;
 var vietqrActiveOrderId = null;
 var vietqrPaymentPageUrl = '';
 var vietqrCanUse = false;
@@ -15,6 +18,8 @@ var vietqrSessionUnlocked = false;
 var vietqrWrongPasswordMessage =
     'Tính năng chưa phát hành. Vui lòng đợi đến khi phát hành. Vui lòng chọn phương thức thanh toán khi nhận hàng (COD) và xác nhận lại.';
 var appliedVoucherDiscountPercent = 0;
+var VIETQR_EXPIRE_MESSAGE = 'Phiên thanh toán đã hết hạn. Vui lòng đặt hàng lại.';
+var VIETQR_COUNTDOWN_MS = 15 * 60 * 1000;
 
 (function ($) {
     'use strict';
@@ -194,6 +199,8 @@ function applyVietQrAccessState(access) {
 function startVietQrCheckoutFlow(data, orderBtn, originalButtonText) {
     vietqrActiveOrderId = data.orderId || '';
     vietqrPaymentPageUrl = (data.qrLink || '').trim();
+    vietqrLocallyExpired = false;
+    vietqrExpireAtMs = null;
 
     if (vietqrPaymentPageUrl && vietqrActiveOrderId) {
         try {
@@ -211,9 +218,13 @@ function startVietQrCheckoutFlow(data, orderBtn, originalButtonText) {
     $('#vietqr-success-view').hide();
     document.getElementById('vietqrPaymentPopup').style.display = 'flex';
 
+    // Luôn bắt đầu đếm ngược 15:00 ngay khi mở popup.
+    startVietQrCountdown(resolveVietQrExpiresAt(data));
+
     if ($('#vietqr-sandbox-enabled').length) {
         $('#vietqr-sandbox-btn').show();
     }
+    $('#vietqr-reopen-btn').show();
 
     if (orderBtn) {
         orderBtn.textContent = 'Đang chờ thanh toán...';
@@ -285,6 +296,7 @@ function handleVietQrStatus(data) {
 
     if (details.status === 'PAID') {
         stopVietQrPolling();
+        stopVietQrCountdown();
         try {
             sessionStorage.removeItem('vietqrPaymentUrl_' + vietqrActiveOrderId);
         } catch (e) { /* ignore */ }
@@ -295,18 +307,26 @@ function handleVietQrStatus(data) {
         return;
     }
     if (details.status === 'EXPIRED') {
-        stopVietQrPolling();
-        setVietQrStatusMessage(details.message || 'Phiên thanh toán đã hết hạn. Vui lòng đặt hàng lại.', 'error');
-        $('#vietqr-sandbox-btn').hide();
+        showVietQrExpiredState(details.message || VIETQR_EXPIRE_MESSAGE);
         return;
     }
     if (details.status === 'PAID_ISSUE') {
         stopVietQrPolling();
+        stopVietQrCountdown();
         setVietQrStatusMessage(details.message ||
             'Đã nhận thanh toán. Đơn hàng đang cần hỗ trợ xử lý tồn kho; chúng tôi sẽ liên hệ với bạn.', 'error');
         $('#vietqr-sandbox-btn').hide();
+        $('#vietqr-reopen-btn').hide();
         return;
     }
+
+    // Đã hết hạn local (00:00) — không để poll PENDING ghi đè thông báo đỏ.
+    if (vietqrLocallyExpired) {
+        return;
+    }
+
+    // Chỉ chỉnh mốc hết hạn từ server nếu lệch > 2s; không restart đếm mỗi lần poll.
+    syncVietQrCountdownFromServer(details.expiresAt);
 
     var waitMsg = details.message;
     if (!waitMsg) {
@@ -343,8 +363,136 @@ function stopVietQrPolling() {
     }
 }
 
+function resolveVietQrExpiresAt(payload) {
+    var raw = payload && (payload.expiresAt != null ? payload.expiresAt : payload.expires_at);
+    var parsed = Number(raw);
+    if (parsed && !isNaN(parsed) && parsed > Date.now()) {
+        return parsed;
+    }
+    return Date.now() + VIETQR_COUNTDOWN_MS;
+}
+
+function syncVietQrCountdownFromServer(expiresAtMs) {
+    var parsed = Number(expiresAtMs);
+    if (!parsed || isNaN(parsed) || !vietqrExpireAtMs || !vietqrCountdownTimer) {
+        return;
+    }
+    if (Math.abs(parsed - vietqrExpireAtMs) > 2000) {
+        startVietQrCountdown(parsed);
+    }
+}
+
+function startVietQrCountdown(expiresAtMs) {
+    if (vietqrLocallyExpired) {
+        return;
+    }
+    var parsed = Number(expiresAtMs);
+    if (!parsed || isNaN(parsed)) {
+        parsed = Date.now() + VIETQR_COUNTDOWN_MS;
+    }
+
+    // Đã chạy đúng mốc này rồi thì giữ interval hiện tại.
+    if (vietqrCountdownTimer && vietqrExpireAtMs === parsed) {
+        return;
+    }
+
+    vietqrExpireAtMs = parsed;
+    stopVietQrCountdown();
+
+    var row = document.getElementById('vietqr-countdown-row');
+    if (row) {
+        row.classList.remove('is-urgent', 'is-expired');
+        row.style.display = 'flex';
+    }
+
+    // Vẽ ngay 15:00 (hoặc thời gian còn lại), rồi tick mỗi giây.
+    renderVietQrCountdown(Math.max(0, vietqrExpireAtMs - Date.now()));
+    vietqrCountdownTimer = window.setInterval(tickVietQrCountdown, 1000);
+}
+
+function tickVietQrCountdown() {
+    if (!vietqrExpireAtMs || vietqrLocallyExpired) {
+        return;
+    }
+    var remaining = Math.max(0, vietqrExpireAtMs - Date.now());
+    renderVietQrCountdown(remaining);
+
+    var row = document.getElementById('vietqr-countdown-row');
+    if (remaining <= 0) {
+        showVietQrExpiredState(VIETQR_EXPIRE_MESSAGE);
+        pollVietQrStatusOnce();
+        return;
+    }
+    if (row) {
+        if (remaining <= 60 * 1000) {
+            row.classList.add('is-urgent');
+        } else {
+            row.classList.remove('is-urgent');
+        }
+    }
+}
+
+function renderVietQrCountdown(remainingMs) {
+    var totalSec = Math.floor(Math.max(0, remainingMs) / 1000);
+    var mm = pad2(Math.floor(totalSec / 60));
+    var ss = pad2(totalSec % 60);
+    var mmEl = document.getElementById('vietqr-countdown-mm');
+    var ssEl = document.getElementById('vietqr-countdown-ss');
+    if (mmEl) {
+        mmEl.textContent = mm;
+    }
+    if (ssEl) {
+        ssEl.textContent = ss;
+    }
+}
+
+function pad2(value) {
+    var n = Number(value) || 0;
+    return (n < 10 ? '0' : '') + n;
+}
+
+function showVietQrExpiredState(message) {
+    vietqrLocallyExpired = true;
+    stopVietQrPolling();
+    stopVietQrCountdown();
+    markVietQrCountdownExpired();
+    setVietQrStatusMessage(message || VIETQR_EXPIRE_MESSAGE, 'error');
+    var sandboxBtn = document.getElementById('vietqr-sandbox-btn');
+    var reopenBtn = document.getElementById('vietqr-reopen-btn');
+    if (sandboxBtn) {
+        sandboxBtn.style.display = 'none';
+    }
+    if (reopenBtn) {
+        reopenBtn.style.display = 'none';
+    }
+}
+
+function markVietQrCountdownExpired() {
+    var mmEl = document.getElementById('vietqr-countdown-mm');
+    var ssEl = document.getElementById('vietqr-countdown-ss');
+    var row = document.getElementById('vietqr-countdown-row');
+    if (mmEl) {
+        mmEl.textContent = '00';
+    }
+    if (ssEl) {
+        ssEl.textContent = '00';
+    }
+    if (row) {
+        row.classList.remove('is-urgent');
+        row.classList.add('is-expired');
+    }
+}
+
+function stopVietQrCountdown() {
+    if (vietqrCountdownTimer) {
+        window.clearInterval(vietqrCountdownTimer);
+        vietqrCountdownTimer = null;
+    }
+}
+
 function closeVietQrSuccessPopup() {
     stopVietQrPolling();
+    stopVietQrCountdown();
     document.getElementById('vietqrPaymentPopup').style.display = 'none';
     window.location.href = '/order-history';
 }

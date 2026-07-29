@@ -93,6 +93,9 @@ public class VietQrCheckoutService {
         draftOrder.setPrepaid(BigDecimal.ZERO);
         orderRepository.save(draftOrder);
         inventoryReservationService.reserve(draftOrder, expiresAt);
+        PaymentCheckoutFlowLog.step(vietqrOrderId, 1,
+                "Đã trừ kho (HELD) khi submit VietQR — orderId=%s, expiresAt=%s",
+                draftOrder.getId(), expiresAt);
 
         CheckoutPending pending = new CheckoutPending();
         pending.setVietqrOrderId(vietqrOrderId);
@@ -130,6 +133,7 @@ public class VietQrCheckoutService {
         response.setQrLink(paymentPageUrl != null ? paymentPageUrl : qr.getQrLink());
         response.setAmount(grandTotal);
         response.setContent(content);
+        response.setExpiresAt(expiresAt != null ? expiresAt.getTime() : null);
         return response;
     }
 
@@ -250,7 +254,7 @@ public class VietQrCheckoutService {
             if (order != null && OrderStatus.AWAITING_PAYMENT.getValue().equals(order.getStatus())) {
                 inventoryReservationService.release(order.getId());
                 order.setStatus(OrderStatus.CANCELLED.getValue());
-                order.setMessageError("Phiên thanh toán VietQR đã hết hạn");
+                order.setMessageError("Phiên thanh toán VietQR đã hết hạn (15 phút)");
                 orderRepository.save(order);
             }
         }
@@ -275,6 +279,7 @@ public class VietQrCheckoutService {
         response.setContent(pending.getContent());
         response.setQrLink(pending.getQrLink());
         response.setQrCode(pending.getQrCode());
+        response.setExpiresAt(pending.getExpiresAt() != null ? pending.getExpiresAt().getTime() : null);
         response.setOrderCreated(orderCreated);
         response.setAwaitingPayment(PaymentConstants.CHECKOUT_STATUS_PENDING.equals(status) && !orderCreated);
         if (PaymentConstants.CHECKOUT_STATUS_PENDING.equals(status)) {

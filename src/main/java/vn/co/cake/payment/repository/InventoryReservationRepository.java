@@ -17,9 +17,13 @@ public interface InventoryReservationRepository extends JpaRepository<InventoryR
 
     Optional<InventoryReservation> findFirstByOrderIdAndVariationId(Long orderId, Long variationId);
 
+    /**
+     * Chỉ cộng soft-hold chưa trừ remain_quantity (legacy / chưa hard-deduct).
+     * Hard-hold (HELD/CONFIRMED với stockDeducted=true) đã nằm trong remain_quantity nên không đếm lại.
+     */
     @Query("select coalesce(sum(r.quantity), 0) from InventoryReservation r "
-            + "where r.variation.id = :variationId and r.order.id <> :orderId and "
-            + "(r.status = 'CONFIRMED' or (r.status = 'HELD' and r.expiresAt > :now))")
+            + "where r.variation.id = :variationId and r.order.id <> :orderId and r.stockDeducted = false and "
+            + "((r.status = 'HELD' and r.expiresAt > :now) or r.status = 'CONFIRMED')")
     Long sumActiveQuantityExcludingOrder(@Param("variationId") Long variationId,
                                          @Param("orderId") Long orderId,
                                          @Param("now") Date now);

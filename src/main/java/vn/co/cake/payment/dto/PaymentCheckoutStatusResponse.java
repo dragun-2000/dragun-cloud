@@ -14,6 +14,8 @@ public class PaymentCheckoutStatusResponse {
     private String qrLink;
     private String qrCode;
     private String message;
+    /** Epoch millis — hết hạn phiên VietQR (đếm ngược trên UI). */
+    private Long expiresAt;
     /** true khi đã có bản ghi {@code orders} (sau webhook / sandbox). */
     private boolean orderCreated;
     /** true khi {@code checkout_pending} vẫn PENDING — mới tạo QR, chưa CK thành công. */

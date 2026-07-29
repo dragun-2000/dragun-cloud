@@ -129,7 +129,7 @@ public class AM006Controller extends BaseController {
                 Calendar deadline = Calendar.getInstance();
                 deadline.add(Calendar.MINUTE, 10);
                 try {
-                    inventoryReservationService.reserveAndConfirmInNewTransaction(
+                    inventoryReservationService.ensureConfirmedForPaidOrder(
                             order.getId(), deadline.getTime());
                 } catch (CommonServletException stockError) {
                     return ResponseEntity.status(HttpStatus.CONFLICT)

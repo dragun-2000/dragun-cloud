@@ -229,6 +229,13 @@
               <p><strong>Mã đơn:</strong> <span id="vietqr-popup-order-id"></span></p>
               <p><strong>Số tiền:</strong> <span id="vietqr-popup-amount"></span> VND</p>
               <p><strong>Nội dung CK:</strong> <span id="vietqr-popup-content"></span></p>
+              <div id="vietqr-countdown-row" class="vietqr-countdown-row">
+                  <span class="vietqr-countdown-label">Giao Dịch Hết Hạn Sau</span>
+                  <span id="vietqr-countdown-mm" class="vietqr-countdown-box">15</span>
+                  <span class="vietqr-countdown-sep">:</span>
+                  <span id="vietqr-countdown-ss" class="vietqr-countdown-box">00</span>
+                  <span class="vietqr-countdown-unit">Phút</span>
+              </div>
               <p id="vietqr-popup-status" class="vietqr-popup-status">Đang chờ xác nhận thanh toán...</p>
               <button type="button" id="vietqr-reopen-btn" class="close-btn vietqr-secondary-btn">Mở lại trang thanh toán VietQR</button>
               <button type="button" id="vietqr-sandbox-btn" class="close-btn vietqr-secondary-btn"
@@ -279,7 +286,7 @@
     };
     /*]]>*/
   </script>
-  <script th:src="@{/js/payment-detail/payment-detail.js}"></script>
+  <script th:src="@{/js/payment-detail/payment-detail.js(v=20260729)}"></script>
   <script>
     (function() {
       var checkbox = document.getElementById('terms-accept');
@@ -388,6 +395,61 @@
             font-weight: 600;
             color: #856404;
             margin-top: 12px !important;
+        }
+
+        .vietqr-countdown-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin: 14px 0 4px !important;
+            font-size: 14px;
+            color: #555;
+            line-height: 1.4;
+        }
+
+        .vietqr-countdown-label,
+        .vietqr-countdown-unit {
+            font-weight: 500;
+            color: #555;
+        }
+
+        .vietqr-countdown-box {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 36px;
+            padding: 6px 10px;
+            border-radius: 8px;
+            background: #e6eeff;
+            color: #444;
+            font-weight: 700;
+            font-size: 16px;
+            font-variant-numeric: tabular-nums;
+            letter-spacing: 0.5px;
+            box-sizing: border-box;
+        }
+
+        .vietqr-countdown-sep {
+            font-weight: 700;
+            color: #555;
+            font-size: 16px;
+        }
+
+        .vietqr-countdown-row.is-urgent .vietqr-countdown-box {
+            background: #fde8ea;
+            color: #c82333;
+        }
+
+        .vietqr-countdown-row.is-expired .vietqr-countdown-box {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .vietqr-countdown-row.is-expired .vietqr-countdown-label,
+        .vietqr-countdown-row.is-expired .vietqr-countdown-unit {
+            color: #721c24;
         }
 
         .vietqr-popup-status.is-success {

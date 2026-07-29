@@ -151,7 +151,7 @@ public class VietQrWebhookService {
         try {
             Calendar reservationDeadline = Calendar.getInstance();
             reservationDeadline.add(Calendar.MINUTE, 10);
-            inventoryReservationService.reserveAndConfirmInNewTransaction(
+            inventoryReservationService.ensureConfirmedForPaidOrder(
                     order.getId(), reservationDeadline.getTime());
 
             order.setStatus(OrderStatus.PENDING_SYNC.getValue());
@@ -161,7 +161,7 @@ public class VietQrWebhookService {
             checkoutPendingRepository.save(pending);
 
             PaymentCheckoutFlowLog.step(orderId, 7,
-                    "Thanh toán ghi nhận — txn=%s, reservation=CONFIRMED, checkout_pending=PAID",
+                    "Thanh toán ghi nhận — txn=%s, reservation=CONFIRMED (kho đã giữ từ lúc submit), checkout_pending=PAID",
                     payload.getTransactionId());
 
             cartService.deletedCartByAccount(pending.getAccountId());
@@ -231,7 +231,8 @@ public class VietQrWebhookService {
                 "INSUFFICIENT_RESERVED_STOCK", reason, requestJson, null, 200, null);
         paymentFulfillmentAlertScheduler.scheduleAfterCommit(order, reason);
         PaymentCheckoutFlowLog.step(pending.getVietqrOrderId(), 7,
-                "ĐÃ NHẬN TIỀN nhưng chưa thể giữ kho — chuyển xử lý admin: %s", reason);
+                "ĐÃ NHẬN TIỀN nhưng không giữ được kho (hold đã hết hạn/đã release và restock không đủ) — admin xử lý: %s",
+                reason);
     }
 
     private boolean reconcileCheckoutAfterDuplicateWebhook(String orderId, CheckoutPending pending,

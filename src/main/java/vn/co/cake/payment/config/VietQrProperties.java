@@ -44,8 +44,12 @@ public class VietQrProperties {
 
     @Data
     public static class Checkout {
+        /**
+         * @deprecated Không còn dùng. Thời hạn giao dịch lấy từ {@link #expireMinutes}.
+         */
+        @Deprecated
         private int expireHours = 24;
-        /** Thời gian giữ kho/hiệu lực checkout. Ưu tiên cấu hình này thay cho expireHours cũ. */
+        /** Thời hạn VietQR sau submit (phút): hết hạn → CANCELLED + hoàn kho. Mặc định 15. */
         private int expireMinutes = 15;
         /** Dev: nút mô phỏng webhook khi chạy localhost (VietQR không gọi được Transaction Sync). */
         private boolean sandboxSimulateEnabled = false;

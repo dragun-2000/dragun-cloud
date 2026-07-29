@@ -10,6 +10,7 @@ CREATE TABLE IF NOT EXISTS inventory_reservation
     quantity     integer     NOT NULL CHECK (quantity > 0),
     status       varchar(16) NOT NULL,
     expires_at   timestamp   NOT NULL,
+    stock_deducted boolean   NOT NULL DEFAULT false,
     CONSTRAINT uk_inventory_reservation_order_variation UNIQUE (order_id, variation_id)
 );
 

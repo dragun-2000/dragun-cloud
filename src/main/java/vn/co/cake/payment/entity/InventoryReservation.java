@@ -45,4 +45,11 @@ public class InventoryReservation extends BaseEntity {
 
     @Column(name = "expires_at", nullable = false)
     private Date expiresAt;
+
+    /**
+     * true khi đã trừ {@code variations.remain_quantity} lúc confirm (hoặc backfill lúc consume).
+     * Đơn cũ trước migration mặc định false — vẫn được tính trong sumActive cho đến khi trừ kho.
+     */
+    @Column(name = "stock_deducted", nullable = false)
+    private boolean stockDeducted;
 }
