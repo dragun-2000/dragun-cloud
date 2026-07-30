@@ -218,8 +218,9 @@ function startVietQrCheckoutFlow(data, orderBtn, originalButtonText) {
     $('#vietqr-success-view').hide();
     document.getElementById('vietqrPaymentPopup').style.display = 'flex';
 
-    // Luôn bắt đầu đếm ngược 15:00 ngay khi mở popup.
-    startVietQrCountdown(resolveVietQrExpiresAt(data));
+    // UI đếm ngược luôn bắt đầu đúng 15:00 (client), không lấy expiresAt server
+    // (tránh lệch đồng hồ server/client khiến hiện 15:04 / 16:xx).
+    startVietQrCountdown(Date.now() + VIETQR_COUNTDOWN_MS);
 
     if ($('#vietqr-sandbox-enabled').length) {
         $('#vietqr-sandbox-btn').show();
@@ -325,8 +326,8 @@ function handleVietQrStatus(data) {
         return;
     }
 
-    // Chỉ chỉnh mốc hết hạn từ server nếu lệch > 2s; không restart đếm mỗi lần poll.
-    syncVietQrCountdownFromServer(details.expiresAt);
+    // Không sync mốc đếm ngược từ server — giữ đúng 15:00 client-side.
+    // Server vẫn tự CANCELLED/hoàn kho theo expires_at của mình.
 
     var waitMsg = details.message;
     if (!waitMsg) {
@@ -363,25 +364,6 @@ function stopVietQrPolling() {
     }
 }
 
-function resolveVietQrExpiresAt(payload) {
-    var raw = payload && (payload.expiresAt != null ? payload.expiresAt : payload.expires_at);
-    var parsed = Number(raw);
-    if (parsed && !isNaN(parsed) && parsed > Date.now()) {
-        return parsed;
-    }
-    return Date.now() + VIETQR_COUNTDOWN_MS;
-}
-
-function syncVietQrCountdownFromServer(expiresAtMs) {
-    var parsed = Number(expiresAtMs);
-    if (!parsed || isNaN(parsed) || !vietqrExpireAtMs || !vietqrCountdownTimer) {
-        return;
-    }
-    if (Math.abs(parsed - vietqrExpireAtMs) > 2000) {
-        startVietQrCountdown(parsed);
-    }
-}
-
 function startVietQrCountdown(expiresAtMs) {
     if (vietqrLocallyExpired) {
         return;
@@ -390,8 +372,12 @@ function startVietQrCountdown(expiresAtMs) {
     if (!parsed || isNaN(parsed)) {
         parsed = Date.now() + VIETQR_COUNTDOWN_MS;
     }
+    // Không bao giờ cho UI đếm > 15 phút.
+    var maxExpireAt = Date.now() + VIETQR_COUNTDOWN_MS;
+    if (parsed > maxExpireAt) {
+        parsed = maxExpireAt;
+    }
 
-    // Đã chạy đúng mốc này rồi thì giữ interval hiện tại.
     if (vietqrCountdownTimer && vietqrExpireAtMs === parsed) {
         return;
     }
@@ -405,7 +391,6 @@ function startVietQrCountdown(expiresAtMs) {
         row.style.display = 'flex';
     }
 
-    // Vẽ ngay 15:00 (hoặc thời gian còn lại), rồi tick mỗi giây.
     renderVietQrCountdown(Math.max(0, vietqrExpireAtMs - Date.now()));
     vietqrCountdownTimer = window.setInterval(tickVietQrCountdown, 1000);
 }
@@ -414,7 +399,7 @@ function tickVietQrCountdown() {
     if (!vietqrExpireAtMs || vietqrLocallyExpired) {
         return;
     }
-    var remaining = Math.max(0, vietqrExpireAtMs - Date.now());
+    var remaining = Math.max(0, Math.min(VIETQR_COUNTDOWN_MS, vietqrExpireAtMs - Date.now()));
     renderVietQrCountdown(remaining);
 
     var row = document.getElementById('vietqr-countdown-row');
@@ -433,7 +418,8 @@ function tickVietQrCountdown() {
 }
 
 function renderVietQrCountdown(remainingMs) {
-    var totalSec = Math.floor(Math.max(0, remainingMs) / 1000);
+    var cappedMs = Math.min(Math.max(0, remainingMs), VIETQR_COUNTDOWN_MS);
+    var totalSec = Math.floor(cappedMs / 1000);
     var mm = pad2(Math.floor(totalSec / 60));
     var ss = pad2(totalSec % 60);
     var mmEl = document.getElementById('vietqr-countdown-mm');
