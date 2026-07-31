@@ -11,6 +11,7 @@ var vietqrExpireAtMs = null;
 var vietqrLocallyExpired = false;
 var vietqrActiveOrderId = null;
 var vietqrPaymentPageUrl = '';
+var vietqrPaymentQrCode = '';
 var vietqrPaymentWindow = null;
 var VIETQR_PAYMENT_WINDOW_NAME = 'debase_vietqr_payment';
 var vietqrCanUse = false;
@@ -199,6 +200,7 @@ function applyVietQrAccessState(access) {
 function startVietQrCheckoutFlow(data, orderBtn, originalButtonText) {
     vietqrActiveOrderId = data.orderId || '';
     vietqrPaymentPageUrl = (data.qrLink || '').trim();
+    vietqrPaymentQrCode = (data.qrCode || '').trim();
     vietqrLocallyExpired = false;
     vietqrExpireAtMs = null;
 
@@ -206,15 +208,15 @@ function startVietQrCheckoutFlow(data, orderBtn, originalButtonText) {
         try {
             sessionStorage.setItem('vietqrPaymentUrl_' + vietqrActiveOrderId, vietqrPaymentPageUrl);
         } catch (e) { /* ignore */ }
-        openVietQrPaymentTab(vietqrPaymentPageUrl);
     }
 
     $('#vietqr-popup-order-id').text(vietqrActiveOrderId);
     $('#vietqr-popup-amount').text(formatMoneyNumber(data.amount));
     $('#vietqr-popup-content').text(data.content || '');
     setVietQrStatusMessage('Đang chờ xác nhận thanh toán...', 'pending');
+    renderVietQrPopupImage(vietqrPaymentQrCode);
 
-    $('#vietqr-wait-view').show();
+    $('#vietqr-wait-view').css('display', 'flex');
     $('#vietqr-success-view').hide();
     document.getElementById('vietqrPaymentPopup').style.display = 'flex';
 
@@ -225,7 +227,12 @@ function startVietQrCheckoutFlow(data, orderBtn, originalButtonText) {
     if ($('#vietqr-sandbox-enabled').length) {
         $('#vietqr-sandbox-btn').show();
     }
-    $('#vietqr-reopen-btn').show();
+    // Nút dự phòng chỉ hiện khi có qrLink (không tự mở tab).
+    if (vietqrPaymentPageUrl) {
+        $('#vietqr-reopen-btn').show();
+    } else {
+        $('#vietqr-reopen-btn').hide();
+    }
 
     if (orderBtn) {
         orderBtn.textContent = 'Đang chờ thanh toán...';
@@ -233,7 +240,7 @@ function startVietQrCheckoutFlow(data, orderBtn, originalButtonText) {
 
     pollVietQrStatusOnce();
     stopVietQrPolling();
-    vietqrPollTimer = setInterval(pollVietQrStatusOnce, 3000);
+    vietqrPollTimer = setInterval(pollVietQrStatusOnce, 5000);
 }
 
 document.addEventListener('visibilitychange', function () {
@@ -288,6 +295,13 @@ function handleVietQrStatus(data) {
     if (details.qrLink) {
         vietqrPaymentPageUrl = details.qrLink;
     }
+    if (details.qrCode) {
+        vietqrPaymentQrCode = String(details.qrCode).trim();
+        if (!vietqrLocallyExpired && details.status !== 'PAID' && details.status !== 'EXPIRED'
+                && details.status !== 'PAID_ISSUE') {
+            renderVietQrPopupImage(vietqrPaymentQrCode);
+        }
+    }
     if (details.amount != null) {
         $('#vietqr-popup-amount').text(formatMoneyNumber(details.amount));
     }
@@ -298,6 +312,7 @@ function handleVietQrStatus(data) {
     if (details.status === 'PAID') {
         stopVietQrPolling();
         stopVietQrCountdown();
+        clearVietQrPopupImage();
         closeVietQrPaymentTab();
         try {
             sessionStorage.removeItem('vietqrPaymentUrl_' + vietqrActiveOrderId);
@@ -315,6 +330,7 @@ function handleVietQrStatus(data) {
     if (details.status === 'PAID_ISSUE') {
         stopVietQrPolling();
         stopVietQrCountdown();
+        clearVietQrPopupImage();
         closeVietQrPaymentTab();
         setVietQrStatusMessage(details.message ||
             'Đã nhận thanh toán. Đơn hàng đang cần hỗ trợ xử lý tồn kho; chúng tôi sẽ liên hệ với bạn.', 'error');
@@ -334,8 +350,8 @@ function handleVietQrStatus(data) {
     var waitMsg = details.message;
     if (!waitMsg) {
         waitMsg = details.awaitingPayment === true
-            ? 'Đã tạo mã QR — chưa xác nhận chuyển khoản. Hoàn tất thanh toán trên tab VietQR; trang sẽ tự cập nhật.'
-            : 'Vui lòng hoàn tất thanh toán trên tab VietQR. Trang sẽ tự cập nhật.';
+            ? 'Đã tạo mã QR — chưa xác nhận chuyển khoản. Quét mã bên trên; trang sẽ tự cập nhật.'
+            : 'Vui lòng quét mã VietQR bên trên để thanh toán. Trang sẽ tự cập nhật.';
     }
     setVietQrStatusMessage(waitMsg, 'pending');
 }
@@ -437,6 +453,104 @@ function renderVietQrCountdown(remainingMs) {
 function pad2(value) {
     var n = Number(value) || 0;
     return (n < 10 ? '0' : '') + n;
+}
+
+function isLikelyBase64ImagePayload(value) {
+    if (!value || value.length < 64) {
+        return false;
+    }
+    if (/^000201/.test(value)) {
+        return false;
+    }
+    return /^[A-Za-z0-9+/=\s]+$/.test(value);
+}
+
+function clearVietQrPopupImage() {
+    var wrap = document.getElementById('vietqr-popup-qr-wrap');
+    var img = document.getElementById('vietqr-popup-qr-image');
+    var fallback = document.getElementById('vietqr-popup-qr-fallback');
+    if (img) {
+        img.removeAttribute('src');
+    }
+    if (wrap) {
+        wrap.style.display = 'none';
+    }
+    if (fallback) {
+        fallback.style.display = 'none';
+    }
+}
+
+function showVietQrPopupImageSrc(src) {
+    var wrap = document.getElementById('vietqr-popup-qr-wrap');
+    var img = document.getElementById('vietqr-popup-qr-image');
+    var fallback = document.getElementById('vietqr-popup-qr-fallback');
+    if (!img || !wrap) {
+        return;
+    }
+    if (!src) {
+        wrap.style.display = 'none';
+        if (fallback) {
+            fallback.style.display = vietqrPaymentPageUrl ? 'block' : 'none';
+        }
+        return;
+    }
+    img.onload = function () {
+        wrap.style.display = 'flex';
+        if (fallback) {
+            fallback.style.display = 'none';
+        }
+    };
+    img.onerror = function () {
+        wrap.style.display = 'none';
+        if (fallback) {
+            fallback.style.display = 'block';
+        }
+    };
+    img.src = src;
+}
+
+/**
+ * Hiển thị QR trong popup Debase.
+ * Hỗ trợ: data URL / URL ảnh / base64 PNG / chuỗi EMV (000201...) qua QRCode.toDataURL.
+ */
+function renderVietQrPopupImage(qrCode) {
+    clearVietQrPopupImage();
+    var raw = qrCode != null ? String(qrCode).trim() : '';
+    if (!raw) {
+        showVietQrPopupImageSrc(null);
+        return;
+    }
+
+    if (raw.indexOf('data:image') === 0
+            || raw.indexOf('http://') === 0
+            || raw.indexOf('https://') === 0) {
+        showVietQrPopupImageSrc(raw);
+        return;
+    }
+
+    if (isLikelyBase64ImagePayload(raw)) {
+        showVietQrPopupImageSrc('data:image/png;base64,' + raw.replace(/\s/g, ''));
+        return;
+    }
+
+    if (window.QRCode && typeof window.QRCode.toDataURL === 'function') {
+        window.QRCode.toDataURL(raw, {
+            width: 280,
+            margin: 1,
+            errorCorrectionLevel: 'M'
+        }, function (err, url) {
+            if (err || !url) {
+                console.warn('renderVietQrPopupImage: QRCode.toDataURL failed', err);
+                showVietQrPopupImageSrc(null);
+                return;
+            }
+            showVietQrPopupImageSrc(url);
+        });
+        return;
+    }
+
+    console.warn('renderVietQrPopupImage: no usable qrCode format / QRCode lib missing');
+    showVietQrPopupImageSrc(null);
 }
 
 function isTouchMobileOrTablet() {
@@ -550,6 +664,7 @@ function showVietQrExpiredState(message) {
     vietqrLocallyExpired = true;
     stopVietQrPolling();
     stopVietQrCountdown();
+    clearVietQrPopupImage();
     closeVietQrPaymentTab();
     markVietQrCountdownExpired();
     setVietQrStatusMessage(message || VIETQR_EXPIRE_MESSAGE, 'error');

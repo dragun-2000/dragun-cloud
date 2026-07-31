@@ -230,7 +230,13 @@
       <div class="popup-content vietqr-popup-content">
           <div id="vietqr-wait-view">
               <h2>Đang chờ thanh toán</h2>
-              <p class="vietqr-popup-lead">Trang thanh toán VietQR đã được mở. Vui lòng quét mã và hoàn tất thanh toán.</p>
+              <p class="vietqr-popup-lead">Quét mã VietQR bên dưới bằng ứng dụng ngân hàng để hoàn tất thanh toán.</p>
+              <div id="vietqr-popup-qr-wrap" class="vietqr-popup-qr-wrap" style="display:none;">
+                  <img id="vietqr-popup-qr-image" class="vietqr-popup-qr-image" alt="Mã QR thanh toán VietQR"/>
+              </div>
+              <p id="vietqr-popup-qr-fallback" class="vietqr-popup-qr-fallback" style="display:none;">
+                  Không hiển thị được mã QR. Vui lòng dùng nút mở trang VietQR bên dưới.
+              </p>
               <p><strong>Mã đơn:</strong> <span id="vietqr-popup-order-id"></span></p>
               <p><strong>Số tiền:</strong> <span id="vietqr-popup-amount"></span> VND</p>
               <p><strong>Nội dung CK:</strong> <span id="vietqr-popup-content"></span></p>
@@ -242,7 +248,9 @@
                   <span class="vietqr-countdown-unit">Phút</span>
               </div>
               <p id="vietqr-popup-status" class="vietqr-popup-status">Đang chờ xác nhận thanh toán...</p>
-              <button type="button" id="vietqr-reopen-btn" class="close-btn vietqr-secondary-btn">Mở lại trang thanh toán VietQR</button>
+              <button type="button" id="vietqr-reopen-btn" class="close-btn vietqr-secondary-btn" style="display:none;">
+                  Mở trang VietQR (dự phòng)
+              </button>
               <button type="button" id="vietqr-sandbox-btn" class="close-btn vietqr-secondary-btn"
                       th:if="${sandboxSimulateEnabled}" style="display:none; background-color:#6c757d;">
                   Đã chuyển khoản — xác nhận thử (sandbox)
@@ -291,7 +299,8 @@
     };
     /*]]>*/
   </script>
-  <script th:src="@{/js/payment-detail/payment-detail.js(v=20260731h)}"></script>
+  <script th:src="@{/js/vendor/qrcode.min.js}"></script>
+  <script th:src="@{/js/payment-detail/payment-detail.js(v=20260731k)}"></script>
   <script>
     (function() {
       var checkbox = document.getElementById('terms-accept');
@@ -382,14 +391,27 @@
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
 
+        /* Popup VietQR: rộng như cũ, không scroll bên trong */
+        #vietqrPaymentPopup {
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+            box-sizing: border-box;
+            overflow-y: auto;
+        }
+
         .vietqr-popup-content {
             width: 360px;
             max-width: min(92vw, 420px);
-            max-height: min(90vh, 720px);
-            overflow-y: auto;
-            -webkit-overflow-scrolling: touch;
+            overflow: visible;
             padding: 24px 18px;
             box-sizing: border-box;
+        }
+
+        #vietqr-wait-view {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
 
         .vietqr-popup-content h2 {
@@ -407,6 +429,31 @@
 
         .vietqr-popup-lead {
             color: #555;
+        }
+
+        .vietqr-popup-qr-wrap {
+            display: flex;
+            justify-content: center;
+            margin: 12px 0 4px;
+        }
+
+        .vietqr-popup-qr-image {
+            width: 240px;
+            height: 240px;
+            max-width: min(70vw, 240px);
+            max-height: min(70vw, 240px);
+            object-fit: contain;
+            background: #fff;
+            border: 1px solid #e5e5e5;
+            border-radius: 8px;
+            padding: 8px;
+            box-sizing: border-box;
+        }
+
+        .vietqr-popup-qr-fallback {
+            color: #c82333;
+            font-size: 13px !important;
+            margin: 8px 0 !important;
         }
 
         .vietqr-popup-status {
@@ -478,21 +525,27 @@
             box-sizing: border-box;
             white-space: normal;
             line-height: 1.35;
+            margin-top: 10px;
         }
 
+        /* Tablet */
+        @media (min-width: 577px) and (max-width: 1024px) {
+            .vietqr-popup-content {
+                width: min(88vw, 420px);
+            }
+        }
+
+        /* Mobile */
         @media (max-width: 576px) {
-            .popup {
-                align-items: flex-end;
-                padding: 0;
+            #vietqrPaymentPopup {
+                padding: 12px;
             }
 
             .vietqr-popup-content {
                 width: 100%;
-                max-width: 100vw;
-                max-height: 92vh;
-                border-radius: 16px 16px 0 0;
+                max-width: calc(100vw - 24px);
+                border-radius: 12px;
                 padding: 20px 16px calc(20px + env(safe-area-inset-bottom, 0px));
-                margin: 0;
             }
 
             .vietqr-popup-content h2 {
@@ -503,9 +556,15 @@
                 font-size: 13px;
             }
 
+            .vietqr-popup-qr-image {
+                width: min(240px, 72vw);
+                height: min(240px, 72vw);
+                max-width: min(240px, 72vw);
+                max-height: min(240px, 72vw);
+            }
+
             .vietqr-countdown-row {
                 font-size: 13px;
-                gap: 6px;
             }
 
             .vietqr-countdown-box {
@@ -536,7 +595,6 @@
 
         .vietqr-secondary-btn {
             background-color: #007bff;
-            margin-top: 10px;
             width: 100%;
         }
 
