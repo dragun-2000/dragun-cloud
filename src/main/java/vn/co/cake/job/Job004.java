@@ -67,6 +67,9 @@ public class Job004 {
         }
         if (expiredCount > 0) {
             log.info("Job004: expired {} VietQR session(s) — CANCELLED + stock restored", expiredCount);
+        } else {
+            // Tick mỗi phút để xác nhận scheduler sống; không có phiên hết hạn thì không restock.
+            log.info("Job004: ran — no expired unpaid VietQR session (candidates={})", orderIds.size());
         }
     }
 

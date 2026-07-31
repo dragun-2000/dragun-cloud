@@ -1,11 +1,15 @@
 package vn.co.cake.payment.config;
 
+import javax.annotation.PostConstruct;
+
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
 import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
 
 @Data
+@Slf4j
 @Component
 @ConfigurationProperties(prefix = "vietqr")
 public class VietQrProperties {
@@ -16,6 +20,12 @@ public class VietQrProperties {
     private Partner partner = new Partner();
     private Bank bank = new Bank();
     private Checkout checkout = new Checkout();
+
+    @PostConstruct
+    void logCheckoutExpireConfig() {
+        log.info("VietQR checkout expire-minutes={} (Job004 restock after this window)",
+                checkout != null ? checkout.getExpireMinutes() : -1);
+    }
 
     @Data
     public static class Api {

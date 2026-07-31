@@ -94,8 +94,8 @@ public class VietQrCheckoutService {
         orderRepository.save(draftOrder);
         inventoryReservationService.reserve(draftOrder, expiresAt);
         PaymentCheckoutFlowLog.step(vietqrOrderId, 1,
-                "Đã trừ kho (HELD) khi submit VietQR — orderId=%s, expiresAt=%s",
-                draftOrder.getId(), expiresAt);
+                "Đã trừ kho (HELD) khi submit VietQR — orderId=%s, expireMinutes=%s, expiresAt=%s",
+                draftOrder.getId(), vietQrProperties.getCheckout().getExpireMinutes(), expiresAt);
 
         CheckoutPending pending = new CheckoutPending();
         pending.setVietqrOrderId(vietqrOrderId);
