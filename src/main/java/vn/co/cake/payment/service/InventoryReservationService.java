@@ -255,6 +255,11 @@ public class InventoryReservationService {
         List<InventoryReservation> toRestore = held.stream()
                 .filter(InventoryReservation::isStockDeducted)
                 .collect(Collectors.toList());
+        long softHeldOnly = held.size() - toRestore.size();
+        if (softHeldOnly > 0) {
+            log.warn("release orderId={}: {} HELD row(s) have stockDeducted=false "
+                    + "(legacy soft-hold — không cộng remain_quantity)", orderId, softHeldOnly);
+        }
         if (!toRestore.isEmpty()) {
             try {
                 applyStockDelta(orderId, toRestore, +1, false);

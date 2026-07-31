@@ -1,7 +1,9 @@
 package vn.co.cake.job;
 
 import java.util.Date;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -44,27 +46,68 @@ public class Job004 {
     @Scheduled(cron = "0 * * * * ?")
     @Transactional
     public void releaseExpiredVietQrReservations() {
-        List<Long> orderIds = reservationRepository.findExpiredHeldOrderIds(new Date());
-        for (Long orderId : orderIds) {
-            inventoryReservationService.release(orderId);
+        Date now = new Date();
+        Set<Long> orderIds = new LinkedHashSet<>(reservationRepository.findExpiredHeldOrderIds(now));
 
-            Order order = orderRepository.findById(orderId).orElse(null);
-            if (order == null) {
-                continue;
+        for (CheckoutPending pending : checkoutPendingRepository.findExpiredPending(now)) {
+            Order order = orderRepository.findFirstByCode(pending.getVietqrOrderId());
+            if (order != null) {
+                orderIds.add(order.getId());
+            } else if (PaymentConstants.CHECKOUT_STATUS_PENDING.equals(pending.getStatus())) {
+                pending.setStatus(PaymentConstants.CHECKOUT_STATUS_EXPIRED);
+                checkoutPendingRepository.save(pending);
             }
-
-            if (OrderStatus.AWAITING_PAYMENT.getValue().equals(order.getStatus())) {
-                order.setStatus(OrderStatus.CANCELLED.getValue());
-                order.setMessageError("Phiên thanh toán VietQR đã hết hạn (5 phút)");
-                orderRepository.save(order);
-            }
-
-            expireCheckoutPending(order.getCode());
-            PaymentCheckoutFlowLog.step(order.getCode(), 10,
-                    "Hết hạn thanh toán VietQR — CANCELLED + hoàn kho (orderId=%s)", orderId);
         }
-        if (!orderIds.isEmpty()) {
-            log.info("Job004: expired {} VietQR session(s) — CANCELLED + stock restored", orderIds.size());
+
+        int expiredCount = 0;
+        for (Long orderId : orderIds) {
+            if (expireUnpaidOrder(orderId)) {
+                expiredCount++;
+            }
+        }
+        if (expiredCount > 0) {
+            log.info("Job004: expired {} VietQR session(s) — CANCELLED + stock restored", expiredCount);
+        }
+    }
+
+    /**
+     * @return true nếu đã hết hạn phiên chưa thanh toán (CANCELLED/hoàn kho)
+     */
+    private boolean expireUnpaidOrder(Long orderId) {
+        Order order = orderRepository.findById(orderId).orElse(null);
+        if (order == null) {
+            return false;
+        }
+
+        // Đơn đã thanh toán / đang xử lý — không EXPIRED pending, không đụng kho CONFIRMED.
+        if (!OrderStatus.AWAITING_PAYMENT.getValue().equals(order.getStatus())
+                && !OrderStatus.CANCELLED.getValue().equals(order.getStatus())) {
+            markPendingPaidIfStillPending(order.getCode());
+            return false;
+        }
+
+        inventoryReservationService.release(orderId);
+
+        if (OrderStatus.AWAITING_PAYMENT.getValue().equals(order.getStatus())) {
+            order.setStatus(OrderStatus.CANCELLED.getValue());
+            order.setMessageError("Phiên thanh toán VietQR đã hết hạn (5 phút)");
+            orderRepository.save(order);
+        }
+
+        expireCheckoutPending(order.getCode());
+        PaymentCheckoutFlowLog.step(order.getCode(), 10,
+                "Hết hạn thanh toán VietQR — CANCELLED + hoàn kho (orderId=%s)", orderId);
+        return true;
+    }
+
+    private void markPendingPaidIfStillPending(String vietqrOrderId) {
+        if (vietqrOrderId == null) {
+            return;
+        }
+        CheckoutPending pending = checkoutPendingRepository.findFirstByVietqrOrderId(vietqrOrderId).orElse(null);
+        if (pending != null && PaymentConstants.CHECKOUT_STATUS_PENDING.equals(pending.getStatus())) {
+            pending.setStatus(PaymentConstants.CHECKOUT_STATUS_PAID);
+            checkoutPendingRepository.save(pending);
         }
     }
 

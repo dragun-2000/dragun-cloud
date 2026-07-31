@@ -9,6 +9,7 @@ var vietqrPollTimer = null;
 var vietqrCountdownTimer = null;
 var vietqrExpireAtMs = null;
 var vietqrLocallyExpired = false;
+var vietqrExpirePollArmed = false;
 var vietqrActiveOrderId = null;
 var vietqrPaymentPageUrl = '';
 var vietqrPaymentQrCode = '';
@@ -202,6 +203,7 @@ function startVietQrCheckoutFlow(data, orderBtn, originalButtonText) {
     vietqrPaymentPageUrl = (data.qrLink || '').trim();
     vietqrPaymentQrCode = (data.qrCode || '').trim();
     vietqrLocallyExpired = false;
+    vietqrExpirePollArmed = false;
     vietqrExpireAtMs = null;
 
     if (vietqrPaymentPageUrl && vietqrActiveOrderId) {
@@ -220,9 +222,9 @@ function startVietQrCheckoutFlow(data, orderBtn, originalButtonText) {
     $('#vietqr-success-view').hide();
     document.getElementById('vietqrPaymentPopup').style.display = 'flex';
 
-    // UI đếm ngược luôn bắt đầu đúng 05:00 (client), không lấy expiresAt server
-    // (tránh lệch đồng hồ server/client).
-    startVietQrCountdown(Date.now() + VIETQR_COUNTDOWN_MS);
+    // UI đếm ngược theo expiresAt server (đồng bộ hoàn kho); fallback 5 phút client.
+    var serverExpireAt = data.expiresAt != null ? Number(data.expiresAt) : NaN;
+    startVietQrCountdown(serverExpireAt);
 
     if ($('#vietqr-sandbox-enabled').length) {
         $('#vietqr-sandbox-btn').show();
@@ -339,13 +341,13 @@ function handleVietQrStatus(data) {
         return;
     }
 
-    // Đã hết hạn local (00:00) — không để poll PENDING ghi đè thông báo đỏ.
-    if (vietqrLocallyExpired) {
+    // Đã hết hạn UI (00:00) — giữ thông báo đỏ; EXPIRED/PAID đã xử lý phía trên.
+    if (vietqrLocallyExpired || vietqrExpirePollArmed
+            || (vietqrExpireAtMs && Date.now() >= vietqrExpireAtMs)) {
+        markVietQrCountdownExpired();
+        setVietQrStatusMessage(VIETQR_EXPIRE_MESSAGE, 'error');
         return;
     }
-
-    // Không sync mốc đếm ngược từ server — giữ đúng 05:00 client-side.
-    // Server vẫn tự CANCELLED/hoàn kho theo expires_at của mình.
 
     var waitMsg = details.message;
     if (!waitMsg) {
@@ -390,10 +392,15 @@ function startVietQrCountdown(expiresAtMs) {
     if (!parsed || isNaN(parsed)) {
         parsed = Date.now() + VIETQR_COUNTDOWN_MS;
     }
-    // Không bao giờ cho UI đếm > 5 phút.
+    // Đồng bộ server nhưng không để UI đếm quá 5 phút (cấu hình Debase).
     var maxExpireAt = Date.now() + VIETQR_COUNTDOWN_MS;
     if (parsed > maxExpireAt) {
         parsed = maxExpireAt;
+    }
+    // Nếu server đã gần hết hạn, vẫn cho phép mốc quá khứ gần (hiện 00:00 + poll expire).
+    var minExpireAt = Date.now() - 60 * 1000;
+    if (parsed < minExpireAt) {
+        parsed = Date.now();
     }
 
     if (vietqrCountdownTimer && vietqrExpireAtMs === parsed) {
@@ -422,8 +429,15 @@ function tickVietQrCountdown() {
 
     var row = document.getElementById('vietqr-countdown-row');
     if (remaining <= 0) {
-        showVietQrExpiredState(VIETQR_EXPIRE_MESSAGE);
-        pollVietQrStatusOnce();
+        // UI hết hạn — giữ poll 5s để status API kịp EXPIRED + hoàn kho.
+        markVietQrCountdownExpired();
+        setVietQrStatusMessage(VIETQR_EXPIRE_MESSAGE, 'error');
+        $('#vietqr-sandbox-btn').hide();
+        $('#vietqr-reopen-btn').hide();
+        if (!vietqrExpirePollArmed) {
+            vietqrExpirePollArmed = true;
+            pollVietQrStatusOnce();
+        }
         return;
     }
     if (row) {

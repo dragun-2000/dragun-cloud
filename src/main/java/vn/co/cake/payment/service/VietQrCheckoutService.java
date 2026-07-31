@@ -245,18 +245,34 @@ public class VietQrCheckoutService {
         if (pending == null) {
             return PaymentConstants.CHECKOUT_STATUS_EXPIRED;
         }
-        if (PaymentConstants.CHECKOUT_STATUS_PENDING.equals(pending.getStatus())
-                && pending.getExpiresAt() != null
-                && pending.getExpiresAt().before(new Date())) {
-            pending.setStatus(PaymentConstants.CHECKOUT_STATUS_EXPIRED);
+        if (!PaymentConstants.CHECKOUT_STATUS_PENDING.equals(pending.getStatus())
+                || pending.getExpiresAt() == null
+                || pending.getExpiresAt().after(new Date())) {
+            return pending.getStatus();
+        }
+
+        Order order = orderRepository.findFirstByCode(pending.getVietqrOrderId());
+        // Đơn đã có tiền / đang xử lý: đồng bộ PAID, không EXPIRED + không release.
+        if (order != null
+                && !OrderStatus.AWAITING_PAYMENT.getValue().equals(order.getStatus())
+                && !OrderStatus.CANCELLED.getValue().equals(order.getStatus())) {
+            pending.setStatus(PaymentConstants.CHECKOUT_STATUS_PAID);
             checkoutPendingRepository.save(pending);
-            Order order = orderRepository.findFirstByCode(pending.getVietqrOrderId());
-            if (order != null && OrderStatus.AWAITING_PAYMENT.getValue().equals(order.getStatus())) {
-                inventoryReservationService.release(order.getId());
+            return pending.getStatus();
+        }
+
+        pending.setStatus(PaymentConstants.CHECKOUT_STATUS_EXPIRED);
+        checkoutPendingRepository.save(pending);
+        if (order != null) {
+            inventoryReservationService.release(order.getId());
+            if (OrderStatus.AWAITING_PAYMENT.getValue().equals(order.getStatus())) {
                 order.setStatus(OrderStatus.CANCELLED.getValue());
                 order.setMessageError("Phiên thanh toán VietQR đã hết hạn (5 phút)");
                 orderRepository.save(order);
             }
+            PaymentCheckoutFlowLog.step(pending.getVietqrOrderId(), 10,
+                    "Status API: hết hạn — hoàn kho (orderId=%s, orderStatus=%s)",
+                    order.getId(), order.getStatus());
         }
         return pending.getStatus();
     }
