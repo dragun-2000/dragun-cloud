@@ -254,7 +254,7 @@ public class VietQrCheckoutService {
             if (order != null && OrderStatus.AWAITING_PAYMENT.getValue().equals(order.getStatus())) {
                 inventoryReservationService.release(order.getId());
                 order.setStatus(OrderStatus.CANCELLED.getValue());
-                order.setMessageError("Phiên thanh toán VietQR đã hết hạn (15 phút)");
+                order.setMessageError("Phiên thanh toán VietQR đã hết hạn (5 phút)");
                 orderRepository.save(order);
             }
         }

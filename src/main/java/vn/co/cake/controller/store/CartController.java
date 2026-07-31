@@ -131,7 +131,7 @@ public class CartController extends BaseController {
         model.addAttribute("totalPriceDisplay", BigDecimalUtil.formatMoney(this.getTotalPrice(orderItems, 0)));
 
         // Check if there are any active provinces
-        List<Province> activeProvinces = provinceRepository.findAllByDeletedFalse();
+        List<Province> activeProvinces = provinceRepository.findAllByDeletedFalseOrderByNameAsc();
         boolean hasActiveProvinces = !CollectionUtils.isEmpty(activeProvinces);
         model.addAttribute("hasActiveProvinces", hasActiveProvinces);
 
@@ -221,7 +221,7 @@ public class CartController extends BaseController {
         
         model.addAttribute("orderDetail", this.init(account));
         
-        List<Province> provinces = provinceRepository.findAllByDeletedFalse();
+        List<Province> provinces = provinceRepository.findAllByDeletedFalseOrderByNameAsc();
         model.addAttribute("provinces", provinces);
 
         List<OrderItem> orderItems = new ArrayList<>();
@@ -421,10 +421,15 @@ public class CartController extends BaseController {
     
     private OrderDetailRequest init(Account account) {
         OrderDetailRequest request = new OrderDetailRequest();
+        if (account == null) {
+            return request;
+        }
         request.setFullName(account.getFullName());
         request.setEmail(account.getMailAddress());
         request.setPhone(account.getPhone());
-        request.setAddress(account.getFloor());
+        // Profile lưu số nhà/tầng vào floor; address là chuỗi đầy đủ sau khi ghép.
+        String street = StringUtils.isNotBlank(account.getFloor()) ? account.getFloor() : null;
+        request.setAddress(street);
         request.setProvince(account.getProvince());
         request.setDistrict(account.getDistrict());
         request.setWard(account.getWard());

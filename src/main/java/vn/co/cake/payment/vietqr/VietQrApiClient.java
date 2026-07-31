@@ -66,6 +66,9 @@ public class VietQrApiClient {
         body.put("amount", amount.longValue());
         body.put("orderId", vietqrOrderId);
         body.put("transType", PaymentConstants.VIETQR_TRANS_TYPE_CREDIT);
+        // Thời hạn quét/thanh toán QR trên VietQR (phút).
+        int expireMinutes = Math.max(vietQrProperties.getCheckout().getExpireMinutes(), 1);
+        body.put("timeOut", expireMinutes);
 
         String requestJson = objectMapper.writeValueAsString(body);
         long start = System.currentTimeMillis();

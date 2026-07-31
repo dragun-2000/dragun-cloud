@@ -7,5 +7,8 @@ import java.util.List;
 
 public interface ProvinceRepository extends JpaRepository<Province, Long> {
     Province findFirstByCode(String code);
-    List<Province> findAllByDeletedFalse();
+
+    List<Province> findAllByDeletedFalseOrderByNameAsc();
+
+    List<Province> findAllByOrderByNameAsc();
 }

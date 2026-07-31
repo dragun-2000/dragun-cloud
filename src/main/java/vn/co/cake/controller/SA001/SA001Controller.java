@@ -107,7 +107,7 @@ public class SA001Controller extends BaseController {
 
     @GetMapping(RequestPathConst.SA001_01_REGISTER_VIEW)
     public String registerPage(Model model, @ModelAttribute("cartForm") CartForm cartForm) {
-        List<Province> provinces = provinceRepository.findAll();
+        List<Province> provinces = provinceRepository.findAllByDeletedFalseOrderByNameAsc();
         model.addAttribute("provinces", provinces);
         model.addAttribute("account", new Account());
         FunctionUtil.updateCartQuantity(model, cartForm);
@@ -121,7 +121,7 @@ public class SA001Controller extends BaseController {
         if (loginInfo != null) {
             account = accountService.getAccount(loginInfo.getId());
         }
-        List<Province> provinces = provinceRepository.findAll();
+        List<Province> provinces = provinceRepository.findAllByDeletedFalseOrderByNameAsc();
         model.addAttribute("provinces", provinces);
         model.addAttribute("account", account);
         FunctionUtil.updateCartQuantity(model, cartForm);

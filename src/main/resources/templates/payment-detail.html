@@ -106,18 +106,23 @@
                 <ul>
                   <li>
                     <select class="form-control" id="provinceSelect" name="province" required>
-                      <option value="" selected="selected">Chọn Tỉnh/Thành Phố</option>
-                      <option th:each="province : ${provinces}" th:value="${province.code}" th:text="${province.name}"></option>
+                      <option value="">Chọn Tỉnh/Thành Phố</option>
+                      <option th:each="province : ${provinces}"
+                              th:value="${province.code}"
+                              th:text="${province.name}"
+                              th:selected="${orderDetail.province != null and orderDetail.province == province.code}"></option>
                     </select>
                   </li>
                   <li>
-                    <select class="form-control" id="districtSelect" name="district" required>
-                      <option value="" selected="selected">Chọn Quận/Huyện</option>
+                    <select class="form-control" id="districtSelect" name="district" required
+                            th:attr="data-selected-district=${orderDetail.district}">
+                      <option value="">Chọn Quận/Huyện</option>
                     </select>
                   </li>
                   <li>
-                    <select class="form-control" id="wardSelect" name="ward" required>
-                      <option value="" selected="selected">Chọn Phường/Xã</option>
+                    <select class="form-control" id="wardSelect" name="ward" required
+                            th:attr="data-selected-ward=${orderDetail.ward}">
+                      <option value="">Chọn Phường/Xã</option>
                     </select>
                   </li>
                 </ul>
@@ -225,13 +230,13 @@
       <div class="popup-content vietqr-popup-content">
           <div id="vietqr-wait-view">
               <h2>Đang chờ thanh toán</h2>
-              <p class="vietqr-popup-lead">Tab thanh toán VietQR đã được mở. Vui lòng quét mã và hoàn tất thanh toán.</p>
+              <p class="vietqr-popup-lead">Trang thanh toán VietQR đã được mở. Vui lòng quét mã và hoàn tất thanh toán.</p>
               <p><strong>Mã đơn:</strong> <span id="vietqr-popup-order-id"></span></p>
               <p><strong>Số tiền:</strong> <span id="vietqr-popup-amount"></span> VND</p>
               <p><strong>Nội dung CK:</strong> <span id="vietqr-popup-content"></span></p>
               <div id="vietqr-countdown-row" class="vietqr-countdown-row">
                   <span class="vietqr-countdown-label">Giao Dịch Hết Hạn Sau</span>
-                  <span id="vietqr-countdown-mm" class="vietqr-countdown-box">15</span>
+                  <span id="vietqr-countdown-mm" class="vietqr-countdown-box">05</span>
                   <span class="vietqr-countdown-sep">:</span>
                   <span id="vietqr-countdown-ss" class="vietqr-countdown-box">00</span>
                   <span class="vietqr-countdown-unit">Phút</span>
@@ -286,7 +291,7 @@
     };
     /*]]>*/
   </script>
-  <script th:src="@{/js/payment-detail/payment-detail.js(v=20260730)}"></script>
+  <script th:src="@{/js/payment-detail/payment-detail.js(v=20260731h)}"></script>
   <script>
     (function() {
       var checkbox = document.getElementById('terms-accept');
@@ -379,12 +384,25 @@
 
         .vietqr-popup-content {
             width: 360px;
-            max-width: 92vw;
+            max-width: min(92vw, 420px);
+            max-height: min(90vh, 720px);
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            padding: 24px 18px;
+            box-sizing: border-box;
+        }
+
+        .vietqr-popup-content h2 {
+            font-size: 22px;
+            margin: 0 0 8px;
+            line-height: 1.3;
+            word-break: break-word;
         }
 
         .vietqr-popup-content p {
             margin: 8px 0;
             font-size: 14px;
+            word-break: break-word;
         }
 
         .vietqr-popup-lead {
@@ -402,11 +420,12 @@
             align-items: center;
             justify-content: center;
             flex-wrap: wrap;
-            gap: 8px;
+            gap: 6px 8px;
             margin: 14px 0 4px !important;
             font-size: 14px;
             color: #555;
             line-height: 1.4;
+            padding: 0 4px;
         }
 
         .vietqr-countdown-label,
@@ -450,6 +469,57 @@
         .vietqr-countdown-row.is-expired .vietqr-countdown-label,
         .vietqr-countdown-row.is-expired .vietqr-countdown-unit {
             color: #721c24;
+        }
+
+        .vietqr-popup-content .vietqr-secondary-btn,
+        .vietqr-popup-content .close-btn {
+            width: 100%;
+            max-width: 100%;
+            box-sizing: border-box;
+            white-space: normal;
+            line-height: 1.35;
+        }
+
+        @media (max-width: 576px) {
+            .popup {
+                align-items: flex-end;
+                padding: 0;
+            }
+
+            .vietqr-popup-content {
+                width: 100%;
+                max-width: 100vw;
+                max-height: 92vh;
+                border-radius: 16px 16px 0 0;
+                padding: 20px 16px calc(20px + env(safe-area-inset-bottom, 0px));
+                margin: 0;
+            }
+
+            .vietqr-popup-content h2 {
+                font-size: 20px;
+            }
+
+            .vietqr-popup-content p {
+                font-size: 13px;
+            }
+
+            .vietqr-countdown-row {
+                font-size: 13px;
+                gap: 6px;
+            }
+
+            .vietqr-countdown-box {
+                min-width: 32px;
+                padding: 5px 8px;
+                font-size: 15px;
+            }
+        }
+
+        @media (max-width: 380px) {
+            .vietqr-countdown-label {
+                flex: 1 0 100%;
+                text-align: center;
+            }
         }
 
         .vietqr-popup-status.is-success {

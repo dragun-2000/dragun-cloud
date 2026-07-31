@@ -11,6 +11,8 @@ var vietqrExpireAtMs = null;
 var vietqrLocallyExpired = false;
 var vietqrActiveOrderId = null;
 var vietqrPaymentPageUrl = '';
+var vietqrPaymentWindow = null;
+var VIETQR_PAYMENT_WINDOW_NAME = 'debase_vietqr_payment';
 var vietqrCanUse = false;
 var vietqrPilotMode = false;
 var vietqrVisibleToAll = true;
@@ -19,7 +21,7 @@ var vietqrWrongPasswordMessage =
     'Tính năng chưa phát hành. Vui lòng đợi đến khi phát hành. Vui lòng chọn phương thức thanh toán khi nhận hàng (COD) và xác nhận lại.';
 var appliedVoucherDiscountPercent = 0;
 var VIETQR_EXPIRE_MESSAGE = 'Phiên thanh toán đã hết hạn. Vui lòng đặt hàng lại.';
-var VIETQR_COUNTDOWN_MS = 15 * 60 * 1000;
+var VIETQR_COUNTDOWN_MS = 5 * 60 * 1000;
 
 (function ($) {
     'use strict';
@@ -35,9 +37,7 @@ var VIETQR_COUNTDOWN_MS = 15 * 60 * 1000;
         applyPaymentMethodRules();
 
         $('#vietqr-reopen-btn').on('click', function () {
-            if (vietqrPaymentPageUrl) {
-                window.open(vietqrPaymentPageUrl, '_blank', 'noopener,noreferrer');
-            }
+            openVietQrPaymentTab(vietqrPaymentPageUrl);
         });
 
         $('#vietqr-sandbox-btn').on('click', function () {
@@ -206,7 +206,7 @@ function startVietQrCheckoutFlow(data, orderBtn, originalButtonText) {
         try {
             sessionStorage.setItem('vietqrPaymentUrl_' + vietqrActiveOrderId, vietqrPaymentPageUrl);
         } catch (e) { /* ignore */ }
-        window.open(vietqrPaymentPageUrl, '_blank', 'noopener,noreferrer');
+        openVietQrPaymentTab(vietqrPaymentPageUrl);
     }
 
     $('#vietqr-popup-order-id').text(vietqrActiveOrderId);
@@ -218,8 +218,8 @@ function startVietQrCheckoutFlow(data, orderBtn, originalButtonText) {
     $('#vietqr-success-view').hide();
     document.getElementById('vietqrPaymentPopup').style.display = 'flex';
 
-    // UI đếm ngược luôn bắt đầu đúng 15:00 (client), không lấy expiresAt server
-    // (tránh lệch đồng hồ server/client khiến hiện 15:04 / 16:xx).
+    // UI đếm ngược luôn bắt đầu đúng 05:00 (client), không lấy expiresAt server
+    // (tránh lệch đồng hồ server/client).
     startVietQrCountdown(Date.now() + VIETQR_COUNTDOWN_MS);
 
     if ($('#vietqr-sandbox-enabled').length) {
@@ -298,6 +298,7 @@ function handleVietQrStatus(data) {
     if (details.status === 'PAID') {
         stopVietQrPolling();
         stopVietQrCountdown();
+        closeVietQrPaymentTab();
         try {
             sessionStorage.removeItem('vietqrPaymentUrl_' + vietqrActiveOrderId);
         } catch (e) { /* ignore */ }
@@ -314,6 +315,7 @@ function handleVietQrStatus(data) {
     if (details.status === 'PAID_ISSUE') {
         stopVietQrPolling();
         stopVietQrCountdown();
+        closeVietQrPaymentTab();
         setVietQrStatusMessage(details.message ||
             'Đã nhận thanh toán. Đơn hàng đang cần hỗ trợ xử lý tồn kho; chúng tôi sẽ liên hệ với bạn.', 'error');
         $('#vietqr-sandbox-btn').hide();
@@ -326,7 +328,7 @@ function handleVietQrStatus(data) {
         return;
     }
 
-    // Không sync mốc đếm ngược từ server — giữ đúng 15:00 client-side.
+    // Không sync mốc đếm ngược từ server — giữ đúng 05:00 client-side.
     // Server vẫn tự CANCELLED/hoàn kho theo expires_at của mình.
 
     var waitMsg = details.message;
@@ -372,7 +374,7 @@ function startVietQrCountdown(expiresAtMs) {
     if (!parsed || isNaN(parsed)) {
         parsed = Date.now() + VIETQR_COUNTDOWN_MS;
     }
-    // Không bao giờ cho UI đếm > 15 phút.
+    // Không bao giờ cho UI đếm > 5 phút.
     var maxExpireAt = Date.now() + VIETQR_COUNTDOWN_MS;
     if (parsed > maxExpireAt) {
         parsed = maxExpireAt;
@@ -437,10 +439,118 @@ function pad2(value) {
     return (n < 10 ? '0' : '') + n;
 }
 
+function isTouchMobileOrTablet() {
+    try {
+        var ua = navigator.userAgent || '';
+        var isIosPhone = /iPhone|iPod/i.test(ua);
+        var isIpad = /iPad/i.test(ua)
+            || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+        var isAndroid = /Android/i.test(ua);
+        var touch = ('ontouchstart' in window) || (navigator.maxTouchPoints > 1);
+        var narrow = Math.min(window.innerWidth || 0, window.screen.width || 0) < 900;
+        return isIosPhone || isIpad || isAndroid || (touch && narrow);
+    } catch (e) {
+        return false;
+    }
+}
+
+/**
+ * Desktop: popup có size. Mobile: tab thường.
+ * Giữ quan hệ opener (không set opener=null) để close() được trình duyệt cho phép.
+ */
+function openVietQrPaymentTab(url) {
+    if (!url) {
+        return null;
+    }
+
+    var mobile = isTouchMobileOrTablet();
+    try {
+        var opened = null;
+        if (mobile) {
+            opened = window.open(url, VIETQR_PAYMENT_WINDOW_NAME);
+        } else {
+            var availW = window.screen && window.screen.availWidth ? window.screen.availWidth : 1200;
+            var availH = window.screen && window.screen.availHeight ? window.screen.availHeight : 800;
+            var w = Math.min(480, Math.max(360, availW - 48));
+            var h = Math.min(760, Math.max(560, availH - 96));
+            var left = Math.max(0, Math.floor((availW - w) / 2));
+            var top = Math.max(0, Math.floor((availH - h) / 2));
+            var features = 'popup=yes,width=' + w + ',height=' + h
+                + ',left=' + left + ',top=' + top
+                + ',scrollbars=yes,resizable=yes';
+            opened = window.open(url, VIETQR_PAYMENT_WINDOW_NAME, features);
+            if (!opened) {
+                opened = window.open(url, VIETQR_PAYMENT_WINDOW_NAME);
+            }
+        }
+
+        // Chỉ cập nhật ref khi open thành công — tránh mất handle cửa sổ cũ nếu bị chặn.
+        if (opened) {
+            vietqrPaymentWindow = opened;
+            window.__debaseVietQrPaymentWindow = opened;
+            try {
+                opened.focus();
+            } catch (e2) { /* ignore */ }
+        } else {
+            console.warn('VietQR payment window was blocked by the browser');
+        }
+    } catch (e) {
+        console.warn('openVietQrPaymentTab failed', e);
+    }
+    return vietqrPaymentWindow;
+}
+
+/**
+ * Đóng cửa sổ VietQR một lần, không retry.
+ * Chỉ thao tác khi còn Window reference và !closed — tránh mở about:blank mới ngoài ý muốn.
+ */
+function closeVietQrPaymentTab() {
+    var ref = vietqrPaymentWindow || window.__debaseVietQrPaymentWindow;
+    vietqrPaymentWindow = null;
+    window.__debaseVietQrPaymentWindow = null;
+
+    if (!ref) {
+        return;
+    }
+
+    var stillOpen = false;
+    try {
+        stillOpen = !ref.closed;
+    } catch (e) {
+        stillOpen = false;
+    }
+    if (!stillOpen) {
+        return;
+    }
+
+    try {
+        ref.close();
+    } catch (e2) { /* ignore */ }
+
+    try {
+        stillOpen = !ref.closed;
+    } catch (e3) {
+        stillOpen = false;
+    }
+    // Fallback: chỉ khi cửa sổ script-opened vẫn còn mở — navigate cùng name rồi đóng.
+    if (!stillOpen) {
+        return;
+    }
+    try {
+        var named = window.open('about:blank', VIETQR_PAYMENT_WINDOW_NAME);
+        if (named && named !== window) {
+            try {
+                named.close();
+            } catch (e4) { /* ignore */ }
+        }
+    } catch (e5) { /* ignore */ }
+}
+
 function showVietQrExpiredState(message) {
     vietqrLocallyExpired = true;
     stopVietQrPolling();
     stopVietQrCountdown();
+    closeVietQrPaymentTab();
     markVietQrCountdownExpired();
     setVietQrStatusMessage(message || VIETQR_EXPIRE_MESSAGE, 'error');
     var sandboxBtn = document.getElementById('vietqr-sandbox-btn');
@@ -495,29 +605,55 @@ function formatMoneyNumber(amount) {
 }
 
 $(document).ready(function() {
-    $('#provinceSelect').change(function() {
-      const provinceCode = $(this).val();
-      $('#districtSelect').empty().append('<option value="">Chọn Quận/Huyện</option>');
-        if (provinceCode) {
-            $.get('/districts/' + provinceCode, function(districts) {
-                $.each(districts, function(index, district) {
-                    $('#districtSelect').append('<option value="' + district.code + '">' + district.name + '</option>');
-                });
-            });
+    function loadDistricts(provinceCode, selectedDistrictCode, selectedWardCode) {
+        $('#districtSelect').empty().append('<option value="">Chọn Quận/Huyện</option>');
+        $('#wardSelect').empty().append('<option value="">Chọn Phường/Xã</option>');
+        if (!provinceCode) {
+            return;
         }
+        $.get('/districts/' + provinceCode, function(districts) {
+            $.each(districts, function(index, district) {
+                var selected = selectedDistrictCode && district.code === selectedDistrictCode ? ' selected' : '';
+                $('#districtSelect').append(
+                    '<option value="' + district.code + '"' + selected + '>' + district.name + '</option>'
+                );
+            });
+            if (selectedDistrictCode) {
+                loadWards(selectedDistrictCode, selectedWardCode);
+            }
+        });
+    }
+
+    function loadWards(districtCode, selectedWardCode) {
+        $('#wardSelect').empty().append('<option value="">Chọn Phường/Xã</option>');
+        if (!districtCode) {
+            return;
+        }
+        $.get('/wards/' + districtCode, function(wards) {
+            $.each(wards, function(index, ward) {
+                var selected = selectedWardCode && ward.code === selectedWardCode ? ' selected' : '';
+                $('#wardSelect').append(
+                    '<option value="' + ward.code + '"' + selected + '>' + ward.name + '</option>'
+                );
+            });
+        });
+    }
+
+    $('#provinceSelect').change(function() {
+        loadDistricts($(this).val(), null, null);
     });
 
     $('#districtSelect').change(function() {
-      const districtCode = $(this).val();
-      $('#wardSelect').empty().append('<option value="">Chọn Phường/Xã</option>');
-        if (districtCode) {
-            $.get('/wards/' + districtCode, function(districts) {
-                $.each(districts, function(index, district) {
-                    $('#wardSelect').append('<option value="' + district.code + '">' + district.name + '</option>');
-                });
-            });
-        }
+        loadWards($(this).val(), null);
     });
+
+    // Prefill địa chỉ từ hồ sơ KH (province đã selected sẵn trên HTML).
+    var provinceCode = $('#provinceSelect').val();
+    if (provinceCode) {
+        var districtCode = $('#districtSelect').attr('data-selected-district');
+        var wardCode = $('#wardSelect').attr('data-selected-ward');
+        loadDistricts(provinceCode, districtCode || null, wardCode || null);
+    }
 });
 
 function showPopup(type, message) {

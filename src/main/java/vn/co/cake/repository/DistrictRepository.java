@@ -6,6 +6,7 @@ import vn.co.cake.entity.District;
 import java.util.List;
 
 public interface DistrictRepository extends JpaRepository<District, Long> {
-    List<District> findAllByParentCode(String parentCode);
+    List<District> findAllByParentCodeOrderByNameAsc(String parentCode);
+
     District findFirstByCode(String code);
 }

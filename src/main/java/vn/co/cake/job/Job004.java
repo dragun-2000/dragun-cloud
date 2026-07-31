@@ -19,7 +19,7 @@ import vn.co.cake.payment.support.PaymentCheckoutFlowLog;
 import vn.co.cake.repository.OrderRepository;
 
 /**
- * Mỗi phút: phiên VietQR quá 15 phút (expires_at) chưa thanh toán
+ * Mỗi phút: phiên VietQR quá hạn (expires_at, mặc định 5 phút) chưa thanh toán
  * → hoàn kho + CANCELLED đơn + EXPIRED checkout_pending.
  */
 @Component
@@ -55,13 +55,13 @@ public class Job004 {
 
             if (OrderStatus.AWAITING_PAYMENT.getValue().equals(order.getStatus())) {
                 order.setStatus(OrderStatus.CANCELLED.getValue());
-                order.setMessageError("Phiên thanh toán VietQR đã hết hạn (15 phút)");
+                order.setMessageError("Phiên thanh toán VietQR đã hết hạn (5 phút)");
                 orderRepository.save(order);
             }
 
             expireCheckoutPending(order.getCode());
             PaymentCheckoutFlowLog.step(order.getCode(), 10,
-                    "Hết hạn 15 phút — CANCELLED + hoàn kho (orderId=%s)", orderId);
+                    "Hết hạn thanh toán VietQR — CANCELLED + hoàn kho (orderId=%s)", orderId);
         }
         if (!orderIds.isEmpty()) {
             log.info("Job004: expired {} VietQR session(s) — CANCELLED + stock restored", orderIds.size());

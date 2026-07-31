@@ -49,8 +49,8 @@ public class VietQrProperties {
          */
         @Deprecated
         private int expireHours = 24;
-        /** Thời hạn VietQR sau submit (phút): hết hạn → CANCELLED + hoàn kho. Mặc định 15. */
-        private int expireMinutes = 15;
+        /** Thời hạn VietQR sau submit (phút): hết hạn → CANCELLED + hoàn kho. Mặc định 5. */
+        private int expireMinutes = 5;
         /** Dev: nút mô phỏng webhook khi chạy localhost (VietQR không gọi được Transaction Sync). */
         private boolean sandboxSimulateEnabled = false;
         /** Trang thanh toán VietQR Pro (mở tab mới), token nối vào cuối URL. */

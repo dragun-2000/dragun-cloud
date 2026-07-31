@@ -37,19 +37,19 @@ public class LocationController {
     @GetMapping("/provinces")
     @ResponseBody
     public List<Province> getDistrictsByProvince() {
-        return provinceRepository.findAllByDeletedFalse();
+        return provinceRepository.findAllByDeletedFalseOrderByNameAsc();
     }
 
     @GetMapping("/districts/{provinceCode}")
     @ResponseBody
     public List<District> getDistrictsByProvince(@PathVariable String provinceCode) {
-        return districtRepository.findAllByParentCode(provinceCode);
+        return districtRepository.findAllByParentCodeOrderByNameAsc(provinceCode);
     }
     
     @GetMapping("/wards/{districtCode}")
     @ResponseBody
     public List<Ward> getWardByProvince(@PathVariable String districtCode) {
-        return wardRepository.findAllByParentCode(districtCode);
+        return wardRepository.findAllByParentCodeOrderByNameAsc(districtCode);
     }
 
     @GetMapping("/setup/location")
