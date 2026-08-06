@@ -200,6 +200,8 @@ public class Product extends BaseEntity {
         this.stockQuantity = stockQuantity;
         this.price = BigDecimal.valueOf(variationResponse.getRetail_price());
         this.discount = BigDecimal.ZERO;
+        this.discountPrice = BigDecimal.ZERO;
+        this.finalPrice = this.price;
         this.categories = "BEST SELLER";
 
         List<String> images = variationResponse.getImages();
@@ -224,6 +226,17 @@ public class Product extends BaseEntity {
         product.setSubCode(variationResponse.getDisplay_id());
         product.setStockQuantity(stockQuantity);
         product.setPrice(BigDecimal.valueOf(variationResponse.getRetail_price()));
+        // Đồng bộ price từ Pancake phải refresh finalPrice theo % giảm đang có trên Debase.
+        BigDecimal listPrice = product.getPrice();
+        BigDecimal discount = product.getDiscount() == null ? BigDecimal.ZERO : product.getDiscount();
+        BigDecimal discountAmount = BigDecimal.ZERO;
+        BigDecimal finalPrice = listPrice;
+        if (listPrice != null && discount.compareTo(BigDecimal.ZERO) > 0) {
+            discountAmount = listPrice.multiply(discount).divide(new BigDecimal("100"), RoundingMode.HALF_UP);
+            finalPrice = listPrice.subtract(discountAmount);
+        }
+        product.setDiscountPrice(discountAmount);
+        product.setFinalPrice(finalPrice);
 
         if (!sizes.isEmpty()) {
             product.setSizes(String.join(",", sizes.stream().map(String::valueOf).toArray(String[]::new)));
