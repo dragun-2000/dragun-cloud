@@ -1,4 +1,10 @@
-# CODING RULE - SINGLE CONVENTION
+# DOC-DEV-01 — Coding Standards (Single Convention)
+
+| Mục | Giá trị |
+|-----|---------|
+| **Mã tài liệu** | DOC-DEV-01 |
+| **Phiên bản** | 1.0 |
+| **Phân loại** | Nội bộ Dev — không gửi gói nghiệm thu KH |
 
 This document is the mandatory prompt and coding convention for all generated or modified code in this project.
 All contributors (human and AI) must follow exactly one unified rule set.

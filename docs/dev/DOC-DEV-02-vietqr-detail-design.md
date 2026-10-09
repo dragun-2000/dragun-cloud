@@ -1,8 +1,14 @@
-# Detail Design — Tích hợp thanh toán VietQR (Debase / dragun-cloud)
+# DOC-DEV-02 — Detail Design — Tích hợp thanh toán VietQR
 
-**Version:** 1.0  
-**Ngày:** 2026-06-03  
-**Tham chiếu API:** [VietQR Callback](https://api.vietqr.vn/vi/api-vietqr-callback)
+| Mục | Giá trị |
+|-----|---------|
+| **Mã tài liệu** | DOC-DEV-02 |
+| **Phiên bản** | 1.0 |
+| **Phân loại** | Nội bộ Dev — không gửi gói nghiệm thu KH |
+| **ICD đối tác** | [DOC-ICD-01](../integrations/DOC-ICD-01-vietqr-callback.md) |
+| **Tham chiếu API VietQR** | https://api.vietqr.vn/vi/api-vietqr-callback |
+
+**Version gốc:** 1.0 · **Ngày:** 2026-06-03
 
 ---
 

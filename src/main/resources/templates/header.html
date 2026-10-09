@@ -18,6 +18,7 @@
   <link href="/css/index/bootstrap-select.css" type="text/css" rel="stylesheet" media="all">
   <link href="/css/index/slick.css" type="text/css" rel="stylesheet" media="all">
   <link href="/css/index/styles.css" type="text/css" rel="stylesheet" media="all">
+  <link href="/css/store-chat.css" type="text/css" rel="stylesheet" media="all">
   <!-- JS -->
   <script type="text/javascript" src="/js/index/jquery-1.9.1.min.js"></script>
   <script type="text/javascript" src="/js/index/popper.min.js"></script>
@@ -547,6 +548,36 @@
         </div>
       </div>
     </footer><!--/footer -->
+
+    <button type="button" class="db-chat-fab" id="dbChatFab" aria-label="Mở chat tư vấn">
+      <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <path d="M5 5.8A2.8 2.8 0 0 1 7.8 3h8.4A2.8 2.8 0 0 1 19 5.8v7.4A2.8 2.8 0 0 1 16.2 16H10l-4.4 3.2c-.7.5-1.6 0-1.6-.8V5.8Z" stroke="currentColor" stroke-width="1.7"/>
+        <path d="M8 8.5h8M8 12h5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+      </svg>
+    </button>
+    <div class="db-chat-panel" id="dbChatPanel" role="dialog" aria-label="Tư vấn sản phẩm De Basé">
+      <div class="db-chat-header">
+        <div>
+          <h3>De Basé Stylist</h3>
+          <p>Tìm, xem và mua nhanh</p>
+        </div>
+        <button type="button" class="db-chat-close" id="dbChatClose" aria-label="Đóng">&times;</button>
+      </div>
+      <div class="db-chat-body" id="dbChatBody">
+        <div class="db-chat-msg bot">Chào bạn, mình là stylist De Basé. Bạn đang tìm áo, quần, váy hay muốn mình gợi ý outfit?</div>
+        <div class="db-chat-chips">
+          <button type="button" class="db-chat-chip" data-q="NEW IN">Hàng mới</button>
+          <button type="button" class="db-chat-chip" data-q="SALE">Sale</button>
+          <button type="button" class="db-chat-chip" data-q="BEST SELLER">Bán chạy</button>
+          <button type="button" class="db-chat-chip" data-q="quần jean">Quần jean</button>
+        </div>
+      </div>
+      <form class="db-chat-footer" id="dbChatForm">
+        <input id="dbChatInput" type="text" placeholder="Hỏi: áo sơ mi trắng, size M..." autocomplete="off">
+        <button type="submit" class="db-chat-send" id="dbChatSend" aria-label="Gửi">➤</button>
+      </form>
+    </div>
+    <script src="/js/store-chat.js"></script>
   </div>
 
 </body>

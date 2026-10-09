@@ -16,6 +16,7 @@ import vn.co.cake.ai.service.SizeAdviceService;
 import vn.co.cake.ai.service.openai.OpenAIService;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -32,6 +33,7 @@ public class SizeAdviceServiceImpl implements SizeAdviceService {
     private static final String CONFLICT_KEYWORDS = "không có size phù hợp|không phù hợp|not_available";
     private static final Pattern SIZE_PATTERN = Pattern.compile("size\\s+([smlx]+)", Pattern.CASE_INSENSITIVE);
     private static final Pattern SIZES_LIST_PATTERN = Pattern.compile("(?:sizes?|size)\\s*:?\\s*([smlx]+(?:\\s*,\\s*[smlx]+)*)", Pattern.CASE_INSENSITIVE);
+    private static final List<String> SIZE_ORDER = Arrays.asList("S", "M", "L", "XL", "XXL", "XXXL");
     
     private final ProductRepository productRepository;
     private final OpenAIService openAIService;
@@ -154,6 +156,11 @@ public class SizeAdviceServiceImpl implements SizeAdviceService {
                "   - CHỈ báo NOT_AVAILABLE khi size phù hợp THỰC SỰ không có trong danh sách\n" +
                "   - CÁCH NÓI: Dùng \"hết hàng\" thay vì \"không có size phù hợp\" để tích cực hơn\n" +
                "7. Xem xét form sản phẩm (ôm/vừa/rộng/oversize) để điều chỉnh size đề xuất (chỉ khi size phù hợp có sẵn).\n" +
+               "   THỨ TỰ SIZE BẮT BUỘC (từ hẹp đến rộng): S → M → L → XL → XXL → XXXL.\n" +
+               "   backupSize LUÔN là size LIỀN KỀ LỚN HƠN recommendedSize (để mặc rộng/oversize).\n" +
+               "   Ví dụ: recommendedSize=M → backupSize=L; recommendedSize=L → backupSize=XL.\n" +
+               "   TUYỆT ĐỐI KHÔNG trả backupSize nhỏ hơn recommendedSize (sai: L rồi backup M).\n" +
+               "   Nếu không còn size lớn hơn trong danh sách có sẵn → backupSize = \"\".\n" +
                "8. Format recommendedSize: CHỈ trả về size thuần (ví dụ: \"M\", \"L\", \"XL\"), KHÔNG thêm prefix \"Size \" hoặc text khác.\n" +
                "9. Nếu sản phẩm KHÔNG CÓ bảng đo, hãy tư vấn như một nhân viên chuyên nghiệp.\n" +
                "10. Chỉ trả về JSON đúng format, không thêm nội dung ngoài JSON.\n" +
@@ -436,10 +443,10 @@ public class SizeAdviceServiceImpl implements SizeAdviceService {
         if (conflict.hasConflict()) {
             log.warn("Product {} - Detected conflict (type: {}): size='{}' is available but response says 'no suitable size'", 
                 product.getId(), conflict.getType(), normalizedSize);
-            return fixConflictResponse(response, message, normalizedSize, request);
+            return correctBackupSize(fixConflictResponse(response, message, normalizedSize, request), product);
         }
         
-        return response;
+        return correctBackupSize(response, product);
     }
     
     /**
@@ -823,13 +830,54 @@ public class SizeAdviceServiceImpl implements SizeAdviceService {
         return "M";
     }
     
+    /**
+     * Size dự phòng cho form rộng/oversize: luôn lớn hơn recommended (S→M→L→XL→XXL).
+     */
     private String getBackupSize(String recommendedSize) {
-        if ("S".equals(recommendedSize)) return "M";
-        if ("M".equals(recommendedSize)) return "S";
-        if ("L".equals(recommendedSize)) return "M";
-        if ("XL".equals(recommendedSize)) return "L";
-        if ("XXL".equals(recommendedSize)) return "XL";
-        return "M";
+        return getNextLargerSize(recommendedSize, null);
+    }
+
+    private String getNextLargerSize(String recommendedSize, List<String> availableSizeList) {
+        String current = normalizeSize(recommendedSize).toUpperCase();
+        int idx = SIZE_ORDER.indexOf(current);
+        if (idx < 0) {
+            return "";
+        }
+        for (int i = idx + 1; i < SIZE_ORDER.size(); i++) {
+            String next = SIZE_ORDER.get(i);
+            if (availableSizeList == null || availableSizeList.isEmpty() || availableSizeList.contains(next)) {
+                return next;
+            }
+        }
+        return "";
+    }
+
+    private SizeAdviceResponse correctBackupSize(SizeAdviceResponse response, Product product) {
+        if (!isValidResponse(response)) {
+            return response;
+        }
+        SizeAdviceMessage message = response.getData().getMessage();
+        if (isNotAvailable(message.getRecommendedSize())) {
+            return response;
+        }
+        List<String> available = StringUtils.isNotBlank(product.getSizes())
+            ? parseAvailableSizes(product.getSizes())
+            : new ArrayList<>();
+        String nextLarger = getNextLargerSize(message.getRecommendedSize(), available);
+        String currentBackup = normalizeSize(message.getBackupSize()).toUpperCase();
+        if (StringUtils.equals(currentBackup, nextLarger)) {
+            return response;
+        }
+        log.info("Corrected backupSize from '{}' to '{}' (next larger than '{}')",
+            message.getBackupSize(), nextLarger, message.getRecommendedSize());
+        SizeAdviceMessage fixed = SizeAdviceMessage.builder()
+            .recommendedSize(message.getRecommendedSize())
+            .backupSize(nextLarger)
+            .reason(message.getReason())
+            .productFitComment(message.getProductFitComment())
+            .closingQuestion(message.getClosingQuestion())
+            .build();
+        return rebuildResponse(response, fixed);
     }
     
     @Override
@@ -1048,6 +1096,7 @@ public class SizeAdviceServiceImpl implements SizeAdviceService {
         prompt.append("8. Luôn thể hiện sự chuyên nghiệp và sẵn sàng hỗ trợ.\n");
         prompt.append("9. Trả lời bằng tiếng Việt, tự nhiên như đang nói chuyện với khách hàng.\n");
         prompt.append("10. Khi khách cung cấp thông tin mới, hãy xác nhận lại thông tin đó trước khi tư vấn.\n");
+        prompt.append("11. Thứ tự size từ hẹp đến rộng: S → M → L → XL → XXL. Muốn mặc rộng/oversize thì chọn size LỚN HƠN, không bao giờ nhỏ hơn.\n");
         
         return prompt.toString();
     }
