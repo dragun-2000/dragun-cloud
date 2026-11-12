@@ -20,7 +20,18 @@ function startVnpayCheckout(data, orderBtn, originalButtonText) {
         },
         error: function (xhr) {
             console.error('vnpay/create failed', xhr.status, xhr.responseJSON || xhr.responseText);
-            showPopup('fail', formatPaymentError(xhr));
+            var errMsg = formatPaymentError(xhr);
+            if (typeof shouldShowVnpayPilotPopup === 'function' && shouldShowVnpayPilotPopup()) {
+                setOrderButtonLoading(orderBtn, false, originalButtonText);
+                showVnpayPilotPopup(orderBtn, originalButtonText);
+                return;
+            }
+            if (errMsg && errMsg.indexOf('pilot') !== -1 && typeof showVnpayPilotPopup === 'function') {
+                setOrderButtonLoading(orderBtn, false, originalButtonText);
+                showVnpayPilotPopup(orderBtn, originalButtonText);
+                return;
+            }
+            showPopup('fail', errMsg);
             setOrderButtonLoading(orderBtn, false, originalButtonText);
         }
     });

@@ -4,7 +4,8 @@ services:
   debase-app:
     build: .
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://debase-db:5432/postgres
+      # POSTGRES_DB below is "debase"; init/*.sql runs against that database.
+      SPRING_DATASOURCE_URL: jdbc:postgresql://debase-db:5432/debase
       SPRING_DATASOURCE_USERNAME: dragun
       SPRING_DATASOURCE_PASSWORD: Picachu@123
       SPRING_JPA_HIBERNATE_DDL_AUTO: none
@@ -18,14 +19,13 @@ services:
       VNPAY_ENABLED: ${VNPAY_ENABLED:-true}
       # vnp_TmnCode — email kết nối VNPAY (test: NTHTEST1)
       VNPAY_TMN_CODE: ${VNPAY_TMN_CODE:-NTHTEST1}
-      # [CÒN THIẾU] vnp_HashSecret — file zip VNPAY gửi riêng tới email chủ tài khoản (mật khẩu zip trong email kết nối)
+      # vnp_HashSecret — bắt buộc trong .env (file zip VNPAY). Chuỗi rỗng → VNPAY ẩn trên UI.
       VNPAY_HASH_SECRET: ${VNPAY_HASH_SECRET:-}
       # Test: https://sandbox.vnpayment.vn/paymentv2/vpcpay.html — Production: VNPAY cấp khi go-live
       VNPAY_PAY_URL: ${VNPAY_PAY_URL:-https://sandbox.vnpayment.vn/paymentv2/vpcpay.html}
       # Test: https://sandbox.vnpayment.vn/merchant_webapi/api/transaction — Production: VNPAY cấp khi go-live
       VNPAY_API_URL: ${VNPAY_API_URL:-https://sandbox.vnpayment.vn/merchant_webapi/api/transaction}
-      # Return URL (dev default có thể set trong application-development.properties).
-      # [CÒN THIẾU ops] Đăng ký IPN https://debase.vn/vnpay/ipn với KT VNPAY (không đặt ở đây).
+      # Return URL public (sandbox test dùng debase.vn). IPN đăng ký riêng với KT VNPAY: https://debase.vn/vnpay/ipn
       VNPAY_RETURN_URL: ${VNPAY_RETURN_URL:-https://debase.vn/vnpay/return}
 
       # MinIO configuration (thay cho AWS S3)
@@ -52,7 +52,8 @@ services:
       POSTGRES_PASSWORD: Picachu@123
       POSTGRES_DB: debase
     ports:
-      - "5432:5432"
+      # Host 5433 avoids clashing with a local Postgres already on 5432 (Windows). Container still listens on 5432.
+      - "5433:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./init:/docker-entrypoint-initdb.d

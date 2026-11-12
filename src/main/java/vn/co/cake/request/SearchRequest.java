@@ -14,7 +14,9 @@ public class SearchRequest implements Serializable {
     public String code;
     private String email;
     private String status;
-    
+    /** COD / VIETQR / VNPAY / TRANSFER — khớp cột orders.payment_method */
+    private String paymentMethod;
+
     @DateTimeFormat(pattern = DateConst.YYYY_MM_DD)
     private Date lastUpdateDateFrom;
     @DateTimeFormat(pattern = DateConst.YYYY_MM_DD)

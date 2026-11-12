@@ -564,6 +564,15 @@ public class AM003Controller extends BaseController {
     
     private Map<String, Object> settingCondition(ProductSearchRequest searchForm) {
         Map<String, Object> conditionMaps = new HashMap<>();
+        if (StringUtils.isNotEmpty(searchForm.getName())) {
+            conditionMaps.put("name", searchForm.getName());
+        }
+        if (StringUtils.isNotEmpty(searchForm.getCode())) {
+            conditionMaps.put("code", searchForm.getCode());
+        }
+        if (StringUtils.isNotEmpty(searchForm.getSubCode())) {
+            conditionMaps.put("subCode", searchForm.getSubCode());
+        }
         return conditionMaps;
     }
 }

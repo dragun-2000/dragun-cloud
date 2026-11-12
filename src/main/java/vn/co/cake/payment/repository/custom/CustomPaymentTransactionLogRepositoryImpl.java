@@ -91,12 +91,17 @@ public class CustomPaymentTransactionLogRepositoryImpl extends BaseRepository
         String statusFilter = StringUtils.trimToEmpty(searchRequest.getStatus());
         params.put("statusFilter", statusFilter);
 
+        // Aggregate status mirrors mapSummaryRow: FAILED > SUCCESS > INFO.
         String having = " HAVING (CAST(:statusFilter AS varchar) = '' "
                 + "OR (CAST(:statusFilter AS varchar) = 'FAILED' AND BOOL_OR(l.status = '"
                 + PaymentConstants.LOG_STATUS_FAILED + "')) "
                 + "OR (CAST(:statusFilter AS varchar) = 'SUCCESS' AND NOT BOOL_OR(l.status = '"
                 + PaymentConstants.LOG_STATUS_FAILED + "') AND BOOL_OR(l.status = '"
-                + PaymentConstants.LOG_STATUS_SUCCESS + "'))) ";
+                + PaymentConstants.LOG_STATUS_SUCCESS + "')) "
+                + "OR (CAST(:statusFilter AS varchar) = 'INFO' AND NOT BOOL_OR(l.status = '"
+                + PaymentConstants.LOG_STATUS_FAILED + "') AND NOT BOOL_OR(l.status = '"
+                + PaymentConstants.LOG_STATUS_SUCCESS + "') AND BOOL_OR(l.status = '"
+                + PaymentConstants.LOG_STATUS_INFO + "'))) ";
 
         String countSql = "SELECT COUNT(*) FROM (SELECT 1 FROM payment_transaction_log l WHERE " + where
                 + " AND " + GROUP_KEY_SQL + " IS NOT NULL GROUP BY " + GROUP_KEY_SQL + having + ") cnt";
@@ -155,7 +160,8 @@ public class CustomPaymentTransactionLogRepositoryImpl extends BaseRepository
             params.put("orderCode", "%" + searchRequest.getOrderCode().trim() + "%");
         }
         if (StringUtils.isNotEmpty(searchRequest.getVietqrOrderId())) {
-            where.append(" AND l.vietqr_order_id = :vietqrOrderId");
+            // VietQR id hoặc mã đơn/txnRef VNPAY (order_code).
+            where.append(" AND (l.vietqr_order_id = :vietqrOrderId OR l.order_code = :vietqrOrderId)");
             params.put("vietqrOrderId", searchRequest.getVietqrOrderId().trim());
         }
         if (StringUtils.isNotEmpty(searchRequest.getPaymentMethod())) {

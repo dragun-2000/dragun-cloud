@@ -4,6 +4,7 @@ import vn.co.cake.common.BaseConst;
 import vn.co.cake.common.RequestPathConst;
 import vn.co.cake.payment.PaymentConstants;
 import vn.co.cake.security.service.ContextService;
+import vn.co.cake.vnpay.VnpayConstants;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
@@ -32,6 +33,7 @@ public class UserLogoutSuccessHandler implements org.springframework.security.we
     public void onLogoutSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException {
         request.getSession().removeAttribute(BaseConst.USER_SESSION);
         request.getSession().removeAttribute(PaymentConstants.SESSION_VIETQR_PILOT_ACCOUNT_ID);
+        request.getSession().removeAttribute(VnpayConstants.SESSION_VNPAY_PILOT_ACCOUNT_ID);
 
         contextService.removeSecurityContextBySessionId(request);
 

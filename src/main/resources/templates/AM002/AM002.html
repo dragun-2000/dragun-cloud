@@ -26,7 +26,7 @@
         <div class="info-fr-1400 w-1200 mt-5">
           <form id="search_form" name="f" th:action="@{/AM/AM002}" method="GET" th:object="${searchCondition}" class="needs-validation" novalidate>
             <div class="form-row">
-              <div class="form-group col-lg-3">
+              <div class="form-group col-lg-4">
                 <div class="row">
                   <label class="col-lg-5 col-form-label text-lg-right font-weight-bold">Mã Đơn Hàng</label>
                   <div class="col-lg-7">
@@ -34,21 +34,41 @@
                   </div>
                 </div>
               </div>
-              <div class="form-group col-lg-3">
+              <div class="form-group col-lg-4">
                 <div class="row">
                   <label class="col-lg-5 col-form-label text-lg-right font-weight-bold">Trạng Thái</label>
                   <div class="col-lg-7">
                     <select class="selectpicker form-control" title="" data-style="select-with-transition btn-white" th:field="*{status}">
                       <option value="">Tất Cả</option>
-                      <option value="PENDING">Chờ Thanh Toán</option>
-                      <option value="COMPLETE">Thanh Toán Thành Công</option>
+                      <option value="AWAITING_PAYMENT">Chờ thanh toán</option>
+                      <option value="PENDING_SYNC">Chờ đồng bộ Pancake</option>
+                      <option value="NEW">Đã đồng bộ Pancake</option>
+                      <option value="SYNC_FAIL">Đồng bộ Pancake thất bại</option>
+                      <option value="PAYMENT_RECEIVED_UNFULFILLABLE">Đã nhận tiền - cần xử lý tồn kho</option>
+                      <option value="CANCELLED">Đã hủy do hết hạn thanh toán</option>
                     </select>
                   </div>
                 </div>
               </div>
-              <div class="form-group col-lg-3">
+              <div class="form-group col-lg-4">
                 <div class="row">
-                  <label for="updatedFrom" class="col-lg-5 col-form-label text-lg-right font-weight-bold">Này Tạo Đơn</label>
+                  <label class="col-lg-5 col-form-label text-lg-right font-weight-bold">PT thanh toán</label>
+                  <div class="col-lg-7">
+                    <select class="selectpicker form-control" title="" data-style="select-with-transition btn-white" th:field="*{paymentMethod}">
+                      <option value="">Tất Cả</option>
+                      <option value="COD">COD</option>
+                      <option value="VIETQR">VIETQR</option>
+                      <option value="VNPAY">VNPAY</option>
+                      <option value="TRANSFER">TRANSFER</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group col-lg-4">
+                <div class="row">
+                  <label for="updatedFrom" class="col-lg-5 col-form-label text-lg-right font-weight-bold">Ngày Tạo Đơn</label>
                   <div class="col-lg-7">
                     <div id="updatedFrom" class="input-group input-group-seamless date datepicker-input-group"
                          data-target-input="nearest">
@@ -59,15 +79,13 @@
                         <span class="input-group-text"><i class="fas fa-calendar-alt"></i></span>
                       </span>
                     </div>
-
                     <div class="invalid-feedback fromDate-format-error"></div>
-
                   </div>
                 </div>
               </div>
-              <div class="form-group col-lg-3">
+              <div class="form-group col-lg-4">
                 <div class="row">
-                  <label for="updatedTo" style="padding: 7px; padding-left: 20px;" class="col-form-label text-sm-center font-weight-bold">～</label>
+                  <label for="updatedTo" class="col-lg-2 col-form-label text-center font-weight-bold">～</label>
                   <div class="col-lg-7">
                     <div id="updatedTo" class="input-group date datepicker-input-group input-group-seamless" data-target-input="nearest">
                       <input style="background: white" type="text" class="update-date-to form-control form-control-sm datepicker-input-group" th:field="*{lastUpdateDateTo}"
@@ -77,14 +95,12 @@
                         <span class="input-group-text"><i class="fas fa-calendar-alt"></i></span>
                       </span>
                     </div>
-
                     <div class="invalid-feedback date-error toDate-format-error"></div>
-
                   </div>
                 </div>
               </div>
             </div>
-            
+
             <div class="text-center mt-4">
               <button type="submit" class="btn custom-btn-info mw-150 search">TÌM KIẾM</button>
             </div>

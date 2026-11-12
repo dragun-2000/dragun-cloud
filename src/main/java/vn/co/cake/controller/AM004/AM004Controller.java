@@ -161,7 +161,9 @@ public class AM004Controller extends BaseController {
 
     private Map<String, Object> settingConditionForAccount(AccountSearchRequest searchForm) {
         Map<String, Object> conditionMaps = new HashMap<>();
-        conditionMaps.put("staffName", searchForm.getKeyword());
+        if (StringUtils.isNotEmpty(searchForm.getKeyword())) {
+            conditionMaps.put("keyword", searchForm.getKeyword());
+        }
         return conditionMaps;
     }
 }

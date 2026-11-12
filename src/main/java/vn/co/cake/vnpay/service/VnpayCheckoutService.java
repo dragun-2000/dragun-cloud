@@ -5,6 +5,8 @@ import java.util.Date;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import javax.servlet.http.HttpSession;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
@@ -47,6 +49,8 @@ public class VnpayCheckoutService {
     private final VnpayPaymentRepository vnpayPaymentRepository;
     private final VnpayApiClient vnpayApiClient;
     private final VnpayProperties properties;
+    private final VnpaySettingsService vnpaySettingsService;
+    private final VnpayPilotAccessService vnpayPilotAccessService;
 
     public VnpayCheckoutService(OrderService orderService,
                                 OrderRepository orderRepository,
@@ -54,7 +58,9 @@ public class VnpayCheckoutService {
                                 PaymentTransactionLogService paymentTransactionLogService,
                                 VnpayPaymentRepository vnpayPaymentRepository,
                                 VnpayApiClient vnpayApiClient,
-                                VnpayProperties properties) {
+                                VnpayProperties properties,
+                                VnpaySettingsService vnpaySettingsService,
+                                VnpayPilotAccessService vnpayPilotAccessService) {
         this.orderService = orderService;
         this.orderRepository = orderRepository;
         this.inventoryReservationService = inventoryReservationService;
@@ -62,14 +68,17 @@ public class VnpayCheckoutService {
         this.vnpayPaymentRepository = vnpayPaymentRepository;
         this.vnpayApiClient = vnpayApiClient;
         this.properties = properties;
+        this.vnpaySettingsService = vnpaySettingsService;
+        this.vnpayPilotAccessService = vnpayPilotAccessService;
     }
 
     @Transactional(rollbackFor = Exception.class)
     public VnpayCheckoutResponse startCheckout(Long accountId, CartForm cartForm, OrderDetailRequest request,
-                                               String clientIp) throws CommonServletException {
-        if (!properties.isUsable()) {
+                                               String clientIp, HttpSession session) throws CommonServletException {
+        if (!properties.isUsable() || !vnpaySettingsService.isFeatureEnabled()) {
             throw new CommonServletException("Thanh toán VNPAY hiện chưa khả dụng.");
         }
+        vnpayPilotAccessService.assertCanUseVnpay(session, accountId);
         List<OrderItem> cartItems = cartForm.getOrderItems();
         if (CollectionUtils.isEmpty(cartItems)) {
             throw new CommonServletException("Giỏ hàng trống");

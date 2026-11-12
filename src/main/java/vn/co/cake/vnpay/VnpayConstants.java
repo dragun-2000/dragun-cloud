@@ -54,6 +54,9 @@ public final class VnpayConstants {
 
     public static final String PAYMENT_STATUS_SUCCESS = "SUCCESS";
 
+    /** Session: accountId đã unlock VNPAY pilot (gắn với user đăng nhập). */
+    public static final String SESSION_VNPAY_PILOT_ACCOUNT_ID = "VNPAY_PILOT_ACCOUNT_ID";
+
     private VnpayConstants() {
     }
 }

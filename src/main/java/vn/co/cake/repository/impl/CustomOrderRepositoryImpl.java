@@ -44,6 +44,9 @@ public class CustomOrderRepositoryImpl extends BaseRepository implements CustomO
         if (StringUtils.isNotEmpty(searchRequest.getStatus())) {
             where.and(qOrder.status.eq(searchRequest.getStatus()));
         }
+        if (StringUtils.isNotEmpty(searchRequest.getPaymentMethod())) {
+            where.and(qOrder.paymentMethod.eq(searchRequest.getPaymentMethod()));
+        }
         if (Objects.nonNull(searchRequest.getLastUpdateDateFrom())) {
             where.and(qOrder.created.after(searchRequest.getLastUpdateDateFrom()));
         }

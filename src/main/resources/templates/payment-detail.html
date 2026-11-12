@@ -239,6 +239,30 @@
       </div>
   </div>
 
+  <div class="popup" id="vnpayPilotPopup">
+      <div class="popup-content vietqr-pilot-popup-content">
+          <h2>Thanh toán VNPAY đang pilot</h2>
+          <p id="vnpay-pilot-popup-message" class="vietqr-pilot-popup-lead"
+             th:text="${vnpayAccess != null && vnpayAccess.pilotMessage != null ? vnpayAccess.pilotMessage : 'Tính năng thanh toán VNPAY đang trong giai đoạn pilot.'}">
+              Tính năng thanh toán VNPAY đang trong giai đoạn pilot.
+          </p>
+          <p class="vietqr-pilot-popup-guide">
+              Nhập mật khẩu pilot và bấm <strong>Xác nhận</strong> để tiếp tục thanh toán VNPAY.
+              Hoặc bấm <strong>Thanh toán khi nhận hàng (COD)</strong> vì VNPAY đang trong quá trình pilot.
+          </p>
+          <label class="vietqr-pilot-popup-label" for="vnpay-pilot-popup-password">Mật khẩu pilot</label>
+          <input type="password" class="form-control" id="vnpay-pilot-popup-password"
+                 placeholder="Nhập mật khẩu pilot" autocomplete="off"/>
+          <p id="vnpay-pilot-popup-error" class="vietqr-pilot-popup-error" style="display:none;"></p>
+          <div class="vietqr-pilot-popup-actions vietqr-pilot-popup-actions--stack">
+              <button type="button" id="vnpay-pilot-popup-confirm" class="close-btn">Xác nhận</button>
+              <button type="button" id="vnpay-pilot-popup-cancel" class="close-btn fail">
+                  Thanh toán khi nhận hàng (COD)
+              </button>
+          </div>
+      </div>
+  </div>
+
   <!-- VietQR: chờ thanh toán / thành công (cùng trang payment-detail) -->
   <div class="popup" id="vietqrPaymentPopup">
       <div class="popup-content vietqr-popup-content">
@@ -287,6 +311,15 @@
   <input type="hidden" id="vietqr-visible-to-all"
          th:if="${vietQrAccess != null}"
          th:value="${vietQrAccess.visibleToAll}"/>
+  <input type="hidden" id="vnpay-can-use"
+         th:if="${vnpayAccess != null}"
+         th:value="${vnpayAccess.canUseVnpay}"/>
+  <input type="hidden" id="vnpay-pilot-mode"
+         th:if="${vnpayAccess != null}"
+         th:value="${vnpayAccess.pilotMode}"/>
+  <input type="hidden" id="vnpay-visible-to-all"
+         th:if="${vnpayAccess != null}"
+         th:value="${vnpayAccess.visibleToAll}"/>
 
   <div id="notification" class="notification">
     <span id="notification-message"></span>
@@ -306,6 +339,15 @@
       pilotMessage: /*[[${vietQrAccess != null && vietQrAccess.pilotMessage != null ? vietQrAccess.pilotMessage : 'Tính năng thanh toán VietQR đang trong giai đoạn pilot. Những khách hàng được admin cung cấp mật khẩu mới được sử dụng.'}]]*/ '',
       wrongPasswordMessage: 'Tính năng chưa phát hành. Vui lòng đợi đến khi phát hành. Vui lòng chọn phương thức thanh toán khi nhận hàng (COD) và xác nhận lại.'
     };
+    window.VNPAY_ACCESS = {
+      enabled: /*[[${vnpayEnabled}]]*/ false,
+      visibleToAll: /*[[${vnpayAccess != null ? vnpayAccess.visibleToAll : true}]]*/ true,
+      canUse: /*[[${vnpayAccess != null ? vnpayAccess.canUseVnpay : true}]]*/ true,
+      unlocked: /*[[${vnpayAccess != null ? vnpayAccess.unlocked : false}]]*/ false,
+      pilotMode: /*[[${vnpayAccess != null ? vnpayAccess.pilotMode : false}]]*/ false,
+      pilotMessage: /*[[${vnpayAccess != null && vnpayAccess.pilotMessage != null ? vnpayAccess.pilotMessage : 'Tính năng thanh toán VNPAY đang trong giai đoạn pilot. Những khách hàng được admin cung cấp mật khẩu mới được sử dụng.'}]]*/ '',
+      wrongPasswordMessage: 'Tính năng VNPAY chưa phát hành. Vui lòng đợi đến khi phát hành. Vui lòng chọn phương thức thanh toán khi nhận hàng (COD) và xác nhận lại.'
+    };
     window.PAYMENT_RULES = {
       codMaxOrderTotal: /*[[${codMaxOrderTotal}]]*/ 1500000,
       codAllowed: /*[[${codAllowed}]]*/ true,
@@ -314,7 +356,7 @@
     /*]]>*/
   </script>
   <script th:src="@{/js/vendor/qrcode.min.js}"></script>
-  <script th:src="@{/js/payment-detail/payment-detail.js(v=20260731n)}"></script>
+  <script th:src="@{/js/payment-detail/payment-detail.js(v=20261112a)}"></script>
   <script th:if="${vnpayEnabled}" th:src="@{/js/payment-detail/vnpay-checkout.js(v=20261111a)}"></script>
   <script>
     (function() {

@@ -21,6 +21,12 @@ var vietqrVisibleToAll = true;
 var vietqrSessionUnlocked = false;
 var vietqrWrongPasswordMessage =
     'Tính năng chưa phát hành. Vui lòng đợi đến khi phát hành. Vui lòng chọn phương thức thanh toán khi nhận hàng (COD) và xác nhận lại.';
+var vnpayCanUse = false;
+var vnpayPilotMode = false;
+var vnpayVisibleToAll = true;
+var vnpaySessionUnlocked = false;
+var vnpayWrongPasswordMessage =
+    'Tính năng VNPAY chưa phát hành. Vui lòng đợi đến khi phát hành. Vui lòng chọn phương thức thanh toán khi nhận hàng (COD) và xác nhận lại.';
 var appliedVoucherDiscountPercent = 0;
 var VIETQR_EXPIRE_MESSAGE = 'Phiên thanh toán đã hết hạn. Vui lòng đặt hàng lại.';
 var VIETQR_COUNTDOWN_MS = 5 * 60 * 1000;
@@ -34,8 +40,10 @@ var VIETQR_COUNTDOWN_MS = 5 * 60 * 1000;
             return;
         }
         initVietQrPilotGate();
+        initVnpayPilotGate();
         bindOrderPlacementHandlers();
         refreshVietQrAccessState();
+        refreshVnpayAccessState();
         applyPaymentMethodRules();
 
         $('#vietqr-reopen-btn').on('click', function () {
@@ -119,6 +127,11 @@ function handlePlaceOrderClick() {
 
         if (isVietQrPaymentMethod(paymentMethod) && shouldShowVietQrPilotPopup()) {
             showVietQrPilotPopup(orderBtn, originalButtonText);
+            return;
+        }
+
+        if (paymentMethod === 'VNPAY' && shouldShowVnpayPilotPopup()) {
+            showVnpayPilotPopup(orderBtn, originalButtonText);
             return;
         }
 
@@ -1285,6 +1298,180 @@ function initVietQrPilotGate() {
         if (event.key === 'Enter') {
             event.preventDefault();
             unlockVietQrPilotAndContinue();
+        }
+    });
+}
+
+function isVnpayVisibleToAll() {
+    return vnpayVisibleToAll === true;
+}
+
+function canUseVnpayNow() {
+    return vnpayCanUse === true || isVnpayVisibleToAll() || vnpaySessionUnlocked === true;
+}
+
+function shouldShowVnpayPilotPopup() {
+    if (!window.VNPAY_ACCESS || window.VNPAY_ACCESS.enabled !== true) {
+        return false;
+    }
+    if (isVnpayVisibleToAll()) {
+        return false;
+    }
+    return !(vnpaySessionUnlocked || canUseVnpayNow());
+}
+
+function refreshVnpayAccessState() {
+    if (!window.VNPAY_ACCESS || !window.VNPAY_ACCESS.enabled) {
+        return;
+    }
+    $.ajax({
+        url: '/api/payment/vnpay-access',
+        type: 'GET',
+        dataType: 'json',
+        cache: false,
+        xhrFields: { withCredentials: true }
+    }).done(function (access) {
+        applyVnpayAccessState(access);
+    }).fail(function (xhr) {
+        console.warn('payment-detail: could not refresh VNPAY access state', xhr.status);
+    });
+}
+
+function applyVnpayAccessState(access) {
+    if (!access) {
+        return;
+    }
+    vnpayVisibleToAll = access.visibleToAll === true;
+    vnpayCanUse = access.canUseVnpay === true;
+    vnpayPilotMode = access.pilotMode === true;
+    vnpaySessionUnlocked = access.unlocked === true || access.canUseVnpay === true;
+    if (access.pilotMessage) {
+        $('#vnpay-pilot-popup-message').text(access.pilotMessage);
+    }
+    $('#vnpay-can-use').val(access.canUseVnpay ? 'true' : 'false');
+    $('#vnpay-visible-to-all').val(access.visibleToAll ? 'true' : 'false');
+}
+
+function getVnpayWrongPasswordMessage() {
+    return vnpayWrongPasswordMessage;
+}
+
+function showVnpayPilotPopup(orderBtn, originalButtonText) {
+    $('#vnpay-pilot-popup-password').val('');
+    $('#vnpay-pilot-popup-error').hide().text('');
+    $('#vnpayPilotPopup').data('orderBtn', orderBtn);
+    $('#vnpayPilotPopup').data('originalButtonText', originalButtonText);
+    document.getElementById('vnpayPilotPopup').style.display = 'flex';
+    setTimeout(function () {
+        $('#vnpay-pilot-popup-password').trigger('focus');
+    }, 0);
+}
+
+function closeVnpayPilotPopup() {
+    var popup = document.getElementById('vnpayPilotPopup');
+    if (popup) {
+        popup.style.display = 'none';
+    }
+    $('#vnpay-pilot-popup-password').val('');
+    $('#vnpay-pilot-popup-error').hide().text('');
+}
+
+function switchToCodFromVnpayPilot() {
+    if (!isCodAllowedForCurrentOrder()) {
+        closeVnpayPilotPopup();
+        showPopup('fail', 'Đơn hàng trên 1.500.000 VND chỉ được thanh toán qua VietQR.');
+        applyPaymentMethodRules();
+        return;
+    }
+    closeVnpayPilotPopup();
+    $('#payment-vnpay').prop('checked', false);
+    $('#payment-cod').prop('checked', true);
+    var $section = $('.choosePayment');
+    if ($section.length) {
+        $('html, body').animate({ scrollTop: $section.offset().top - 80 }, 300);
+    }
+}
+
+function unlockVnpayPilotAndContinue() {
+    var password = ($('#vnpay-pilot-popup-password').val() || '').trim();
+    var $error = $('#vnpay-pilot-popup-error');
+    $error.hide().text('');
+
+    if (!password) {
+        $error.text('Vui lòng nhập mật khẩu pilot để sử dụng VNPAY.').show();
+        return;
+    }
+
+    var $popup = $('#vnpayPilotPopup');
+    var orderBtn = $popup.data('orderBtn');
+    var originalButtonText = $popup.data('originalButtonText') || 'Đặt Hàng';
+    var $confirmBtn = $('#vnpay-pilot-popup-confirm');
+    $confirmBtn.prop('disabled', true).text('Đang xác nhận...');
+
+    $.ajax({
+        type: 'POST',
+        contentType: 'application/json',
+        url: '/api/payment/vnpay-access/unlock',
+        data: JSON.stringify({ password: password }),
+        headers: buildPaymentHeaders(),
+        success: function (data) {
+            if (data && data.canUseVnpay) {
+                applyVnpayAccessState(data);
+                vnpaySessionUnlocked = true;
+                closeVnpayPilotPopup();
+                if (orderBtn) {
+                    orderBtn.disabled = true;
+                    orderBtn.textContent = 'Đang xử lý...';
+                    orderBtn.classList.add('disabled');
+                }
+                performCreateOrder(document.getElementById('create-order'), orderBtn, originalButtonText);
+                return;
+            }
+            $error.text(getVnpayWrongPasswordMessage()).show();
+        },
+        error: function (xhr) {
+            if (xhr.status === 400) {
+                $error.text(getVnpayWrongPasswordMessage()).show();
+                return;
+            }
+            $error.text(formatPaymentError(xhr)).show();
+        },
+        complete: function () {
+            $confirmBtn.prop('disabled', false).text('Xác nhận');
+        }
+    });
+}
+
+function initVnpayPilotGate() {
+    if (window.VNPAY_ACCESS) {
+        applyVnpayAccessState({
+            visibleToAll: window.VNPAY_ACCESS.visibleToAll === true,
+            canUseVnpay: window.VNPAY_ACCESS.canUse === true,
+            pilotMode: window.VNPAY_ACCESS.pilotMode === true,
+            unlocked: window.VNPAY_ACCESS.unlocked === true || window.VNPAY_ACCESS.canUse === true,
+            pilotMessage: window.VNPAY_ACCESS.pilotMessage
+        });
+        if (window.VNPAY_ACCESS.wrongPasswordMessage) {
+            vnpayWrongPasswordMessage = window.VNPAY_ACCESS.wrongPasswordMessage;
+        }
+    } else {
+        var $visibleFlag = $('#vnpay-visible-to-all');
+        if ($visibleFlag.length) {
+            vnpayVisibleToAll = $visibleFlag.val() === 'true';
+        }
+        var $canUseFlag = $('#vnpay-can-use');
+        if ($canUseFlag.length) {
+            vnpayCanUse = $canUseFlag.val() === 'true';
+            vnpaySessionUnlocked = vnpayCanUse && !vnpayVisibleToAll;
+        }
+    }
+
+    $('#vnpay-pilot-popup-confirm').on('click', unlockVnpayPilotAndContinue);
+    $('#vnpay-pilot-popup-cancel').on('click', switchToCodFromVnpayPilot);
+    $('#vnpay-pilot-popup-password').on('keydown', function (event) {
+        if (event.key === 'Enter') {
+            event.preventDefault();
+            unlockVnpayPilotAndContinue();
         }
     });
 }

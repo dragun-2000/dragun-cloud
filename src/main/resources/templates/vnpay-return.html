@@ -37,13 +37,16 @@
     var attempts = 0;
     var maxAttempts = 10;
 
+    var statusUnavailableMsg =
+        'Kết quả trên trang lấy từ chữ ký return. Đăng nhập lại để đối chiếu trạng thái đơn trên server.';
+
     function poll() {
       attempts++;
       fetch('/api/vnpay/status/' + encodeURIComponent(txnRef), { credentials: 'same-origin' })
         .then(function (res) { return res.ok ? res.json() : null; })
         .then(function (data) {
           if (!data) {
-            statusEl.textContent = '';
+            statusEl.textContent = statusUnavailableMsg;
             return;
           }
           statusEl.textContent = data.message || '';
@@ -52,7 +55,7 @@
           }
         })
         .catch(function () {
-          statusEl.textContent = '';
+          statusEl.textContent = statusUnavailableMsg;
         });
     }
 

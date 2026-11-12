@@ -58,7 +58,7 @@ public class VnpayCheckoutController extends BaseController {
         }
         try {
             VnpayCheckoutResponse response = vnpayCheckoutService.startCheckout(
-                    loginInfo.getId(), cartForm, request, resolveClientIp(httpRequest));
+                    loginInfo.getId(), cartForm, request, resolveClientIp(httpRequest), session);
             return ResponseEntity.ok(response);
         } catch (CommonServletException ex) {
             log.warn("VNPAY create rejected accountId={}: {}", loginInfo.getId(), ex.getMessage());

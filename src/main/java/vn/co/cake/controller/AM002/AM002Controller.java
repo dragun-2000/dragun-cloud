@@ -97,6 +97,21 @@ public class AM002Controller extends BaseController {
 
     private Map<String, Object> settingCondition(SearchRequest searchForm) {
         Map<String, Object> conditionMaps = new HashMap<>();
+        if (StringUtils.isNotEmpty(searchForm.getCode())) {
+            conditionMaps.put("code", searchForm.getCode());
+        }
+        if (StringUtils.isNotEmpty(searchForm.getStatus())) {
+            conditionMaps.put("status", searchForm.getStatus());
+        }
+        if (StringUtils.isNotEmpty(searchForm.getPaymentMethod())) {
+            conditionMaps.put("paymentMethod", searchForm.getPaymentMethod());
+        }
+        if (searchForm.getLastUpdateDateFrom() != null) {
+            conditionMaps.put("lastUpdateDateFrom", searchForm.getLastUpdateDateFrom());
+        }
+        if (searchForm.getLastUpdateDateTo() != null) {
+            conditionMaps.put("lastUpdateDateTo", searchForm.getLastUpdateDateTo());
+        }
         return conditionMaps;
     }
 }

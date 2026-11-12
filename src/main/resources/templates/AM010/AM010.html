@@ -48,9 +48,10 @@
 
               <div class="form-group col-lg-3">
 
-                <label class="font-weight-bold">Mã VietQR</label>
+                <label class="font-weight-bold">Mã GD (VietQR / đơn)</label>
 
-                <input type="text" class="form-control" th:field="*{vietqrOrderId}"/>
+                <input type="text" class="form-control" th:field="*{vietqrOrderId}"
+                       placeholder="vietqr_order_id hoặc mã đơn VNPAY"/>
 
               </div>
 
@@ -83,6 +84,10 @@
                   <option value="COD">COD</option>
 
                   <option value="VIETQR">VIETQR</option>
+
+                  <option value="VNPAY">VNPAY</option>
+
+                  <option value="TRANSFER">TRANSFER</option>
 
                 </select>
 
