@@ -13,6 +13,21 @@ services:
       # Brevo: API key từ tab "API keys & MCP" (đặt trong .env: BREVO_API_KEY=...)
       BREVO_API_KEY: ${BREVO_API_KEY:-}
 
+      # VNPAY (đặt giá trị trong .env cạnh docker-compose.yml, KHÔNG commit). Chi tiết: application-*.properties mục VNPAY.
+      # Mặc định đang trỏ môi trường TEST (sandbox); production phải override TMN_CODE / PAY_URL / API_URL.
+      VNPAY_ENABLED: ${VNPAY_ENABLED:-true}
+      # vnp_TmnCode — email kết nối VNPAY (test: NTHTEST1)
+      VNPAY_TMN_CODE: ${VNPAY_TMN_CODE:-NTHTEST1}
+      # [CÒN THIẾU] vnp_HashSecret — file zip VNPAY gửi riêng tới email chủ tài khoản (mật khẩu zip trong email kết nối)
+      VNPAY_HASH_SECRET: ${VNPAY_HASH_SECRET:-}
+      # Test: https://sandbox.vnpayment.vn/paymentv2/vpcpay.html — Production: VNPAY cấp khi go-live
+      VNPAY_PAY_URL: ${VNPAY_PAY_URL:-https://sandbox.vnpayment.vn/paymentv2/vpcpay.html}
+      # Test: https://sandbox.vnpayment.vn/merchant_webapi/api/transaction — Production: VNPAY cấp khi go-live
+      VNPAY_API_URL: ${VNPAY_API_URL:-https://sandbox.vnpayment.vn/merchant_webapi/api/transaction}
+      # Return URL (dev default có thể set trong application-development.properties).
+      # [CÒN THIẾU ops] Đăng ký IPN https://debase.vn/vnpay/ipn với KT VNPAY (không đặt ở đây).
+      VNPAY_RETURN_URL: ${VNPAY_RETURN_URL:-https://debase.vn/vnpay/return}
+
       # MinIO configuration (thay cho AWS S3)
       # MINIO_ENDPOINT: http://debase-minio:9000
       # MINIO_ACCESS_KEY: dragun

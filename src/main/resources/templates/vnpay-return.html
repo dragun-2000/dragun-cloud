@@ -1,0 +1,63 @@
+<!doctype html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="header :: common-header"></head>
+<body>
+<div class="wrapper">
+  <div th:replace="header :: header"></div>
+  <div class="main">
+    <div class="wrap wrap--mw900 text-center py-5" id="vnpay-return"
+         th:attr="data-txn-ref=${txnRef}, data-valid=${validSignature}">
+      <h2 class="delivery-title">Kết quả thanh toán VNPAY</h2>
+      <p th:if="${txnRef != null}">Mã đơn: <strong th:text="${txnRef}"></strong></p>
+      <p th:if="${amount != null}">Số tiền:
+        <strong th:text="${#numbers.formatDecimal(amount, 1, 'POINT', 0, 'COMMA')}"></strong> VND</p>
+
+      <p id="vnpay-return-message" th:classappend="${success} ? 'text-success' : 'text-danger'"
+         th:text="${message}"></p>
+      <!-- Return URL chỉ để hiển thị; trạng thái đơn lấy từ server (đã cập nhật qua IPN). -->
+      <p id="vnpay-server-status" class="small text-muted" th:if="${validSignature}">
+        Đang kiểm tra trạng thái đơn hàng...</p>
+
+      <div class="mt-4">
+        <a href="/order-history" class="btn btn-dark">Xem lịch sử đơn hàng</a>
+        <a href="/" class="btn btn-outline-secondary">Về trang chủ</a>
+      </div>
+    </div>
+  </div>
+  <div th:replace="header :: footer"></div>
+</div>
+<script>
+  (function () {
+    var root = document.getElementById('vnpay-return');
+    var statusEl = document.getElementById('vnpay-server-status');
+    if (!root || !statusEl || root.getAttribute('data-valid') !== 'true') {
+      return;
+    }
+    var txnRef = root.getAttribute('data-txn-ref');
+    var attempts = 0;
+    var maxAttempts = 10;
+
+    function poll() {
+      attempts++;
+      fetch('/api/vnpay/status/' + encodeURIComponent(txnRef), { credentials: 'same-origin' })
+        .then(function (res) { return res.ok ? res.json() : null; })
+        .then(function (data) {
+          if (!data) {
+            statusEl.textContent = '';
+            return;
+          }
+          statusEl.textContent = data.message || '';
+          if (data.status === 'PENDING' && attempts < maxAttempts) {
+            setTimeout(poll, 3000);
+          }
+        })
+        .catch(function () {
+          statusEl.textContent = '';
+        });
+    }
+
+    poll();
+  })();
+</script>
+</body>
+</html>

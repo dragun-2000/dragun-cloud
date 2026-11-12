@@ -24,6 +24,7 @@ import vn.co.cake.entity.OrderItem;
 import vn.co.cake.entity.Variation;
 import vn.co.cake.helper.EmailService;
 import vn.co.cake.payment.PaymentConstants;
+import vn.co.cake.vnpay.VnpayConstants;
 import vn.co.cake.repository.OrderRepository;
 import vn.co.cake.utils.BigDecimalUtil;
 import vn.co.cake.utils.DateUtil;
@@ -171,8 +172,11 @@ public class OrderConfirmationMailService {
     }
 
     private static PaymentSummary resolvePaymentSummary(String paymentMethod, BigDecimal prepaid, BigDecimal grandTotal) {
-        boolean vietQr = PaymentConstants.METHOD_VIETQR.equalsIgnoreCase(paymentMethod)
+        boolean isVietQr = PaymentConstants.METHOD_VIETQR.equalsIgnoreCase(paymentMethod)
                 || PaymentConstants.METHOD_TRANSFER_LEGACY.equalsIgnoreCase(paymentMethod);
+        boolean isVnpay = VnpayConstants.METHOD_VNPAY.equalsIgnoreCase(paymentMethod);
+        boolean vietQr = isVietQr || isVnpay;
+        String onlineChannel = isVnpay ? "VNPAY" : "VietQR";
         boolean cod = PaymentConstants.METHOD_COD.equalsIgnoreCase(paymentMethod);
 
         BigDecimal safeGrand = grandTotal != null ? grandTotal : BigDecimal.ZERO;
@@ -191,10 +195,10 @@ public class OrderConfirmationMailService {
             boolean fullyPaid = remaining.compareTo(BigDecimal.ZERO) == 0;
             String status = fullyPaid ? "Đã thanh toán" : "Đã thanh toán một phần";
             String summary = fullyPaid
-                    ? String.format("Đơn hàng đã được thanh toán đủ %s VND qua VietQR. Cảm ơn bạn!",
-                            BigDecimalUtil.formatMoney(paid))
-                    : String.format("Đơn hàng đã thanh toán %s VND qua VietQR. Số tiền còn lại: %s VND.",
-                            BigDecimalUtil.formatMoney(paid), BigDecimalUtil.formatMoney(remaining));
+                    ? String.format("Đơn hàng đã được thanh toán đủ %s VND qua %s. Cảm ơn bạn!",
+                            BigDecimalUtil.formatMoney(paid), onlineChannel)
+                    : String.format("Đơn hàng đã thanh toán %s VND qua %s. Số tiền còn lại: %s VND.",
+                            BigDecimalUtil.formatMoney(paid), onlineChannel, BigDecimalUtil.formatMoney(remaining));
             return new PaymentSummary(status, paid, remaining, summary, true, fullyPaid);
         }
 
@@ -247,6 +251,9 @@ public class OrderConfirmationMailService {
         }
         if (PaymentConstants.METHOD_COD.equalsIgnoreCase(method)) {
             return "Thanh toán khi nhận hàng (COD)";
+        }
+        if (VnpayConstants.METHOD_VNPAY.equalsIgnoreCase(method)) {
+            return "Thanh toán VNPAY";
         }
         return StringUtils.defaultIfBlank(method, "—");
     }

@@ -1115,6 +1115,12 @@ function performCreateOrder(formElement, orderBtn, originalButtonText) {
         province: province, district: district, ward: ward, address: address, note: note, voucher: voucher
     };
 
+    // VNPAY xử lý riêng trong vnpay-checkout.js (API /api/vnpay/create, redirect sang cổng VNPAY).
+    if (paymentMethod === 'VNPAY' && typeof startVnpayCheckout === 'function') {
+        startVnpayCheckout(data, orderBtn, originalButtonText);
+        return;
+    }
+
     $.ajax({
         type: 'POST',
         contentType: 'application/json',
