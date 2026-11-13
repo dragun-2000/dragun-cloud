@@ -12,7 +12,7 @@ import vn.co.cake.service.aws.S3Service;
 @Service
 public class S3ServiceImpl implements S3Service {
 
-    private static final String UPLOAD_DIR = "/var/www/html/external-images/";
+    private static final String UPLOAD_DIR = "c:/data/external-images/";
 
     /**
      * Upload file ảnh vào thư mục local và trả về URL hiển thị.
