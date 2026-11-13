@@ -54,7 +54,7 @@ public class WebConfig implements WebMvcConfigurer {
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
         registry.addResourceHandler("/external-images/**")
-                .addResourceLocations("file:/var/www/html/external-images/")
+                .addResourceLocations("file:/C:/data/external-images/")
                 // Cache static file 30 ngày
                 .setCachePeriod(2592000); // 30 * 24 * 60 * 60
 
