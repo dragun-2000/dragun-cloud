@@ -13,7 +13,8 @@ import vn.co.cake.vnpay.repository.VnpayPaymentRepository;
 import vn.co.cake.vnpay.service.VnpayExpireService;
 
 /**
- * Mỗi phút: phiên VNPAY PENDING đã quá vnp_ExpireDate + grace → QueryDR → chốt PAID / EXPIRED.
+ * Mỗi phút (:30): phiên VNPAY PENDING đã quá {@code expiresAt + expireGraceMinutes}
+ * → QueryDR → PAID / EXPIRED; nếu QueryDR lỗi thì huỷ khi {@code now >= expiresAt + queryDrGiveUpMinutes}.
  * Độc lập với Job004 (VietQR).
  */
 @Slf4j

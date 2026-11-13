@@ -55,8 +55,10 @@ public class VnpayExpireService {
         if (payment == null || !VnpayConstants.STATUS_PENDING.equals(payment.getStatus())) {
             return;
         }
-        boolean giveUp = new Date().after(new Date(payment.getExpiresAt().getTime()
-                + TimeUnit.MINUTES.toMillis(properties.getQueryDrGiveUpMinutes())));
+        long giveUpAtMs = payment.getExpiresAt().getTime()
+                + TimeUnit.MINUTES.toMillis(properties.getQueryDrGiveUpMinutes());
+        // >= để query-dr-give-up-minutes=0 huỷ ngay từ lần job đầu sau expiresAt.
+        boolean giveUp = System.currentTimeMillis() >= giveUpAtMs;
 
         VnpayQueryDrResult result = null;
         try {
@@ -98,7 +100,10 @@ public class VnpayExpireService {
                     "Phiên thanh toán VNPAY đã hết hạn (không xác nhận được với VNPAY)");
             logQuery(payment, false, "EXPIRED_UNVERIFIED", result);
             vnpayPaymentRepository.save(payment);
+            return;
         }
+        log.info("VNPAY reconcile giữ PENDING txnRef={} — chờ QueryDR/IPN đến {}",
+                txnRef, new Date(giveUpAtMs));
     }
 
     private static void copyResultFields(VnpayPayment payment, VnpayQueryDrResult result) {

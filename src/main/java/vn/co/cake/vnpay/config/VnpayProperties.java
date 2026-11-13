@@ -30,10 +30,16 @@ public class VnpayProperties {
     private String locale = "vn";
     /** Thời hạn thanh toán gửi VNPAY (vnp_ExpireDate), phút. */
     private int expireMinutes = 15;
-    /** Chờ thêm sau vnp_ExpireDate trước khi QueryDR + huỷ đơn (IPN có thể trễ). */
+    /**
+     * Chờ thêm sau {@code expiresAt} trước khi job bắt đầu QueryDR (IPN có thể trễ).
+     * Job chọn phiên khi {@code expiresAt <= now - grace}.
+     */
     private int expireGraceMinutes = 5;
-    /** Sau mốc này mà QueryDR vẫn lỗi → huỷ đơn + hoàn kho. */
-    private int queryDrGiveUpMinutes = 30;
+    /**
+     * Phút sau {@code expiresAt}: nếu QueryDR vẫn lỗi / không kết luận được → huỷ đơn + hoàn kho.
+     * Nên {@code >= expireGraceMinutes} (hoặc 0 khi muốn huỷ ngay sau hạn nếu QueryDR fail).
+     */
+    private int queryDrGiveUpMinutes = 5;
     private int connectTimeoutMs = 5000;
     private int readTimeoutMs = 15000;
 
@@ -55,7 +61,9 @@ public class VnpayProperties {
                     StringUtils.isNotBlank(hashSecret) ? "OK" : "MISSING",
                     StringUtils.isNotBlank(returnUrl) ? "OK" : "MISSING");
         } else {
-            log.info("VNPAY enabled={}, configured={}, payUrl={}", enabled, isConfigured(), payUrl);
+            log.info("VNPAY enabled={}, configured={}, payUrl={}, expireMinutes={}, "
+                            + "expireGraceMinutes={}, queryDrGiveUpMinutes={}",
+                    enabled, isConfigured(), payUrl, expireMinutes, expireGraceMinutes, queryDrGiveUpMinutes);
         }
     }
 }
