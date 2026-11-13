@@ -53,7 +53,7 @@ services:
       POSTGRES_DB: debase
     ports:
       # Host 5433 avoids clashing with a local Postgres already on 5432 (Windows). Container still listens on 5432.
-      - "5433:5432"
+      - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./init:/docker-entrypoint-initdb.d
