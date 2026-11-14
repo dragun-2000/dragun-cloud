@@ -44,6 +44,9 @@ $(function () {
         var status = displayValue($card.data('status'));
         var date = $card.data('date');
         var amount = displayValue($card.data('amount'));
+        var paymentMethodLabel = displayValue($card.data('payment-method-label'));
+        var paidAmount = displayValue($card.data('paid-amount'));
+        var remainingAmount = displayValue($card.data('remaining-amount'));
 
         return '<div class="order-detail-modal__summary">' +
             '<div class="order-detail-modal__summary-main">' +
@@ -65,11 +68,11 @@ $(function () {
             '<h6 class="order-detail-modal__section-title">Thời gian &amp; thanh toán</h6>' +
             '<dl class="order-detail-modal__grid">' +
             buildDetailRow('Thời gian đặt', date) +
+            buildDetailRow('Phương thức thanh toán', paymentMethodLabel, { fullWidth: true }) +
+            buildDetailRow('Tổng đơn', amount) +
+            buildDetailRow('Đã thanh toán', paidAmount) +
+            buildDetailRow('Còn phải thanh toán', remainingAmount) +
             '</dl>' +
-            '<div class="order-detail-modal__amount-box">' +
-            '<span class="order-detail-modal__amount-label">COD thanh toán</span>' +
-            '<span class="order-detail-modal__amount-value">' + escapeHtml(amount) + '</span>' +
-            '</div>' +
             '</div>';
     }
 

@@ -28,6 +28,15 @@ public class OrderPancakeResponse {
     private String partnerName;
     private ShippingAddress shipping_address;
 
+    /** Raw method từ DB (COD / VIETQR / VNPAY) — map local order-history. */
+    private String paymentMethod;
+    /** Nhãn tiếng Việt hiển thị popup chi tiết. */
+    private String paymentMethodLabel;
+    /** Đã thanh toán (đã format, vd {@code 120,000 VND}). */
+    private String paidAmount;
+    /** Còn phải thanh toán (đã format). */
+    private String remainingAmount;
+
     public static List<OrderPancakeResponse> parseListFromData(JsonNode dataNode, ObjectMapper mapper) {
         List<OrderPancakeResponse> orders = new ArrayList<>();
         if (dataNode == null || dataNode.isNull() || !dataNode.isArray()) {

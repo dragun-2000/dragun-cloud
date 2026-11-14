@@ -122,28 +122,28 @@ public class PaymentCheckoutController extends BaseController {
         return paymentStatus(vietqrOrderId, session);
     }
 
-    @PostMapping("/sandbox-simulate/{vietqrOrderId}")
-    public ResponseEntity<?> sandboxSimulate(@PathVariable String vietqrOrderId, HttpSession session) {
-        if (!vietQrProperties.getCheckout().isSandboxSimulateEnabled()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
-        }
-        UserLoginInfo loginInfo = getLoginInfo(session);
-        if (loginInfo == null) {
-            return errorResponse(HttpStatus.FORBIDDEN, "Vui lòng đăng nhập");
-        }
-        try {
-            vietQrPilotAccessService.assertCanUseVietQr(session, loginInfo.getId());
-            PaymentCheckoutFlowLog.step(vietqrOrderId, 1,
-                    "API POST sandbox-simulate — accountId=%s", loginInfo.getId());
-            vietQrCheckoutService.runSandboxPaymentConfirm(vietqrOrderId, loginInfo.getId());
-            PaymentCheckoutStatusResponse response = vietQrCheckoutService.getCheckoutDetails(
-                    vietqrOrderId, loginInfo.getId());
-            return ResponseEntity.ok(response);
-        } catch (Exception ex) {
-            log.error("Sandbox simulate failed: orderId={}", vietqrOrderId, ex);
-            return errorResponse(HttpStatus.BAD_REQUEST, resolveErrorMessage(ex));
-        }
-    }
+    // @PostMapping("/sandbox-simulate/{vietqrOrderId}")
+    // public ResponseEntity<?> sandboxSimulate(@PathVariable String vietqrOrderId, HttpSession session) {
+    //     if (!vietQrProperties.getCheckout().isSandboxSimulateEnabled()) {
+    //         return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+    //     }
+    //     UserLoginInfo loginInfo = getLoginInfo(session);
+    //     if (loginInfo == null) {
+    //         return errorResponse(HttpStatus.FORBIDDEN, "Vui lòng đăng nhập");
+    //     }
+    //     try {
+    //         vietQrPilotAccessService.assertCanUseVietQr(session, loginInfo.getId());
+    //         PaymentCheckoutFlowLog.step(vietqrOrderId, 1,
+    //                 "API POST sandbox-simulate — accountId=%s", loginInfo.getId());
+    //         vietQrCheckoutService.runSandboxPaymentConfirm(vietqrOrderId, loginInfo.getId());
+    //         PaymentCheckoutStatusResponse response = vietQrCheckoutService.getCheckoutDetails(
+    //                 vietqrOrderId, loginInfo.getId());
+    //         return ResponseEntity.ok(response);
+    //     } catch (Exception ex) {
+    //         log.error("Sandbox simulate failed: orderId={}", vietqrOrderId, ex);
+    //         return errorResponse(HttpStatus.BAD_REQUEST, resolveErrorMessage(ex));
+    //     }
+    // }
 
     private CartForm resolveCartForm(HttpSession session, UserLoginInfo loginInfo) {
         Object sessionAttr = session.getAttribute("cartForm");

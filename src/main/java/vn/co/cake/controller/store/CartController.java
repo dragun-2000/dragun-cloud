@@ -37,6 +37,7 @@ import vn.co.cake.service.OrderService;
 import vn.co.cake.utils.BigDecimalUtil;
 import vn.co.cake.utils.DateUtil;
 import vn.co.cake.utils.FunctionUtil;
+import vn.co.cake.vnpay.VnpayConstants;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 
@@ -331,10 +332,20 @@ public class CartController extends BaseController {
         }
         
         // Format money
-        if (order.getTotalAmount() != null) {
-            String money = BigDecimalUtil.formatMoney(order.getTotalAmount()) + " VND";
-            response.setMoney_to_collect(money);
+        BigDecimal total = order.getTotalAmount() != null ? order.getTotalAmount() : BigDecimal.ZERO;
+        response.setMoney_to_collect(BigDecimalUtil.formatMoney(total) + " VND");
+
+        String paymentMethod = order.getPaymentMethod();
+        response.setPaymentMethod(paymentMethod);
+        response.setPaymentMethodLabel(resolvePaymentMethodLabel(paymentMethod));
+
+        BigDecimal paid = resolvePaidAmount(paymentMethod, order.getPrepaid(), total);
+        BigDecimal remaining = total.subtract(paid);
+        if (remaining.compareTo(BigDecimal.ZERO) < 0) {
+            remaining = BigDecimal.ZERO;
         }
+        response.setPaidAmount(BigDecimalUtil.formatMoney(paid) + " VND");
+        response.setRemainingAmount(BigDecimalUtil.formatMoney(remaining) + " VND");
         
         if (StringUtils.isNotBlank(order.getPancakeStatusName())) {
             response.setStatus_name(order.getPancakeStatusName());
@@ -357,6 +368,42 @@ public class CartController extends BaseController {
         response.setTracking_link(order.getTrackingLink());
 
         return response;
+    }
+
+    private static String resolvePaymentMethodLabel(String method) {
+        if (PaymentConstants.METHOD_VIETQR.equalsIgnoreCase(method)
+                || PaymentConstants.METHOD_TRANSFER_LEGACY.equalsIgnoreCase(method)) {
+            return "Chuyển khoản VietQR";
+        }
+        if (PaymentConstants.METHOD_COD.equalsIgnoreCase(method)) {
+            return "Thanh toán khi nhận hàng (COD)";
+        }
+        if (VnpayConstants.METHOD_VNPAY.equalsIgnoreCase(method)) {
+            return "Thanh toán VNPAY";
+        }
+        return StringUtils.defaultIfBlank(method, "—");
+    }
+
+    /**
+     * Mirror mail confirmation: online (VietQR/VNPAY) dùng prepaid, thiếu thì coi như đã trả đủ total;
+     * COD = chưa trả trước.
+     */
+    private static BigDecimal resolvePaidAmount(String paymentMethod, BigDecimal prepaid, BigDecimal total) {
+        boolean online = PaymentConstants.METHOD_VIETQR.equalsIgnoreCase(paymentMethod)
+                || PaymentConstants.METHOD_TRANSFER_LEGACY.equalsIgnoreCase(paymentMethod)
+                || VnpayConstants.METHOD_VNPAY.equalsIgnoreCase(paymentMethod);
+        boolean cod = PaymentConstants.METHOD_COD.equalsIgnoreCase(paymentMethod);
+        BigDecimal safeTotal = total != null ? total : BigDecimal.ZERO;
+
+        if (cod) {
+            return BigDecimal.ZERO;
+        }
+        if (online) {
+            BigDecimal paid = prepaid != null && prepaid.compareTo(BigDecimal.ZERO) > 0 ? prepaid : safeTotal;
+            return paid.compareTo(safeTotal) > 0 ? safeTotal : paid;
+        }
+        BigDecimal fallback = prepaid != null ? prepaid.max(BigDecimal.ZERO) : BigDecimal.ZERO;
+        return fallback.compareTo(safeTotal) > 0 ? safeTotal : fallback;
     }
     
     private void formatOrderPancakeResponses(List<OrderPancakeResponse> orders) {

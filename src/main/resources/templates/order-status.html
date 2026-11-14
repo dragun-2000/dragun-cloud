@@ -25,6 +25,9 @@
                         data-status=${order.status_name},
                         data-date=${order.inserted_at},
                         data-amount=${order.money_to_collect},
+                        data-payment-method-label=${order.paymentMethodLabel},
+                        data-paid-amount=${order.paidAmount},
+                        data-remaining-amount=${order.remainingAmount},
                         data-tracking-link=${order.tracking_link}">
             <div class="titleInformation">
               <div class="title-tlt d-flex justify-content-between w-100">
@@ -68,7 +71,7 @@
                   <div class="price" th:text="${order?.inserted_at ?: 'N/A'}">N/A</div>
                 </li>
                 <li>
-                  <div class="text-left">Cod Thanh Toán</div>
+                  <div class="text-left">Tổng thanh toán</div>
                   <div class="price" th:text="${order?.money_to_collect ?: 'N/A'}">N/A</div>
                 </li>
               </ul>
