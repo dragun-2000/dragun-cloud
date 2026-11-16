@@ -55,6 +55,7 @@ public class AdminSecurityConfiguration extends WebSecurityConfigurerAdapter {
             .authorizeRequests()
             .antMatchers(RequestPathConst.HOME, RequestPathConst.AM, RequestPathConst.AM001, RequestPathConst.AM001_LOGIN, RequestPathConst.PAGE_ERROR, RequestPathConst.SA001_REGISTER).permitAll()
             .antMatchers("/favicon-16x16.png", RequestPathConst.AM001.concat("/**"), RequestPathConst.SA001.concat("/**")).permitAll()
+            .antMatchers("/AM/system/**").hasRole("ADMIN")
             .antMatchers("/AM/**").hasAnyRole("ADMIN", "STAFF")
             .antMatchers("/HO/**").hasRole("MANAGE")
             .antMatchers("/csv/**").hasAnyRole("ADMIN", "MANAGE", "USER", "STAFF")

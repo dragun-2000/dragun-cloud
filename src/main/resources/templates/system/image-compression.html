@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.w3.org/1999/xhtml" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security" layout:decorate="~{template/baseManage.html}">
+<div class="container-fluid" layout:fragment="main-content">
+    <style>
+        .img-cmp { padding: 16px 0; font-size: 14px; }
+        .img-cmp .num { text-align: right; white-space: nowrap; }
+        .img-cmp .ok { color: #1b7f3b; }
+        .img-cmp .err { color: #b3261e; }
+        .img-cmp .muted { color: #777; }
+        .img-cmp .toolbar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin: 10px 0; }
+        .img-cmp form.inline { display: inline-block; margin: 2px 4px 2px 0; }
+        .img-cmp details summary { cursor: pointer; }
+        .img-cmp table td, .img-cmp table th { vertical-align: top; }
+    </style>
+
+    <div class="row">
+    <div th:replace="~{template/sidebar :: sidebar}"></div>
+    <main class="main-content col-lg-10 col-md-9 col-sm-12 p-0 offset-lg-2 offset-md-3">
+    <div th:replace="~{template/navbar :: navbar}"></div>
+    <div class="main-content-container container-fluid">
+    <div class="page-header text-center no-gutters py-4">
+        <h3 class="page-title font-weight-bold">Nén Ảnh Sản Phẩm</h3>
+    </div>
+    <div class="img-cmp">
+
+        <div class="alert alert-info">
+            Ảnh &gt; <b th:text="${props.targetBytes / 1024}">500</b> KB được nén xuống dưới ngưỡng (cạnh dài không nhỏ
+            hơn <b th:text="${props.minLongEdge}">1200</b>px). Tên file, định dạng và URL trong DB giữ nguyên; ảnh đã nén
+            hoặc nhỏ hơn ngưỡng không bị nén lại; ảnh nào lỗi thì giữ nguyên ảnh gốc.<br>
+            Ổ đĩa còn trống — ảnh: <b th:text="${disk['upload']} + ' MB'"></b>,
+            sao lưu: <b th:text="${disk['backup'] < 0 ? 'chưa cấu hình' : disk['backup'] + ' MB'}"></b>.
+            Có <b th:text="${totalProducts}"></b> sản phẩm, tổng <b th:text="${totalPendingMb} + ' MB'"></b> ảnh cần nén.
+        </div>
+
+        <div class="alert alert-success" th:if="${message}" th:text="${message}"></div>
+        <div class="alert alert-danger" th:if="${error}" th:text="${error}"></div>
+
+        <form method="get" th:action="@{/AM/system/image-compression}" class="toolbar">
+            <input class="form-control" style="max-width: 280px" type="text" name="q" th:value="${q}"
+                   placeholder="Tên hoặc mã sản phẩm">
+            <select class="form-control" style="max-width: 360px" name="onlyPending" onchange="this.form.submit()">
+                <option value="true" th:selected="${onlyPending}">Chỉ sản phẩm còn ảnh cần nén / còn sao lưu</option>
+                <option value="false" th:selected="${!onlyPending}">Tất cả sản phẩm</option>
+            </select>
+            <button class="btn btn-outline-secondary" type="submit">Lọc</button>
+        </form>
+
+        <form id="bulkForm" method="post" th:action="@{/AM/system/image-compression/compress}"
+              onsubmit="return imgCmpConfirmBulk();">
+            <input type="hidden" name="q" th:value="${q}">
+            <input type="hidden" name="onlyPending" th:value="${onlyPending}">
+            <input type="hidden" name="page" th:value="${page}">
+            <div class="toolbar">
+                <label class="mb-0"><input type="checkbox" id="imgCmpBackup" name="backup" value="true"> Sao lưu ảnh gốc
+                    <span class="muted">(cần ổ trống ≈ dung lượng ảnh gốc của sản phẩm; kiểm tra xong bấm "Xoá sao lưu")</span></label>
+                <button type="submit" class="btn btn-primary">Nén các sản phẩm đã chọn</button>
+            </div>
+        </form>
+
+        <div class="table-responsive">
+            <table class="table table-bordered table-sm bg-white">
+                <thead class="thead-light">
+                <tr>
+                    <th><input type="checkbox" onclick="imgCmpToggleAll(this)" title="Chọn tất cả trên trang"></th>
+                    <th>ID</th>
+                    <th>Sản phẩm</th>
+                    <th class="num">Số ảnh</th>
+                    <th class="num">Tổng MB</th>
+                    <th class="num">Cần nén</th>
+                    <th class="num">Đã nén</th>
+                    <th>Trạng thái</th>
+                    <th>Thao tác</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:if="${rows.isEmpty()}"><td colspan="9" class="muted">Không có sản phẩm nào.</td></tr>
+                <tr th:each="r : ${rows}">
+                    <td><input type="checkbox" class="img-cmp-pick" name="productIds" form="bulkForm" th:value="${r.productId}"
+                               th:disabled="${r.pendingCount == 0 or (r.task != null and r.task.active)}"></td>
+                    <td th:text="${r.productId}"></td>
+                    <td>
+                        <div th:text="${r.name}"></div>
+                        <div class="muted" th:text="${r.code}"></div>
+                        <a th:if="${r.firstImageUrl}" th:href="${r.firstImageUrl}" target="_blank" rel="noopener">Xem ảnh đầu</a>
+                    </td>
+                    <td class="num">
+                        <span th:text="${r.localCount}"></span>
+                        <div class="muted" th:if="${r.missingCount > 0}" th:text="${r.missingCount} + ' thiếu file'"></div>
+                        <div class="muted" th:if="${r.externalCount > 0}" th:text="${r.externalCount} + ' ảnh ngoài'"></div>
+                    </td>
+                    <td class="num" th:text="${r.totalMb}"></td>
+                    <td class="num">
+                        <b th:if="${r.pendingCount > 0}" th:text="${r.pendingCount} + ' ảnh / ' + ${r.pendingMb} + ' MB'"></b>
+                        <span class="muted" th:if="${r.pendingCount == 0}">0</span>
+                    </td>
+                    <td class="num" th:text="${r.compressedCount}"></td>
+                    <td>
+                        <span class="muted" th:if="${r.task == null}">—</span>
+                        <th:block th:if="${r.task != null}">
+                            <span th:class="${r.task.state.name() == 'FAILED' ? 'err' : (r.task.state.name() == 'DONE' ? 'ok' : '')}"
+                                  th:text="${r.task.state}"></span>
+                            <div th:if="${r.task.message}" th:text="${r.task.message}"></div>
+                            <div th:if="${r.task.savedMb > 0}" class="ok" th:text="'Giảm ' + ${r.task.savedMb} + ' MB'"></div>
+                            <details th:if="${!r.task.files.isEmpty()}">
+                                <summary th:text="'Chi tiết ' + ${r.task.files.size()} + ' ảnh'"></summary>
+                                <div th:each="f : ${r.task.files}">
+                                    <span th:text="${f.fileName}"></span>:
+                                    <span th:class="${f.outcome.name() == 'FAILED' ? 'err' : ''}" th:text="${f.outcome}"></span>
+                                    <span th:if="${f.outcome.name() == 'COMPRESSED'}"
+                                          th:text="${f.kbBefore} + 'KB → ' + ${f.kbAfter} + 'KB (' + ${f.width} + '×' + ${f.height} + ')'"></span>
+                                    <span class="muted" th:if="${f.outcome.name() != 'COMPRESSED' and f.message != null}" th:text="${f.message}"></span>
+                                </div>
+                            </details>
+                        </th:block>
+                    </td>
+                    <td>
+                        <form class="inline" method="post" th:action="@{/AM/system/image-compression/compress}"
+                              th:if="${r.pendingCount > 0 and (r.task == null or !r.task.active)}" onsubmit="imgCmpCopyBackup(this)">
+                            <input type="hidden" name="productIds" th:value="${r.productId}">
+                            <input type="hidden" name="backup" value="false">
+                            <input type="hidden" name="q" th:value="${q}">
+                            <input type="hidden" name="onlyPending" th:value="${onlyPending}">
+                            <input type="hidden" name="page" th:value="${page}">
+                            <button class="btn btn-sm btn-primary" type="submit">Nén</button>
+                        </form>
+                        <th:block th:if="${r.backupCount > 0}">
+                            <div class="muted" th:text="${r.backupCount} + ' ảnh gốc đang sao lưu'"></div>
+                            <form class="inline" method="post"
+                                  th:action="@{/AM/system/image-compression/products/{id}/restore(id=${r.productId})}"
+                                  onsubmit="return confirm('Khôi phục ảnh gốc (ghi đè ảnh đã nén) cho sản phẩm này?');">
+                                <input type="hidden" name="q" th:value="${q}">
+                                <input type="hidden" name="onlyPending" th:value="${onlyPending}">
+                                <input type="hidden" name="page" th:value="${page}">
+                                <button class="btn btn-sm btn-outline-secondary" type="submit">Khôi phục</button>
+                            </form>
+                            <form class="inline" method="post"
+                                  th:action="@{/AM/system/image-compression/products/{id}/delete-backup(id=${r.productId})}"
+                                  onsubmit="return confirm('Xoá vĩnh viễn ảnh gốc đã sao lưu của sản phẩm này? Không thể khôi phục lại.');">
+                                <input type="hidden" name="q" th:value="${q}">
+                                <input type="hidden" name="onlyPending" th:value="${onlyPending}">
+                                <input type="hidden" name="page" th:value="${page}">
+                                <button class="btn btn-sm btn-outline-danger" type="submit">Xoá sao lưu</button>
+                            </form>
+                        </th:block>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <nav th:if="${totalPages > 1}">
+            <ul class="pagination">
+                <li th:each="i : ${#numbers.sequence(0, totalPages - 1)}" class="page-item"
+                    th:classappend="${i == page} ? 'active' : ''">
+                    <a class="page-link" th:href="@{/AM/system/image-compression(q=${q},onlyPending=${onlyPending},page=${i})}"
+                       th:text="${i + 1}"></a>
+                </li>
+            </ul>
+        </nav>
+    </div>
+    </div>
+    </main>
+    </div>
+
+    <script th:inline="javascript">
+        function imgCmpToggleAll(src) {
+            document.querySelectorAll('input.img-cmp-pick:not(:disabled)').forEach(function (c) { c.checked = src.checked; });
+        }
+        function imgCmpCopyBackup(form) {
+            form.querySelector('input[name=backup]').value = document.getElementById('imgCmpBackup').checked ? 'true' : 'false';
+            return true;
+        }
+        function imgCmpConfirmBulk() {
+            var n = document.querySelectorAll('input.img-cmp-pick:checked').length;
+            if (n === 0) { alert('Chưa chọn sản phẩm nào'); return false; }
+            return confirm('Nén ảnh của ' + n + ' sản phẩm đã chọn?');
+        }
+        /*<![CDATA[*/
+        if (/*[[${autoRefresh}]]*/ false) {
+            setTimeout(function () { window.location.reload(); }, 5000);
+        }
+        /*]]>*/
+    </script>
+</div>
+</html>
