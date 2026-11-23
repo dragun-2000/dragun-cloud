@@ -6,6 +6,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.UUID;
 
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpEntity;
@@ -59,7 +60,7 @@ public class VnpayApiClient {
 
         String query = VnpaySigner.buildQuery(params);
         String secureHash = VnpaySigner.hmacSha512(properties.getHashSecret(), query);
-        return properties.getPayUrl() + "?" + query + "&" + VnpayConstants.PARAM_SECURE_HASH + "=" + secureHash;
+        return StringUtils.trim(properties.getPayUrl()) + "?" + query + "&" + VnpayConstants.PARAM_SECURE_HASH + "=" + secureHash;
     }
 
     /**

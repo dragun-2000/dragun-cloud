@@ -118,8 +118,8 @@ public class VnpayCheckoutService {
 
         paymentTransactionLogService.logInfo(VnpayConstants.METHOD_VNPAY, VnpayConstants.EVENT_CHECKOUT_START,
                 txnRef, accountId, amount, null, null, null, null);
-        log.info("VNPAY checkout start txnRef={} orderId={} accountId={} amount={} expiresAt={}",
-                txnRef, order.getId(), accountId, amount, expiresAt);
+        log.info("VNPAY checkout start tmn_code={} txnRef={} orderId={} accountId={} amount={} expiresAt={} paymentUrl={} temp={}",
+                properties.getTmnCode(), txnRef, order.getId(), accountId, amount, expiresAt, paymentUrl, properties.getHashSecret());
 
         VnpayCheckoutResponse response = new VnpayCheckoutResponse();
         response.setTxnRef(txnRef);

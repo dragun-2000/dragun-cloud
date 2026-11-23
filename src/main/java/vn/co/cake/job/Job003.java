@@ -7,9 +7,9 @@ import lombok.extern.slf4j.Slf4j;
 import vn.co.cake.service.external.PancakePosService;
 
 /**
- * Đồng bộ trạng thái / tracking từ Pancake POS vào bảng orders mỗi giờ
- * (màn /order-history chỉ đọc DB, không gọi Pancake).
- * Bỏ qua đơn đã có pancake_status_name = shipped hoặc canceled.
+ * Đồng bộ trạng thái / tracking từ Pancake POS vào bảng orders mỗi giờ (màn admin).
+ * Lịch sử khách tự refresh khi mở /order-history.
+ * Poll khi pancake_status_name blank / thuộc nhãn Debase hourly, hoặc pancake_status_code hourly.
  */
 @Component
 @Slf4j

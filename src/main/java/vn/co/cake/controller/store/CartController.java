@@ -17,7 +17,6 @@ import vn.co.cake.entity.Account;
 import vn.co.cake.entity.Order;
 import vn.co.cake.entity.Province;
 import vn.co.cake.entity.Voucher;
-import vn.co.cake.enums.OrderStatus;
 import vn.co.cake.exception.CommonServletException;
 import vn.co.cake.payment.PaymentConstants;
 import vn.co.cake.payment.config.VietQrProperties;
@@ -34,6 +33,8 @@ import vn.co.cake.security.user.UserLoginInfo;
 import vn.co.cake.service.AccountService;
 import vn.co.cake.service.CartService;
 import vn.co.cake.service.OrderService;
+import vn.co.cake.service.external.PancakeOrderStatus;
+import vn.co.cake.service.external.PancakePosService;
 import vn.co.cake.utils.BigDecimalUtil;
 import vn.co.cake.utils.DateUtil;
 import vn.co.cake.utils.FunctionUtil;
@@ -62,6 +63,7 @@ public class CartController extends BaseController {
     private final VietQrProperties vietQrProperties;
     private final VietQrPilotAccessService vietQrPilotAccessService;
     private final PaymentOrderTotalCalculator paymentOrderTotalCalculator;
+    private final PancakePosService pancakePosService;
 
     public CartController(CartService cartService,
                           AccountService accountService,
@@ -72,7 +74,8 @@ public class CartController extends BaseController {
                           OrderRepository orderRepository,
                           VietQrProperties vietQrProperties,
                           VietQrPilotAccessService vietQrPilotAccessService,
-                          PaymentOrderTotalCalculator paymentOrderTotalCalculator) {
+                          PaymentOrderTotalCalculator paymentOrderTotalCalculator,
+                          PancakePosService pancakePosService) {
         this.cartService = cartService;
         this.accountService = accountService;
         this.provinceRepository = provinceRepository;
@@ -83,6 +86,7 @@ public class CartController extends BaseController {
         this.vietQrProperties = vietQrProperties;
         this.vietQrPilotAccessService = vietQrPilotAccessService;
         this.paymentOrderTotalCalculator = paymentOrderTotalCalculator;
+        this.pancakePosService = pancakePosService;
     }
 
     @ModelAttribute("cartForm")
@@ -288,6 +292,14 @@ public class CartController extends BaseController {
             List<Order> dbOrders = orderRepository.findVisibleOrderHistoryByPhone(phone);
             log.info("Found {} orders in database for phone: {}", dbOrders.size(), phone);
 
+            try {
+                pancakePosService.syncOrdersForCustomer(dbOrders);
+                dbOrders = orderRepository.findVisibleOrderHistoryByPhone(phone);
+            } catch (Exception syncEx) {
+                log.warn("Pancake refresh on order-history failed for phone {}: {}",
+                        phone, syncEx.getMessage());
+            }
+
             List<OrderPancakeResponse> allOrders = dbOrders.stream()
                     .map(this::mapOrderToOrderPancakeResponse)
                     .collect(Collectors.toList());
@@ -347,18 +359,11 @@ public class CartController extends BaseController {
         response.setPaidAmount(BigDecimalUtil.formatMoney(paid) + " VND");
         response.setRemainingAmount(BigDecimalUtil.formatMoney(remaining) + " VND");
         
-        if (StringUtils.isNotBlank(order.getPancakeStatusName())) {
-            response.setStatus_name(order.getPancakeStatusName());
-        } else if (OrderStatus.SYNC_FAIL.getValue().equals(order.getStatus())) {
-            response.setStatus_name("Đồng bộ Pancake thất bại");
-        } else if (OrderStatus.PENDING_SYNC.getValue().equals(order.getStatus())) {
-            response.setStatus_name("Chờ đồng bộ Pancake");
-        } else if (OrderStatus.NEW.getValue().equals(order.getStatus())) {
-            response.setStatus_name("Đã đồng bộ Pancake");
-        } else {
-            response.setStatus_name("Đang xử lý");
-        }
-        
+        response.setStatus_name(PancakeOrderStatus.resolveDisplayStatus(order));
+        response.setStatusCode(order.getPancakeStatusCode());
+        response.setCancelMode(PancakeOrderStatus.resolveCancelMode(
+                order.getStatus(), order.getPancakeStatusCode(), order.getPancakeStatusName()).name());
+
         // Create ShippingAddress
         ShippingAddress shippingAddress = new ShippingAddress();
         shippingAddress.setPhone_number(order.getPhone() != null ? order.getPhone() : "N/A");

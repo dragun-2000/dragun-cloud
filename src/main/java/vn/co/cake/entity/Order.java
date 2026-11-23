@@ -29,6 +29,8 @@ public class Order extends BaseEntity {
     private String status;
     @Column(name = "pancake_status_name", length = 255)
     private String pancakeStatusName;
+    @Column(name = "pancake_status_code")
+    private Integer pancakeStatusCode;
     @Column(name = "shipping_partner", length = 64)
     private String shippingPartner;
     @Column(name = "pancake_order_id", length = 64)

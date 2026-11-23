@@ -28,9 +28,10 @@
                         data-payment-method-label=${order.paymentMethodLabel},
                         data-paid-amount=${order.paidAmount},
                         data-remaining-amount=${order.remainingAmount},
-                        data-tracking-link=${order.tracking_link}">
+                        data-tracking-link=${order.tracking_link},
+                        data-cancel-mode=${order.cancelMode}">
             <div class="titleInformation">
-              <div class="title-tlt d-flex justify-content-between w-100">
+              <div class="title-tlt d-flex justify-content-between w-100 align-items-start">
                 <h2 class="tlt">
                   <span class="item">
                     <span th:text="${stat.count} + '.'">1</span>
@@ -39,13 +40,22 @@
                   <small th:if="${order.customId != null}" class="text-muted d-block" style="font-size: 14px; font-weight: normal;"
                          th:text="'Mã đơn: ' + ${order.customId}"></small>
                 </h2>
-                <button
-                  type="button"
-                  class="btn btn-primary js-pancake-order-detail"
-                  style="margin-left: auto;"
-                  th:attr="data-tracking-link=${order.tracking_link}">
-                  Xem chi tiết
-                </button>
+                <div class="d-flex flex-wrap" style="margin-left: auto; gap: 8px;">
+                  <button
+                    type="button"
+                    class="btn btn-outline-danger js-order-cancel"
+                    th:if="${order.cancelMode != null and order.cancelMode != 'NONE'}"
+                    th:attr="data-order-code=${order.customId != null ? order.customId : order.id},
+                             data-cancel-mode=${order.cancelMode}">
+                    Hủy đơn
+                  </button>
+                  <button
+                    type="button"
+                    class="btn btn-primary js-pancake-order-detail"
+                    th:attr="data-tracking-link=${order.tracking_link}">
+                    Xem chi tiết
+                  </button>
+                </div>
               </div>
             </div>
             <div class="boxInformation">
@@ -64,7 +74,7 @@
                 </li>
                 <li>
                   <div class="text-left">Trạng thái đơn hàng:</div>
-                  <div class="price" th:text="${order?.status_name ?: 'N/A'}">N/A</div>
+                  <div class="price js-order-status-label" th:text="${order?.status_name ?: 'N/A'}">N/A</div>
                 </li>
                 <li>
                   <div class="text-left">Thời gian đặt hàng:</div>
@@ -108,6 +118,30 @@
 </div>
 
 <!-- Popup chờ / thành công thanh toán VietQR -->
+<div class="modal fade" id="orderCancelContactModal" tabindex="-1" role="dialog" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Liên hệ để hủy đơn</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Đóng">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body text-center">
+        <p class="mb-3">Đơn đã được xác nhận. Vui lòng liên hệ admin qua Facebook hoặc Instagram để hủy đơn.</p>
+        <p class="mb-2"><strong>Mã đơn:</strong> <span id="order-cancel-contact-code"></span></p>
+        <div class="d-flex justify-content-center flex-wrap" style="gap: 12px;">
+          <a id="order-cancel-facebook" href="https://www.facebook.com/debase.95" target="_blank" rel="noopener noreferrer" class="btn btn-primary">Facebook</a>
+          <a id="order-cancel-instagram" href="https://www.instagram.com/debase.95" target="_blank" rel="noopener noreferrer" class="btn btn-outline-primary">Instagram</a>
+        </div>
+      </div>
+      <div class="modal-footer justify-content-center">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Đóng</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div class="modal fade" id="vietqrPaymentWaitModal" tabindex="-1" role="dialog"
      data-backdrop="static" data-keyboard="false" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered" role="document">

@@ -129,6 +129,7 @@ CREATE TABLE IF NOT EXISTS orders
     shipping_address varchar(255),
     status               varchar(255),
     pancake_status_name  varchar(255),
+    pancake_status_code  integer,
     shipping_partner     varchar(64),
     pancake_order_id     varchar(64),
     tracking_link        varchar(512),

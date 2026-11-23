@@ -24,6 +24,8 @@ public class OrderPancakeResponse {
     private String tracking_link;
     private String inserted_at;
     private String status_name;
+    /** Mã số trạng thái Pancake (field {@code status} dạng số). */
+    private Integer statusCode;
     @JsonProperty("partner_name")
     private String partnerName;
     private ShippingAddress shipping_address;
@@ -36,6 +38,8 @@ public class OrderPancakeResponse {
     private String paidAmount;
     /** Còn phải thanh toán (đã format). */
     private String remainingAmount;
+    /** SELF / CONTACT / NONE — nút hủy trên lịch sử đơn. */
+    private String cancelMode;
 
     public static List<OrderPancakeResponse> parseListFromData(JsonNode dataNode, ObjectMapper mapper) {
         List<OrderPancakeResponse> orders = new ArrayList<>();
@@ -66,10 +70,23 @@ public class OrderPancakeResponse {
         order.setLink_confirm_order(scalarText(node, "link_confirm_order"));
         order.setTracking_link(firstLink(node, "tracking_link"));
         order.setInserted_at(scalarText(node, "inserted_at"));
+        order.setStatusCode(resolveStatusCode(node));
         order.setStatus_name(resolveStatusName(node));
         order.setPartnerName(resolvePartnerName(node));
         order.setShipping_address(parseShippingAddress(node, mapper));
         return order;
+    }
+
+    private static Integer resolveStatusCode(JsonNode node) {
+        JsonNode status = node.get("status");
+        if (status != null && status.isNumber()) {
+            return status.asInt();
+        }
+        JsonNode statusId = node.get("status_id");
+        if (statusId != null && statusId.isNumber()) {
+            return statusId.asInt();
+        }
+        return null;
     }
 
     private static String resolvePartnerName(JsonNode node) {
@@ -99,13 +116,9 @@ public class OrderPancakeResponse {
             return statusName;
         }
         JsonNode status = node.get("status");
-        if (status != null && !status.isNull()) {
-            if (status.isTextual()) {
-                return status.asText();
-            }
-            if (status.isNumber()) {
-                return "Trạng thái #" + status.asInt();
-            }
+        // Numeric status is stored in statusCode — do not invent "Trạng thái #N".
+        if (status != null && status.isTextual()) {
+            return status.asText();
         }
         return null;
     }
@@ -168,6 +181,9 @@ public class OrderPancakeResponse {
         }
         if (StringUtils.isNotBlank(detail.getStatus_name())) {
             this.status_name = detail.getStatus_name();
+        }
+        if (detail.getStatusCode() != null) {
+            this.statusCode = detail.getStatusCode();
         }
         if (StringUtils.isNotBlank(detail.getOrder_link())) {
             this.order_link = detail.getOrder_link();

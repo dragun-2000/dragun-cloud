@@ -101,6 +101,81 @@ $(function () {
         showLocalDetailModal($card, null);
     });
 
+    function showContactCancelModal(orderCode, facebookUrl, instagramUrl) {
+        $('#order-cancel-contact-code').text(orderCode || '');
+        if (facebookUrl) {
+            $('#order-cancel-facebook').attr('href', facebookUrl);
+        }
+        if (instagramUrl) {
+            $('#order-cancel-instagram').attr('href', instagramUrl);
+        }
+        $('#orderCancelContactModal').modal('show');
+    }
+
+    function markOrderCancelledOnCard($card, statusName) {
+        $card.find('.js-order-status-label').text(statusName || 'Đã hủy');
+        $card.attr('data-status', statusName || 'Đã hủy');
+        $card.attr('data-cancel-mode', 'NONE');
+        $card.find('.js-order-cancel').remove();
+    }
+
+    $(document).on('click', '.js-order-cancel', function (e) {
+        e.preventDefault();
+        var $btn = $(this);
+        if ($btn.data('busy')) {
+            return;
+        }
+        var orderCode = ($btn.attr('data-order-code') || '').toString().trim();
+        var cancelMode = ($btn.attr('data-cancel-mode') || '').toString().trim();
+        var $card = $btn.closest('.js-order-card');
+        if (!orderCode) {
+            return;
+        }
+
+        if (cancelMode === 'CONTACT') {
+            showContactCancelModal(orderCode);
+            return;
+        }
+
+        if (!window.confirm('Bạn chắc chắn muốn hủy đơn ' + orderCode + '?')) {
+            return;
+        }
+
+        $btn.data('busy', true).prop('disabled', true);
+        $.ajax({
+            type: 'POST',
+            url: '/api/orders/' + encodeURIComponent(orderCode) + '/cancel',
+            contentType: 'application/json',
+            success: function (response) {
+                var result = response && response.result;
+                if (result === 'CANCELLED' || result === 'ALREADY_CANCELLED') {
+                    markOrderCancelledOnCard($card, response.statusName);
+                    window.alert(response.message || 'Đã hủy đơn hàng.');
+                    return;
+                }
+                if (result === 'CONTACT_ADMIN') {
+                    $btn.attr('data-cancel-mode', 'CONTACT');
+                    $card.attr('data-cancel-mode', 'CONTACT');
+                    if (response.statusName) {
+                        $card.find('.js-order-status-label').text(response.statusName);
+                        $card.attr('data-status', response.statusName);
+                    }
+                    showContactCancelModal(orderCode, response.facebookUrl, response.instagramUrl);
+                    return;
+                }
+                window.alert((response && response.message) || 'Không thể hủy đơn. Vui lòng thử lại.');
+            },
+            error: function (xhr) {
+                var msg = (xhr.responseJSON && (xhr.responseJSON.message || xhr.responseJSON.result))
+                    || 'Không thể hủy đơn. Vui lòng thử lại.';
+                window.alert(msg);
+            },
+            complete: function () {
+                $btn.data('busy', false).prop('disabled', false);
+            }
+        });
+    });
+
     initVietQrPendingPayment();
 });
 

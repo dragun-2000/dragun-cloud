@@ -10,7 +10,7 @@ import vn.co.cake.entity.Account;
 
 import vn.co.cake.entity.Order;
 
-import vn.co.cake.enums.OrderStatus;
+import vn.co.cake.service.external.PancakeOrderStatus;
 
 import vn.co.cake.utils.DateUtil;
 
@@ -157,65 +157,7 @@ public class OrderDetailResponse {
 
 
     private static String resolveStatusDisplay(Order order) {
-
-        if (StringUtils.isNotBlank(order.getPancakeStatusName())) {
-
-            return order.getPancakeStatusName();
-
-        }
-
-        return mapInternalStatus(order.getStatus());
-
-    }
-
-
-
-    private static String mapInternalStatus(String status) {
-
-        if (StringUtils.isBlank(status)) {
-
-            return "—";
-
-        }
-
-        if (OrderStatus.NEW.getValue().equals(status)) {
-
-            return "Đã đồng bộ Pancake";
-
-        }
-
-        if (OrderStatus.SYNC_FAIL.getValue().equals(status)) {
-
-            return "Đồng bộ Pancake thất bại";
-
-        }
-
-        if (OrderStatus.PENDING_SYNC.getValue().equals(status)) {
-
-            return "Chờ đồng bộ Pancake";
-
-        }
-
-        if (OrderStatus.AWAITING_PAYMENT.getValue().equals(status)) {
-
-            return "Chờ thanh toán";
-
-        }
-
-        if (OrderStatus.PAYMENT_RECEIVED_UNFULFILLABLE.getValue().equals(status)) {
-
-            return "Đã nhận tiền - cần xử lý tồn kho";
-
-        }
-
-        if (OrderStatus.CANCELLED.getValue().equals(status)) {
-
-            return "Đã hủy do hết hạn thanh toán";
-
-        }
-
-        return status;
-
+        return PancakeOrderStatus.resolveDisplayStatus(order);
     }
 
 

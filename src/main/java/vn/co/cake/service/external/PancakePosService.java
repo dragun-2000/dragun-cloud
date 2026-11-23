@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
+import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
@@ -67,6 +68,7 @@ public class PancakePosService {
     private final RestTemplate restTemplate;
     private final EmailService emailService;
     private final InventoryReservationService inventoryReservationService;
+    private final PancakeOrderSyncWriter pancakeOrderSyncWriter;
 
     public PancakePosService(RestTemplateBuilder restTemplateBuilder,
                              PancakePropertyRepository pancakePropertyRepository,
@@ -77,7 +79,8 @@ public class PancakePosService {
                              OrderItemRepository orderItemRepository,
                              @Qualifier("pancakeRestTemplate") RestTemplate restTemplate,
                              EmailService emailService,
-                             InventoryReservationService inventoryReservationService) {
+                             InventoryReservationService inventoryReservationService,
+                             PancakeOrderSyncWriter pancakeOrderSyncWriter) {
         this.pancakePropertyRepository = pancakePropertyRepository;
         this.productRepository = productRepository;
         this.variationRepository = variationRepository;
@@ -87,6 +90,7 @@ public class PancakePosService {
         this.restTemplate = restTemplate;
         this.emailService = emailService;
         this.inventoryReservationService = inventoryReservationService;
+        this.pancakeOrderSyncWriter = pancakeOrderSyncWriter;
     }
 
     public void saveWebhookHistory(String payload) {
@@ -251,10 +255,16 @@ public class PancakePosService {
                     "Pancake API phản hồi — http=%s, durationMs=%s", response.getStatusCode(), cost);
 
             if (response.getStatusCode() != HttpStatus.CREATED) {
+                String responseBody = StringUtils.defaultString(response.getBody());
                 PaymentCheckoutFlowLog.step(traceId, 14,
-                        "LỖI Pancake HTTP %s — orderCode=%s", response.getStatusCode(), order.getCode());
+                        "LỖI Pancake HTTP %s — orderCode=%s, body=%s, hint=%s",
+                        response.getStatusCode(), order.getCode(), truncateMessage(responseBody, 500),
+                        hintForPancakeHttpError(response.getStatusCode().value(), responseBody));
+                log.error("Pancake create order rejected orderCode={} http={} body={}",
+                        order.getCode(), response.getStatusCode(), truncateMessage(responseBody, 1000));
                 logCurlForPancakeOrder(url, headers, body, order.getCode());
-                updateOrderSyncFailure(order, "HTTP " + response.getStatusCode());
+                updateOrderSyncFailure(order, truncateMessage(
+                        "HTTP " + response.getStatusCode() + ": " + responseBody, 255));
                 return false;
             }
             if (response.getBody() == null || response.getBody().isBlank()) {
@@ -268,6 +278,20 @@ public class PancakePosService {
                     "Pancake tạo đơn thành công (HTTP 201) — orderCode=%s", order.getCode());
             return true;
 
+        } catch (HttpStatusCodeException e) {
+            // RestTemplate throws for 4xx/5xx — đây là lỗi từ Pancake, không phải bug app bất ngờ.
+            int httpStatus = e.getRawStatusCode();
+            String responseBody = StringUtils.defaultIfBlank(e.getResponseBodyAsString(), e.getStatusText());
+            String hint = hintForPancakeHttpError(httpStatus, responseBody);
+            PaymentCheckoutFlowLog.step(traceId, 14,
+                    "LỖI Pancake HTTP %s — orderCode=%s, body=%s, hint=%s",
+                    httpStatus, order.getCode(), truncateMessage(responseBody, 500), hint);
+            log.error("Pancake create order HTTP error orderCode={} http={} shopId={} warehouseId={} body={} hint={}",
+                    order.getCode(), httpStatus, pancake.getShopId(), pancake.getWarehouseId(),
+                    truncateMessage(responseBody, 1000), hint);
+            logCurlForPancakeOrder(url, headers, body, order.getCode());
+            updateOrderSyncFailure(order, truncateMessage("HTTP " + httpStatus + ": " + responseBody, 255));
+            return false;
         } catch (ResourceAccessException e) {
             logCurlForPancakeOrder(url, headers, body, order.getCode());
             Throwable root = getRootCause(e);
@@ -287,10 +311,35 @@ public class PancakePosService {
             log.error("Unexpected error syncing order {}", order.getCode(), e);
             String errMsg = e.getMessage() != null ? e.getMessage() : e.getClass().getSimpleName();
             PaymentCheckoutFlowLog.step(traceId, 14,
-                    "LỖI không mong đợi khi sync Pancake — orderCode=%s, %s", order.getCode(), errMsg);
+                    "LỖI không mong đợi khi sync Pancake — orderCode=%s, type=%s, %s",
+                    order.getCode(), e.getClass().getSimpleName(), errMsg);
             updateOrderSyncFailure(order, truncateMessage(errMsg, 255));
             return false;
         }
+    }
+
+    /** Gợi ý ngắn theo HTTP/body Pancake để đọc log nhanh hơn. */
+    private static String hintForPancakeHttpError(int httpStatus, String responseBody) {
+        String body = StringUtils.defaultString(responseBody).toLowerCase();
+        if (httpStatus >= 500) {
+            if (body.contains("variation") || body.contains("product")) {
+                return "Pancake 5xx liên quan sản phẩm/biến thể — kiểm tra variation_id/product_id trên POS";
+            }
+            if (body.contains("warehouse")) {
+                return "Pancake 5xx liên quan kho — kiểm tra warehouse_id trong pancake_properties";
+            }
+            return "Pancake server 5xx — xem curl file/email; thường do payload (variation/kho/địa chỉ) hoặc sự cố POS tạm thời";
+        }
+        if (httpStatus == 401 || httpStatus == 403) {
+            return "Token/api_key Pancake không hợp lệ hoặc hết hạn";
+        }
+        if (httpStatus == 404) {
+            return "Sai shop_id/URL hoặc resource không tồn tại trên Pancake";
+        }
+        if (httpStatus == 400 || httpStatus == 422) {
+            return "Payload create order bị Pancake từ chối — kiểm tra items/variation/địa chỉ/SĐT trong curl file";
+        }
+        return "Xem response body + file log/pancake-curl-*.txt";
     }
     
     @Transactional
@@ -312,18 +361,44 @@ public class PancakePosService {
 
     /**
      * Job định kỳ: gom đơn theo SĐT, gọi Pancake tối thiểu rồi lưu status / tracking vào DB.
+     * Mỗi đơn ghi DB trong transaction riêng; GET lỗi không đẩy pancake_synced_at.
      */
-    @Transactional
     public void syncOrdersFromPancakeHourly(int batchSize) {
-        List<Order> orders = orderRepository.findOrdersForPancakeHourlySync(batchSize);
+        List<String> hourlyNames = PancakeOrderStatus.hourlySyncDebaseValues();
+        List<Integer> hourlyCodes = PancakeOrderStatus.hourlySyncPancakeCodes();
+        if (CollectionUtils.isEmpty(hourlyNames) || CollectionUtils.isEmpty(hourlyCodes)) {
+            log.error("Pancake hourly sync aborted: empty hourly name/code lists from enum");
+            return;
+        }
+        List<Order> orders = orderRepository.findOrdersForPancakeHourlySync(hourlyNames, hourlyCodes, batchSize);
         if (CollectionUtils.isEmpty(orders)) {
             log.info("Pancake hourly sync: no orders due for refresh");
             return;
         }
+        int synced = syncOrdersBatch(orders, true);
+        log.info("Pancake hourly sync: refreshed {} / {} orders", synced, orders.size());
+    }
 
+    /**
+     * Đồng bộ status/tracking cho đúng các đơn của khách khi mở lịch sử.
+     * Lỗi Pancake một đơn không làm fail cả trang. Không áp filter Job003.
+     */
+    public void syncOrdersForCustomer(List<Order> orders) {
+        if (CollectionUtils.isEmpty(orders)) {
+            return;
+        }
+        int synced = syncOrdersBatch(orders, false);
+        log.info("Pancake customer sync: refreshed {} / {} orders", synced, orders.size());
+    }
+
+    private int syncOrdersBatch(List<Order> orders, boolean hourlyFilter) {
         Map<String, List<Order>> byPhone = new LinkedHashMap<>();
         for (Order order : orders) {
             if (order == null || StringUtils.isBlank(order.getPhone())) {
+                continue;
+            }
+            if (hourlyFilter && !PancakeOrderStatus.needsHourlySync(
+                    order.getPancakeStatusCode(), order.getPancakeStatusName())) {
                 continue;
             }
             byPhone.computeIfAbsent(order.getPhone().trim(), k -> new ArrayList<>()).add(order);
@@ -337,13 +412,14 @@ public class PancakePosService {
             for (Order order : phoneOrders) {
                 try {
                     if (StringUtils.isNotBlank(order.getPancakeOrderId())) {
-                        syncOrderFromPancakeDetail(order);
-                        synced++;
+                        if (refreshOrderFromPancakeDetail(order)) {
+                            synced++;
+                        }
                     } else {
                         needListLookup.add(order);
                     }
                 } catch (Exception ex) {
-                    log.warn("Pancake hourly sync failed for order {}: {}", order.getCode(), ex.getMessage());
+                    log.warn("Pancake sync failed for order {}: {}", order.getCode(), ex.getMessage());
                 }
             }
             if (needListLookup.isEmpty()) {
@@ -353,38 +429,97 @@ public class PancakePosService {
                 List<OrderPancakeResponse> pancakeList = getAllOrderPancake(phone, 0, 200);
                 for (Order order : needListLookup) {
                     try {
-                        syncOrderFromPancakeList(order, pancakeList);
-                        synced++;
+                        if (refreshOrderFromPancakeList(order, pancakeList)) {
+                            synced++;
+                        }
                     } catch (Exception ex) {
-                        log.warn("Pancake hourly sync failed for order {}: {}", order.getCode(), ex.getMessage());
+                        log.warn("Pancake sync failed for order {}: {}", order.getCode(), ex.getMessage());
                     }
                 }
             } catch (Exception ex) {
-                log.warn("Pancake hourly sync failed for phone {}: {}", phone, ex.getMessage());
+                log.warn("Pancake sync failed for phone {}: {}", phone, ex.getMessage());
             }
         }
-        log.info("Pancake hourly sync: refreshed {} orders across {} phone(s)", synced, byPhone.size());
+        return synced;
     }
 
-    private void syncOrderFromPancakeDetail(Order order) {
+    /** @return true nếu đã ghi DB thành công từ GET detail. */
+    private boolean refreshOrderFromPancakeDetail(Order order) {
         OrderPancakeResponse detail = getOrderPancakeDetail(order.getPancakeOrderId());
-        if (detail != null) {
-            applyPancakeOrderResponse(order, detail);
+        if (detail == null) {
+            return false;
         }
-        order.setPancakeSyncedAt(new Date());
-        orderRepository.save(order);
+        pancakeOrderSyncWriter.applySuccessfulSync(order.getId(), detail);
+        return true;
     }
 
-    private void syncOrderFromPancakeList(Order order, List<OrderPancakeResponse> pancakeList) {
-        if (pancakeList != null && !pancakeList.isEmpty()) {
-            OrderPancakeResponse match = findMatchingPancakeOrder(pancakeList, order.getCode());
-            if (match != null) {
-                enrichWithPancakeOrderDetail(match);
-                applyPancakeOrderResponse(order, match);
-            }
+    /** @return true nếu khớp được đơn trên Pancake và ghi DB. */
+    private boolean refreshOrderFromPancakeList(Order order, List<OrderPancakeResponse> pancakeList) {
+        if (pancakeList == null || pancakeList.isEmpty()) {
+            return false;
         }
-        order.setPancakeSyncedAt(new Date());
-        orderRepository.save(order);
+        OrderPancakeResponse match = findMatchingPancakeOrder(pancakeList, order.getCode());
+        if (match == null) {
+            return false;
+        }
+        enrichWithPancakeOrderDetail(match);
+        pancakeOrderSyncWriter.applySuccessfulSync(order.getId(), match);
+        return true;
+    }
+
+    /**
+     * Hủy đơn trên Pancake POS (PUT status = canceled).
+     * @return response body đã parse, hoặc null nếu thất bại
+     */
+    public OrderPancakeResponse cancelOrderOnPancake(String pancakeOrderId) {
+        if (StringUtils.isBlank(pancakeOrderId)) {
+            return null;
+        }
+        PancakeProperties pancakeProperty = getDefault();
+        if (!hasApiCredentials(pancakeProperty)) {
+            log.error("PancakeProperties not found — cannot cancel order {}", pancakeOrderId);
+            return null;
+        }
+        String url = pancakeApiUrl + "/shops/" + pancakeProperty.getShopId()
+                + "/orders/" + pancakeOrderId + "?api_key=" + pancakeProperty.getToken();
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.set("Connection", "close");
+        headers.set("User-Agent", "DebaseApp/1.0 (Java)");
+
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("status", PancakeOrderStatus.CODE_CANCELED);
+        try {
+            ResponseEntity<String> response = restTemplate.exchange(
+                    url, HttpMethod.PUT, new HttpEntity<>(body, headers), String.class);
+            if (!response.getStatusCode().is2xxSuccessful() || StringUtils.isBlank(response.getBody())) {
+                log.warn("Pancake cancel failed for {}: status={}", pancakeOrderId, response.getStatusCode());
+                return null;
+            }
+            ObjectMapper objectMapper = new ObjectMapper();
+            objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+            JsonNode rootNode = objectMapper.readTree(response.getBody());
+            JsonNode dataNode = rootNode.path("data");
+            if (dataNode.isMissingNode() || dataNode.isNull()) {
+                dataNode = rootNode;
+            }
+            if (dataNode.isArray() && dataNode.size() > 0) {
+                dataNode = dataNode.get(0);
+            }
+            OrderPancakeResponse result = OrderPancakeResponse.fromPancakeJsonNode(dataNode, objectMapper);
+            if (result.getStatusCode() == null) {
+                result.setStatusCode(PancakeOrderStatus.CODE_CANCELED);
+            }
+            if (StringUtils.isBlank(result.getStatus_name())) {
+                result.setStatus_name(PancakeOrderStatus.LABEL_CANCELED);
+            }
+            log.info("Pancake cancel ok orderId={} statusCode={} statusName={}",
+                    pancakeOrderId, result.getStatusCode(), result.getStatus_name());
+            return result;
+        } catch (Exception ex) {
+            log.error("Pancake cancel error for {}: {}", pancakeOrderId, ex.getMessage());
+            return null;
+        }
     }
 
     @Transactional
@@ -453,19 +588,7 @@ public class PancakePosService {
     }
 
     private void applyPancakeOrderResponse(Order order, OrderPancakeResponse pancakeOrder) {
-        if (StringUtils.isNotBlank(pancakeOrder.getId())) {
-            order.setPancakeOrderId(pancakeOrder.getId());
-        }
-        if (StringUtils.isNotBlank(pancakeOrder.getStatus_name())) {
-            order.setPancakeStatusName(pancakeOrder.getStatus_name());
-        }
-        String partner = pancakeOrder.resolveShippingPartner();
-        if (StringUtils.isNotBlank(partner)) {
-            order.setShippingPartner(partner);
-        }
-        if (StringUtils.isNotBlank(pancakeOrder.getTracking_link())) {
-            order.setTrackingLink(pancakeOrder.getTracking_link());
-        }
+        PancakeOrderSyncWriter.applyFields(order, pancakeOrder);
     }
 
     private void applyPancakeJsonNode(Order order, JsonNode data) {
@@ -476,10 +599,13 @@ public class PancakePosService {
         if (StringUtils.isNotBlank(pancakeId)) {
             order.setPancakeOrderId(pancakeId);
         }
-        String statusName = textValue(data, "status_name");
-        if (StringUtils.isNotBlank(statusName)) {
-            order.setPancakeStatusName(statusName);
+        Integer statusCode = null;
+        if (data.has("status") && data.get("status").isNumber()) {
+            statusCode = data.get("status").asInt();
+        } else if (data.has("status_id") && data.get("status_id").isNumber()) {
+            statusCode = data.get("status_id").asInt();
         }
+        PancakeOrderStatus.applyFulfillmentToOrder(order, statusCode, textValue(data, "status_name"));
         String trackingLink = textValue(data, "tracking_link");
         if (StringUtils.isNotBlank(trackingLink)) {
             order.setTrackingLink(trackingLink);
