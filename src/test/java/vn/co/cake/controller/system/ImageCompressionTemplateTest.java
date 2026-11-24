@@ -33,7 +33,7 @@ class ImageCompressionTemplateTest {
         assertTrue(html.contains("Áo khoác đen"));
         assertTrue(html.contains("/AM/system/image-compression/products/10/restore"));
         assertTrue(html.contains("2 ảnh gốc đang sao lưu"));
-        assertTrue(html.contains("Nén Ảnh Sản Phẩm"), "trang nằm trong layout admin, có mục menu");
+        assertTrue(html.contains("Check Sản Phẩm"), "trang nằm trong layout admin, có mục menu");
         assertTrue(html.contains("Cấu hình thanh toán"), "sidebar admin được dựng");
 
         String empty = render(Collections.emptyList(), false);
