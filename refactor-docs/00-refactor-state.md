@@ -8,8 +8,8 @@
 | Current phase | **Phase 6 — in progress** (approved: T-00 + Wave 1 + option A, 2026-11-24). See `14-refactoring-progress.md`. |
 | Completed phases | Phase 1, Phase 2, Phase 3 (docs 06–09), Phase 4 (docs 10–11 + Tier A tests), Phase 5 (docs 12–13) |
 | Current approved scope | Documentation (`refactor-docs/**`) + **Tier A characterization tests** (new files under `src/test/java/**` only; approved by owner 2026-11-24). **No production source, existing-test, config or dependency changes are approved.** |
-| Current task | T-00 (commit baseline docs + Tier A tests). BF-01 fixed and committed in `f132489`; user env set (Maven at `D:\freeland\apache-maven-3.9.9`, `MAVEN_OPTS`). |
-| Next permitted action | After T-00: T-01…T-07, one at a time, each gated and committed. |
+| Current task | None. Completed: BF-01 (`f132489`), T-00 (`515dc24`), T-01 (unused imports; next commit). |
+| Next permitted action | T-02a (wildcard imports, `entity/**`), after owner go-ahead; then T-02b…T-07 one at a time. |
 | Git housekeeping (2026-11-24, owner-approved) | `.claude/worktrees` unstaged; `.claude/worktrees/` added to **local** `.git/info/exclude` (not `.gitignore`); 4 agent worktrees removed and 4 `worktree-agent-*` branches deleted (no unique commits; all 17 test files verified byte-identical in this checkout first). Note: new files keep getting auto-staged by something outside the agent (likely the IDE). |
 
 ## Git baseline

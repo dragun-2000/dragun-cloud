@@ -14,7 +14,6 @@ import org.springframework.web.bind.annotation.RestController;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import vn.co.cake.exception.CommonServletException;
-import vn.co.cake.payment.PaymentConstants;
 import vn.co.cake.payment.dto.VietQrTransactionSyncRequest;
 import lombok.extern.slf4j.Slf4j;
 import vn.co.cake.payment.support.PaymentCheckoutFlowLog;

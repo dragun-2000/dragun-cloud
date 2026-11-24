@@ -3,7 +3,6 @@ package vn.co.cake.service.external;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import vn.co.cake.controller.external.dto.OrderExtendDTO;
-import vn.co.cake.dto.GenericMailForm;
 import vn.co.cake.entity.external.CustomerInfoExtend;
 import vn.co.cake.entity.external.OrderExtend;
 import vn.co.cake.entity.external.OrderItemExtend;

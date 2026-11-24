@@ -6,13 +6,31 @@ Approved by owner 2026-11-24: **T-00 + Wave 1 (T-01 … T-07)**, then option A t
 |---|---|---|
 | BF-01 fix (option A) | **COMPLETED** | `f132489`; gate passed (53 tests) |
 | T-00 Commit baseline docs + Tier A tests | **COMPLETED** | Committed in the commit that contains this line (`docs: add refactor baseline …`); gate passed. Was BLOCKED before option A (see below). |
-| T-01 Remove unused imports | PENDING | Waits on T-00 (per-task commits need a clean base) |
+| T-01 Remove unused imports | **COMPLETED** | 14 import lines in 10 files. VM-BYTE identical (11 class files). Gate passed. Committed in the commit containing this line. |
 | T-02a–d Wildcard → explicit imports | PENDING | |
 | T-03 Delete commented-out code (partial) | PENDING | |
 | T-04 Delete `AM005Controller` | PENDING | |
 | T-05 Delete `CSVHelper` | PENDING | |
 | T-06 Remove unused local in `UserLogoutSuccessHandler` | PENDING | |
 | T-07 Remove unreferenced repository methods | PENDING | |
+
+## T-01 — Remove unused imports (2026-11-24)
+
+- **Files:**
+  - `controller/BaseController` (`HashMap`, `List`, `CommonServletException`)
+  - `dto/GenericMailForm` (`List`)
+  - `entity/Account` (`dto.CartForm`)
+  - `entity/Cart` (`CollectionUtils`, `dto.CartForm`, `dto.OrderItem`)
+  - `enums/Colors` (`lombok.Data`)
+  - `job/Job004` (`List`)
+  - `payment/api/VietQrTransactionSyncController` (`PaymentConstants`)
+  - `service/external/OrderExtendService` (`dto.GenericMailForm`)
+  - `service/impl/CartServiceImpl` (`BigDecimal`)
+  - `service/impl/ProductServiceImpl` (`ProductPancakeRequest`)
+- **Diff:** 14 deletions, 0 insertions; nothing else changed.
+- **VM-BYTE:** `javap -c -p -constants` of the 10 classes plus 1 nested class, before and after a fresh compile → **identical**.
+- **Suite / gate:** see the commit's gate run (`GATE_RESULT=pass`, 297 tests, 0 failures).
+- **Behavior impact:** none (compile-time only).
 
 ## T-00 — BLOCKED (2026-11-24)
 

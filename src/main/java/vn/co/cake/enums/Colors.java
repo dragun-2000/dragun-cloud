@@ -1,6 +1,5 @@
 package vn.co.cake.enums;
 
-import lombok.Data;
 
 import java.util.Arrays;
 import java.util.List;

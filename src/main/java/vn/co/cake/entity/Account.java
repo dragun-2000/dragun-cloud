@@ -3,7 +3,6 @@ package vn.co.cake.entity;
 import com.querydsl.core.annotations.QueryEntity;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import vn.co.cake.dto.CartForm;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
