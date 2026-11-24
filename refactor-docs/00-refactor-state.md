@@ -8,8 +8,8 @@
 | Current phase | **Phase 6 — in progress** (approved: T-00 + Wave 1 + option A, 2026-11-24). See `14-refactoring-progress.md`. |
 | Completed phases | Phase 1, Phase 2, Phase 3 (docs 06–09), Phase 4 (docs 10–11 + Tier A tests), Phase 5 (docs 12–13) |
 | Current approved scope | Documentation (`refactor-docs/**`) + **Tier A characterization tests** (new files under `src/test/java/**` only; approved by owner 2026-11-24). **No production source, existing-test, config or dependency changes are approved.** |
-| Current task | None. Completed: BF-01 (`f132489`), T-00 (`515dc24`), T-01 (`3555a3f`), T-02a (`entity/**` wildcard imports; next commit). |
-| Next permitted action | T-02b (wildcard imports, `service/**`), after owner go-ahead; then T-02c…T-07 one at a time. |
+| Current task | None. Completed: BF-01 (`f132489`), T-00 (`515dc24`), T-01 (`3555a3f`), T-02a (`67b9e58`), T-02b (`service/**` wildcard imports; next commit). |
+| Next permitted action | T-02c (wildcard imports, `controller/**`), after owner go-ahead; then T-02d…T-07 one at a time. |
 | Git housekeeping (2026-11-24, owner-approved) | `.claude/worktrees` unstaged; `.claude/worktrees/` added to **local** `.git/info/exclude` (not `.gitignore`); 4 agent worktrees removed and 4 `worktree-agent-*` branches deleted (no unique commits; all 17 test files verified byte-identical in this checkout first). Note: new files keep getting auto-staged by something outside the agent (likely the IDE). |
 
 ## Git baseline

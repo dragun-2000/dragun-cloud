@@ -2,7 +2,14 @@ package vn.co.cake.service.impl;
 
 import com.facebook.ads.sdk.APIContext;
 import com.facebook.ads.sdk.APIException;
-import com.facebook.ads.sdk.serverside.*;
+import com.facebook.ads.sdk.serverside.ActionSource;
+import com.facebook.ads.sdk.serverside.Content;
+import com.facebook.ads.sdk.serverside.CustomData;
+import com.facebook.ads.sdk.serverside.DeliveryCategory;
+import com.facebook.ads.sdk.serverside.Event;
+import com.facebook.ads.sdk.serverside.EventRequest;
+import com.facebook.ads.sdk.serverside.EventResponse;
+import com.facebook.ads.sdk.serverside.UserData;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 

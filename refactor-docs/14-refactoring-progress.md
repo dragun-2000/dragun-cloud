@@ -8,7 +8,8 @@ Approved by owner 2026-11-24: **T-00 + Wave 1 (T-01 … T-07)**, then option A t
 | T-00 Commit baseline docs + Tier A tests | **COMPLETED** | Committed in the commit that contains this line (`docs: add refactor baseline …`); gate passed. Was BLOCKED before option A (see below). |
 | T-01 Remove unused imports | **COMPLETED** | 14 import lines in 10 files. VM-BYTE identical (11 class files). Gate passed. Committed in the commit containing this line. |
 | T-02a Wildcard → explicit imports, `entity/**` | **COMPLETED** | 15 files: `javax.persistence.*` replaced by 101 explicit imports. Verbose VM-BYTE identical apart from line numbers. Gate passed. Committed in the commit containing this line. |
-| T-02b–d Wildcard → explicit imports (`service`, `controller`, other) | PENDING | |
+| T-02b Wildcard → explicit imports, `service/**` | **COMPLETED** | 6 files, 11 wildcards (9 packages) → 74 explicit imports. Verbose VM-BYTE identical apart from line numbers; no unused imports. Gate passed. Committed in the commit containing this line. |
+| T-02c–d Wildcard → explicit imports (`controller`, other) | PENDING | 14 wildcard lines in 13 files remain |
 | T-03 Delete commented-out code (partial) | PENDING | |
 | T-04 Delete `AM005Controller` | PENDING | |
 | T-05 Delete `CSVHelper` | PENDING | |
@@ -48,6 +49,31 @@ Approved by owner 2026-11-24: **T-00 + Wave 1 (T-01 … T-07)**, then option A t
 - **Diff:** 15 deletions, 101 insertions, all import lines; line endings preserved.
 - **VM-BYTE (verbose):** `javap -v -p -constants`, covering annotations and the constant pool, for all 15 classes. The before state was rebuilt from HEAD sources (stashed), the after state from the edit. **Identical** except `LineNumberTable` entries. Stack-trace line numbers in these classes shift by +4…+9; no other effect.
 - **Suite / gate:** see the commit's gate run.
+
+## T-02b — Wildcard → explicit imports in `service/**` (2026-11-24)
+
+| File | Wildcards replaced | Explicit imports |
+|---|---|---|
+| `service/aws/impl/S3ServiceImpl` | `java.io.*`, `java.nio.file.*` | 5 |
+| `service/external/PancakePosService` | `org.springframework.http.*`, `vn.co.cake.entity.*`, `vn.co.cake.repository.*` | 19 |
+| `service/impl/AccountServiceImpl` | `org.apache.poi.ss.usermodel.*`, `vn.co.cake.request.*` | 15 |
+| `service/impl/CartServiceImpl` | `java.util.*` | 6 |
+| `service/impl/OrderServiceImpl` | `vn.co.cake.entity.*`, `vn.co.cake.repository.*` | 21 |
+| `service/impl/PixelConversionServiceImpl` | `com.facebook.ads.sdk.serverside.*` | 8 |
+
+- **Type sources:**
+  - JDK packages from `lib/modules` (`jimage list`).
+  - The others from the single jar that provides each package: `spring-web-5.3.19`, `poi-5.2.3`, `facebook-java-business-sdk-17.0.0`. There are no split packages.
+  - Project packages from `target/classes`, including the QueryDSL Q-classes in `vn.co.cake.entity`.
+- **Shadowing checks:** for each file, names are excluded when they are declared in the file, explicitly imported, or present in the file's own package. Names in two wildcard packages, or also in `java.lang`, are flagged; none were found. Names that occur only after a `.` are ignored (qualified names such as `vn.co.cake.dto.OrderItem`, nested refs such as `Map.Entry`).
+- **Incident during the task (fixed, no impact):**
+  - The first resolution dropped 3 names in `PixelConversionServiceImpl`.
+  - Cause: the script stripped `//` comments before string literals, so the `//` in `"http://..."` truncated a line and left an unterminated string that swallowed the following lines.
+  - The compiler caught it (`cannot find symbol`). The 6 files were restored to HEAD, the script was changed to a single-pass literal/comment tokenizer, and the files were re-resolved.
+  - This bug can only drop names, which always fails compilation, never silently re-bind them. T-02a therefore stays valid: it compiled, its verbose bytecode matched, and a re-scan finds no unused imports in `entity/**`.
+- **Diff:** 11 deletions, 74 insertions (import lines only).
+- **VM-BYTE (verbose):** all 6 classes are identical except `LineNumberTable`. Stack-trace line numbers in these classes shift.
+- **Checks:** no wildcard left in `service/**`; unused-import scan of `service/**` is clean.
 
 ## T-00 — BLOCKED (2026-11-24)
 
