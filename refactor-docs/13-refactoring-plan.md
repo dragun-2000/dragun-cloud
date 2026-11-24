@@ -5,7 +5,7 @@ Baseline `a0515d8`. Source of findings: `12-refactoring-audit.md`. **No task is 
 ## 1. Rules for every task (Phase 6)
 
 1. **Pre-check.** The working tree contains only the expected changes. The full suite is at baseline: **297 run, 0 failures** (BF-01 fixed in `f132489`). `gate.sh` must pass before each commit; this is enforced by the repo's agent pre-commit hook.
-2. **Bytecode snapshot (VM-BYTE).** Before editing, compile and dump `javap -c -p -constants` for every class in the task's file list into `scratchpad/<task>/before/`.
+2. **Bytecode snapshot (VM-BYTE).** Before editing, compile and dump `javap -v -p -constants` for every class in the task's file list into `scratchpad/<task>/before/`. Filter out the header lines that vary between builds and the `LineNumberTable` entries (see `12` §0).
 3. **Change.** Make the smallest edit. Touch only the listed files. Follow `docs/coding_rule.md`.
 4. **Review the diff.** Read the full `git diff` for the task. Nothing outside the file list may change.
 5. **Compile.** Then dump to `after/` and diff against `before/` for VM-BYTE tasks. The expected result is stated per task.

@@ -18,7 +18,12 @@ Baseline `a0515d8`. Paths relative to `src/main/java/vn/co/cake/`. **Nothing in 
 
 **Verification methods used in this audit**
 
-- **VM-BYTE — bytecode equivalence:** compile before and after, then compare `javap -c -p -constants` output of every touched class. Line numbers aren't printed without `-l`, so this ignores them. For import-only or comment-only changes, the output must be identical. This is the strongest evidence available without a running application.
+- **VM-BYTE — bytecode equivalence:** compile before and after, then compare `javap -v -p -constants` output of every touched class.
+  - Filtered out: the classfile path, last-modified and checksum header lines, and `LineNumberTable` entries (`line N: M`).
+  - Covered: code, constant pool, annotations (`RuntimeVisibleAnnotations`), signatures and flags.
+  - For import-only or comment-only changes, the output must be identical.
+  - The only remaining difference is source line numbers in debug info. They are visible solely as line numbers in stack traces, and that is recorded per task.
+  - (Corrected 2026-11-24 during T-02a. The original definition used `javap -c`, which omits annotations.)
 - **VM-SUITE:** the full suite must still show 297 run with only BF-01 failing (plus any newly approved tests).
 - **VM-GREP:** zero remaining references after a removal.
 - **VM-CTX:** some changes alter the Spring bean set or repository composition. Those can't be fully verified without starting the application context, which needs a DB (Tier C). Without one they stay **UNVERIFIED at runtime**.

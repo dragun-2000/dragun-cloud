@@ -7,7 +7,8 @@ Approved by owner 2026-11-24: **T-00 + Wave 1 (T-01 … T-07)**, then option A t
 | BF-01 fix (option A) | **COMPLETED** | `f132489`; gate passed (53 tests) |
 | T-00 Commit baseline docs + Tier A tests | **COMPLETED** | Committed in the commit that contains this line (`docs: add refactor baseline …`); gate passed. Was BLOCKED before option A (see below). |
 | T-01 Remove unused imports | **COMPLETED** | 14 import lines in 10 files. VM-BYTE identical (11 class files). Gate passed. Committed in the commit containing this line. |
-| T-02a–d Wildcard → explicit imports | PENDING | |
+| T-02a Wildcard → explicit imports, `entity/**` | **COMPLETED** | 15 files: `javax.persistence.*` replaced by 101 explicit imports. Verbose VM-BYTE identical apart from line numbers. Gate passed. Committed in the commit containing this line. |
+| T-02b–d Wildcard → explicit imports (`service`, `controller`, other) | PENDING | |
 | T-03 Delete commented-out code (partial) | PENDING | |
 | T-04 Delete `AM005Controller` | PENDING | |
 | T-05 Delete `CSVHelper` | PENDING | |
@@ -31,6 +32,22 @@ Approved by owner 2026-11-24: **T-00 + Wave 1 (T-01 … T-07)**, then option A t
 - **VM-BYTE:** `javap -c -p -constants` of the 10 classes plus 1 nested class, before and after a fresh compile → **identical**.
 - **Suite / gate:** see the commit's gate run (`GATE_RESULT=pass`, 297 tests, 0 failures).
 - **Behavior impact:** none (compile-time only).
+- **Correction (found during T-02a):** removing import lines shifts source line numbers, so stack-trace line numbers in these 10 classes moved up by 1–3. The `javap -c` comparison used here doesn't include debug info, so it couldn't show this. No other effect.
+
+## T-02a — Wildcard → explicit imports in `entity/**` (2026-11-24)
+
+- **Scope:** 15 files, each with exactly one `import javax.persistence.*;`:
+  - `entity/`: `CategoryRelations`, `District`, `Order`, `OrderSequence`, `PancakeProperties`, `Product`, `Province`, `Voucher`, `Ward`, `Warehouse`, `WebhookHistory`
+  - `entity/external/OrderExtend`
+  - `entity/thiyen/`: `ProductGallery`, `ProductVariant`, `YProduct`
+- **Resolution method:**
+  - The `javax.persistence` type list comes from the only classpath jar that provides the package, `jakarta.persistence-api-2.2.3.jar` (138 types; all 176 classpath jars checked).
+  - For each file, the script intersected that list with the capitalized identifiers used in the comment- and string-stripped body.
+  - Shadowing checks: no JPA simple name collides with a class in `vn.co.cake.entity`, `.thiyen` or `.external`, with an existing explicit import, or with a type declared in the file.
+  - Scripts: `scratchpad/resolve_wildcard.py`, `apply_wildcard.py` (not committed).
+- **Diff:** 15 deletions, 101 insertions, all import lines; line endings preserved.
+- **VM-BYTE (verbose):** `javap -v -p -constants`, covering annotations and the constant pool, for all 15 classes. The before state was rebuilt from HEAD sources (stashed), the after state from the edit. **Identical** except `LineNumberTable` entries. Stack-trace line numbers in these classes shift by +4…+9; no other effect.
+- **Suite / gate:** see the commit's gate run.
 
 ## T-00 — BLOCKED (2026-11-24)
 
