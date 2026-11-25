@@ -75,6 +75,25 @@ Approved by owner 2026-11-24: **T-00 + Wave 1 (T-01 … T-07)**, then option A t
 - **VM-BYTE (verbose):** all 6 classes are identical except `LineNumberTable`. Stack-trace line numbers in these classes shift.
 - **Checks:** no wildcard left in `service/**`; unused-import scan of `service/**` is clean.
 
+## T-02c — Wildcard → explicit imports in `controller/**` (2026-11-25)
+
+| File | Wildcards replaced | Explicit imports |
+|---|---|---|
+| `AM003/AM003Controller` | `org.springframework.web.bind.annotation.*` | 6 |
+| `AM009/AM009Controller` | same | 4 |
+| `SA001/SA001Controller` | same | 7 |
+| `store/CartController` | same | 6 |
+| `store/HomeController` | same + `java.util.*` | 14 |
+| `external/OrderExtendController`, `ProductExtendController`, `ShopExtendController` | same | 8 each |
+| `thiyen/ProductController` | same | 8 |
+| `external/dto/MainOrderRequest` | `vn.co.cake.entity.*` | 5 |
+
+- **Type sources:** `org.springframework.web.bind.annotation` comes only from `spring-web-5.3.19.jar` (28 types). `java.util` comes from the JDK modules; `vn.co.cake.entity` from `target/classes`, Q-classes included.
+- **Shadowing checks:** same rules as T-02b; no conflicts and no same-package exclusions. `HomeController` keeps its explicit `javax.websocket.server.PathParam` import unchanged.
+- **Diff:** 11 deletions, 74 insertions (import lines only).
+- **VM-BYTE (verbose):** 11 class files (10 classes + 1 nested) are identical except `LineNumberTable`, so stack-trace line numbers shift. The annotation types on handler methods are unchanged (`RuntimeVisibleAnnotations` compared).
+- **Checks:** no wildcard left in `controller/**`; no unused imports.
+
 ## T-00 — BLOCKED (2026-11-24)
 
 **What happened.** `.git/hooks/pre-commit` (portable-skills pack) only lets an agent commit a tree that its `gate.sh` has stamped as passing. I ran the gate on the current tree:
