@@ -120,8 +120,8 @@ public class HomeController extends BaseController {
         
         removeSessionAttributes(session, SESSION_FROM_EDIT_PAGE);
 
-        // ✅ Cho phép cache trang HTML trong 1 ngày
-        response.setHeader("Cache-Control", "public, max-age=86400");
+        // The page carries per-user state (login, cart count) and the admin-switched SALE menu: no shared or day-long cache.
+        response.setHeader("Cache-Control", "private, no-cache");
 
         return ScreenPathConst.INDEX_SCREEN;
     }

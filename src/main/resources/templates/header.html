@@ -82,7 +82,7 @@
             <div class="gNav">
               <ul>
                 <li>
-                  <a th:href="@{/products/group/SALE}" th:text="#{header.sale}">SALE</a>
+                  <a th:href="@{/products/group/SALE}" th:classappend="${saleMenu != null ? saleMenu.cssClass : ''}" th:text="#{${saleMenu != null ? saleMenu.labelKey : 'header.sale'}}">SALE</a>
                 </li>
                 <li>
                   <a th:href="@{/products/group/NEW IN}" th:text="#{header.newIn}">NEW IN</a>
@@ -201,7 +201,7 @@
               <div class="hamber-content">
                 <ul class="navigation">
                   <li>
-                    <a th:href="@{/products/group/SALE}" th:text="#{header.sale}">SALE</a>
+                    <a th:href="@{/products/group/SALE}" th:classappend="${saleMenu != null ? saleMenu.cssClass : ''}" th:text="#{${saleMenu != null ? saleMenu.labelKey : 'header.sale'}}">SALE</a>
                   </li>
                   <li>
                     <a th:href="@{/products/group/NEW IN}" th:text="#{header.newIn}">NEW IN</a>

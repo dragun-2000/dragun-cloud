@@ -77,6 +77,7 @@ public class RequestPathConst {
   public static final String AM011 = "/AM/AM011";
   public static final String AM011_SAVE = "/AM/AM011/save";
   public static final String AM011_VNPAY_SAVE = "/AM/AM011/vnpay/save";
+  public static final String AM011_SALE_MENU_SAVE = "/AM/AM011/sale-menu/save";
 
   // SA001
     public static final String SA001_01_REGISTER_VIEW = "/SA/SA001/register-view";

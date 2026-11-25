@@ -20,6 +20,10 @@ import vn.co.cake.payment.dto.VietQrPilotSettingsForm;
 import vn.co.cake.payment.entity.VietQrPilotSettings;
 import vn.co.cake.payment.service.VietQrPilotAccessService;
 import vn.co.cake.security.admin.AdminLoginInfo;
+import vn.co.cake.storefront.dto.SaleMenuSettingsForm;
+import vn.co.cake.storefront.entity.SaleMenuStyle;
+import vn.co.cake.storefront.entity.StorefrontSettings;
+import vn.co.cake.storefront.service.StorefrontSettingsService;
 import vn.co.cake.vnpay.config.VnpayProperties;
 import vn.co.cake.vnpay.dto.VnpaySettingsForm;
 import vn.co.cake.vnpay.entity.VnpaySettings;
@@ -36,13 +40,16 @@ public class AM011Controller extends BaseController {
   private final VietQrPilotAccessService vietQrPilotAccessService;
   private final VnpayPilotAccessService vnpayPilotAccessService;
   private final VnpayProperties vnpayProperties;
+  private final StorefrontSettingsService storefrontSettingsService;
 
   public AM011Controller(VietQrPilotAccessService vietQrPilotAccessService,
                          VnpayPilotAccessService vnpayPilotAccessService,
-                         VnpayProperties vnpayProperties) {
+                         VnpayProperties vnpayProperties,
+                         StorefrontSettingsService storefrontSettingsService) {
     this.vietQrPilotAccessService = vietQrPilotAccessService;
     this.vnpayPilotAccessService = vnpayPilotAccessService;
     this.vnpayProperties = vnpayProperties;
+    this.storefrontSettingsService = storefrontSettingsService;
   }
 
   @GetMapping(RequestPathConst.AM011)
@@ -65,6 +72,13 @@ public class AM011Controller extends BaseController {
     model.addAttribute("vnpayConfigured", vnpayProperties.isConfigured());
     model.addAttribute("vnpayLastUpdated", vnpaySettings.getUpdated());
     model.addAttribute("vnpayLastUpdater", vnpaySettings.getUpdater());
+
+    StorefrontSettings storefrontSettings = storefrontSettingsService.getSettings();
+    SaleMenuStyle saleMenuStyle = storefrontSettings.getSaleMenuStyle() != null
+        ? storefrontSettings.getSaleMenuStyle() : SaleMenuStyle.SALE;
+    model.addAttribute("saleMenuStyle", saleMenuStyle.name());
+    model.addAttribute("saleMenuLastUpdated", storefrontSettings.getUpdated());
+    model.addAttribute("saleMenuLastUpdater", storefrontSettings.getUpdater());
 
     addSideMenu(model, RequestPathConst.AM011);
     return ScreenPathConst.AM011_SCREEN;
@@ -124,6 +138,31 @@ public class AM011Controller extends BaseController {
     } catch (Exception ex) {
       log.error("AM011 VNPAY save failed: {}", ex.getMessage(), ex);
       return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Không lưu được cấu hình VNPAY");
+    }
+  }
+
+  @PostMapping(value = RequestPathConst.AM011_SALE_MENU_SAVE, produces = MediaType.TEXT_PLAIN_VALUE)
+  @ResponseBody
+  public ResponseEntity<String> saveSaleMenu(@RequestBody SaleMenuSettingsForm form, HttpSession session) {
+    AdminLoginInfo admin = getLoginInfoAdmin(session);
+    if (admin == null) {
+      return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Unauthorized");
+    }
+    if (admin.getAuthority() != Authorities.ROLE_ADMIN) {
+      return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Chỉ ROLE_ADMIN mới được cấu hình hiển thị menu");
+    }
+    try {
+      SaleMenuStyle style = SaleMenuStyle.parse(form.getSaleMenuStyle());
+      storefrontSettingsService.saveSaleMenuStyle(style, admin.getUsername());
+      log.info("AM011: sale menu style={} by {}", style, admin.getUsername());
+      return ResponseEntity.ok(style == SaleMenuStyle.BLACK_FRIDAY
+          ? "Menu đang hiển thị BLACK FRIDAY (màu đỏ)"
+          : "Menu đang hiển thị SALE");
+    } catch (IllegalArgumentException ex) {
+      return ResponseEntity.badRequest().body(ex.getMessage());
+    } catch (Exception ex) {
+      log.error("AM011 sale menu save failed: {}", ex.getMessage(), ex);
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Không lưu được cấu hình hiển thị menu");
     }
   }
 }
