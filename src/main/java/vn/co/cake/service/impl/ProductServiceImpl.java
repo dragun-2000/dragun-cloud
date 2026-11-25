@@ -284,8 +284,10 @@ public class ProductServiceImpl implements ProductService {
             throw new CommonServletException("Vui lòng chọn ít nhất một sản phẩm!");
         }
         
-        if (discount == null || discount.compareTo(BigDecimal.ZERO) <= 0 || discount.compareTo(new BigDecimal("100")) >= 0) {
-            throw new CommonServletException("Giảm giá phải lớn hơn 0 và nhỏ hơn 100!");
+        // Số nguyên 0–99; 0 = bỏ giảm giá cho các sản phẩm đã chọn.
+        if (discount == null || discount.compareTo(BigDecimal.ZERO) < 0 || discount.compareTo(new BigDecimal("99")) > 0
+                || discount.stripTrailingZeros().scale() > 0) {
+            throw new CommonServletException("Giảm giá phải là số nguyên từ 0 đến 99!");
         }
         
         List<Product> products = productRepository.findAllByIdIn(productIds);

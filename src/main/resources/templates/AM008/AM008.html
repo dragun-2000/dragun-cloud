@@ -59,8 +59,8 @@
                 <div class="row align-items-end">
                   <label class="col-lg-4 col-form-label text-lg-right font-weight-bold mb-0">Giảm Giá (%)</label>
                   <div class="col-lg-8">
-                    <input type="number" id="discountInput" class="form-control" min="0.01" max="99.99" step="0.01" placeholder="Nhập % giảm giá">
-                    <small class="form-text text-muted mb-0">Nhập số từ 0.01 đến 99.99</small>
+                    <input type="number" id="discountInput" class="form-control" min="0" max="99" step="1" inputmode="numeric" placeholder="Nhập % giảm giá">
+                    <small class="form-text text-muted mb-0">Nhập số nguyên từ 0 đến 99 (nhập 0 để bỏ giảm giá)</small>
                   </div>
                 </div>
               </div>
@@ -227,10 +227,22 @@
         $('#selectedCount').val($('.product-checkbox:checked').length);
       }
 
+      // Số nguyên 0–99, không nhận số thập phân, dấu âm hay số mũ.
+      function readDiscount() {
+        var raw = $.trim($('#discountInput').val());
+        return /^\d{1,2}$/.test(raw) ? parseInt(raw, 10) : NaN;
+      }
+
+      $('#discountInput').on('keydown', function(e) {
+        if (['.', ',', '-', '+', 'e', 'E'].indexOf(e.key) !== -1) {
+          e.preventDefault();
+        }
+      });
+
       function updateButtonState() {
         var selectedCount = $('.product-checkbox:checked').length;
-        var discountValue = parseFloat($('#discountInput').val());
-        $('#updateDiscountBtn').prop('disabled', !(selectedCount > 0 && discountValue > 0 && discountValue < 100));
+        var discountValue = readDiscount();
+        $('#updateDiscountBtn').prop('disabled', !(selectedCount > 0 && !isNaN(discountValue)));
       }
 
       function showAm008Alert(message) {
@@ -292,21 +304,23 @@
         $('.product-checkbox:checked').each(function() {
           selectedProducts.push($(this).data('product-id'));
         });
-        var discountValue = parseFloat($('#discountInput').val());
+        var discountValue = readDiscount();
 
         if (selectedProducts.length === 0) {
           showAm008Alert('Vui lòng chọn ít nhất một sản phẩm!');
           return;
         }
-        if (!discountValue || discountValue <= 0 || discountValue >= 100) {
-          showAm008Alert('Vui lòng nhập % giảm giá hợp lệ (lớn hơn 0 và nhỏ hơn 100)!');
+        if (isNaN(discountValue)) {
+          showAm008Alert('Vui lòng nhập % giảm giá là số nguyên từ 0 đến 99!');
           return;
         }
 
         var $btn = $(this);
         var originalText = $btn.html();
-        var confirmMessage = 'Bạn có chắc chắn muốn cập nhật giảm giá ' + discountValue + '% cho '
-            + selectedProducts.length + ' sản phẩm đã chọn?';
+        var confirmMessage = discountValue === 0
+            ? 'Bạn có chắc chắn muốn bỏ giảm giá cho ' + selectedProducts.length + ' sản phẩm đã chọn?'
+            : 'Bạn có chắc chắn muốn cập nhật giảm giá ' + discountValue + '% cho '
+              + selectedProducts.length + ' sản phẩm đã chọn?';
 
         showAm008Confirm(confirmMessage, function() {
           submitDiscountUpdate(selectedProducts, discountValue, $btn, originalText);
