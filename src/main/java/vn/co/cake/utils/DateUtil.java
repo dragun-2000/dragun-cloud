@@ -37,6 +37,16 @@ public class DateUtil {
         return sdf.format(date);
     }
 
+    /** Định dạng thời điểm theo múi giờ chỉ định, không phụ thuộc múi giờ mặc định của JVM. */
+    public static String dateToString(Date date, String format, String timeZoneId) {
+        if (date == null) {
+            return null;
+        }
+        SimpleDateFormat sdf = new SimpleDateFormat(format);
+        sdf.setTimeZone(TimeZone.getTimeZone(timeZoneId));
+        return sdf.format(date);
+    }
+
     public static String dateToStringJP(Date date, String format) {
         if (date == null) {
             return null;

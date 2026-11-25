@@ -106,7 +106,7 @@
                       <span th:text="${order.code}"></span>
                     </td>
                     <td class="text-center" th:text="${order.fullName}"></td>
-                    <td class="text-center" th:text="${#dates.format(order.created, 'yyyy-MM-dd HH:mm:ss')}"></td>
+                    <td class="text-center" th:text="${order.createdDisplay}"></td>
                     <td class="text-center" th:text="${order.shippingAddress}"></td>
                     <td class="text-center" th:text="${order.countError != null ? order.countError : 0}"></td>
                     <td class="text-left" style="max-width: 300px; min-width: 200px; word-wrap: break-word; word-break: break-word; white-space: normal;" th:text="${order.messageError != null ? order.messageError : 'N/A'}"></td>

@@ -33,7 +33,7 @@ import vn.co.cake.request.*;
 import vn.co.cake.security.admin.AdminLoginInfo;
 import vn.co.cake.security.repository.ContextRepository;
 import vn.co.cake.service.AccountService;
-import vn.co.cake.utils.DateUtil;
+import vn.co.cake.common.DateConst;
 import vn.co.cake.utils.PhoneValidator;
 
 import java.io.ByteArrayOutputStream;
@@ -43,6 +43,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.TimeZone;
 import java.util.stream.Collectors;
 
 import static vn.co.cake.common.StringConst.ROLE_USER;
@@ -461,6 +462,7 @@ public class AccountServiceImpl implements AccountService {
 
         // Create data rows
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        dateFormat.setTimeZone(TimeZone.getTimeZone(DateConst.VN));
         int rowNum = 1;
         for (Account account : accounts) {
             createDataRow(sheet, rowNum++, account, wardMap, dateFormat, dataStyle);
@@ -567,7 +569,7 @@ public class AccountServiceImpl implements AccountService {
         // Ngày Tạo
         Cell cell8 = row.createCell(8);
         if (account.getCreated() != null) {
-            cell8.setCellValue(dateFormat.format(DateUtil.plusHours(account.getCreated(), 7)));
+            cell8.setCellValue(dateFormat.format(account.getCreated()));
         } else {
             cell8.setCellValue("");
         }
