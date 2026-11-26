@@ -4,8 +4,6 @@ import vn.co.cake.entity.Account;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
-
 /**
  * AccountRepository
  */
@@ -19,6 +17,4 @@ public interface AccountRepository extends JpaRepository<Account, Long>, CustomA
     Account findByIdAndHash(Long accountId, String hash);
 
     Account findFirstByIdAndDeletedIsFalse(Long id);
-
-    List<Account> findAllByAuthoritiesAndMailAddressIn(String role, List<String> usernames);
 }

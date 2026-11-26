@@ -135,7 +135,7 @@ public class ProductServiceImpl implements ProductService {
                 for (VariationResponse.Field field : fields) {
                     if ("Size".equalsIgnoreCase(field.getName())) {
                         sizes.add(field.getValue());
-                    } else if ("Màu".equalsIgnoreCase(field.getName())) {
+                    } else if ("Màu".equalsIgnoreCase(field.getName()) || "color".equalsIgnoreCase(field.getName())) {
                         colors.add(field.getValue());
                     } else if ("Kiểu".equalsIgnoreCase(field.getName())) {
                         types.add(field.getValue());

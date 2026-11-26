@@ -9,6 +9,4 @@ public interface ProvinceRepository extends JpaRepository<Province, Long> {
     Province findFirstByCode(String code);
 
     List<Province> findAllByDeletedFalseOrderByNameAsc();
-
-    List<Province> findAllByOrderByNameAsc();
 }

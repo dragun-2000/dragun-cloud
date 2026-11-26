@@ -13,7 +13,6 @@ import vn.co.cake.entity.Variation;
 
 public interface VariationRepository extends JpaRepository<Variation, Long> {
     Variation findFirstByVariationId(String variationId);
-    Variation findFirstByPancakeProductIdAndSize(String productPancakeId, String size);
     List<Variation> findAllByPancakeProductId(String pancakeProductId);
     List<Variation> findAllByVariationIdIn(List<String> variationIds);
     List<Variation> findAllByPancakeProductIdAndColor(String productPancakeId, String color);

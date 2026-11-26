@@ -8,8 +8,8 @@
 | Current phase | **Phase 6 — in progress** (approved: T-00 + Wave 1 + option A, 2026-11-24). See `14-refactoring-progress.md`. |
 | Completed phases | Phase 1, Phase 2, Phase 3 (docs 06–09), Phase 4 (docs 10–11 + Tier A tests), Phase 5 (docs 12–13) |
 | Current approved scope | Documentation (`refactor-docs/**`) + **Tier A characterization tests** (new files under `src/test/java/**` only; approved by owner 2026-11-24). **No production source, existing-test, config or dependency changes are approved.** |
-| Current task | None. Completed: BF-01 (`f132489`), T-00 (`515dc24`), T-01 (`3555a3f`), T-02a (`67b9e58`), T-02b (`4c08f4f`), T-02c (code in `ab72804`, docs `b682363`), T-02d (`d1752ab`), T-03 (`19a9db6`), T-04 (`f7f46cd`), T-05 (`c6704f9`), T-06 (next commit). Branch then merged `dev/compression-image` (`589b5c2`, owner, 2026-11-26). |
-| Next permitted action | T-07 (unreferenced repository methods). |
+| Current task | None. Completed: BF-01 (`f132489`), T-00 (`515dc24`), T-01 (`3555a3f`), T-02a (`67b9e58`), T-02b (`4c08f4f`), T-02c (code in `ab72804`, docs `b682363`), T-02d (`d1752ab`), T-03 (`19a9db6`), T-04 (`f7f46cd`), T-05 (`c6704f9`), T-06 (`808f048`), T-07 (next commit). **Wave 1 complete.** Branch then merged `dev/compression-image` (`589b5c2`, owner, 2026-11-26). |
+| Next permitted action | None approved. Wave 2 (T-08…T-14) and the §6 owner decisions in `13-refactoring-plan.md` need owner approval first. |
 | Git housekeeping (2026-11-24, owner-approved) | `.claude/worktrees` unstaged; `.claude/worktrees/` added to **local** `.git/info/exclude` (not `.gitignore`); 4 agent worktrees removed and 4 `worktree-agent-*` branches deleted (no unique commits; all 17 test files verified byte-identical in this checkout first). Note: new files keep getting auto-staged by something outside the agent (likely the IDE). |
 
 ## Git baseline

@@ -15,8 +15,6 @@ public interface CustomAccountRepository {
 
     List<Account> findAllByDeletedIsFalseAndConditionForExport(String keyword, String email);
 
-    List<Long> findIdAllByDeletedIsFalseAndFullNameContaining(String name, String email);
-
     Account findAccountForAdmin(String phone);
     
     Account findAccountForMember(String phone);

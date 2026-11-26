@@ -14,8 +14,6 @@ public interface CheckoutPendingRepository extends JpaRepository<CheckoutPending
 
     Optional<CheckoutPending> findFirstByVietqrOrderId(String vietqrOrderId);
 
-    Optional<CheckoutPending> findFirstByVietqrOrderIdAndStatus(String vietqrOrderId, String status);
-
     @Query("select p from CheckoutPending p "
             + "where p.status = 'PENDING' and p.expiresAt is not null and p.expiresAt <= :now")
     List<CheckoutPending> findExpiredPending(@Param("now") Date now);

@@ -6,6 +6,5 @@ import vn.co.cake.entity.Category;
 import java.util.List;
 
 public interface CategoryRepository extends JpaRepository<Category, Long> {
-    Category findFirstByName(String name);
     List<Category> findAllByDeletedIsFalse();
 }

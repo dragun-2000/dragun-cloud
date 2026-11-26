@@ -19,7 +19,6 @@ public interface OrderRepository extends JpaRepository<Order, Long>, CustomOrder
     Order findFirstByCode(String code);
     Order findFirstByAccountIdOrderByCreatedDesc(Long accountId);
     List<Order> findByStatusAndCountErrorLessThanAndDeletedFalse(String status, int maxCountError);
-    List<Order> findByPhoneAndDeletedFalseOrderByCreatedDesc(String phone);
 
     /** Hiện đơn đang xử lý + đơn đã hủy sau khi lên Pancake; ẩn hết hạn thanh toán (CANCELLED chưa có pancake_order_id). */
     @Query("select o from Order o where o.phone = :phone and o.deleted = false "
@@ -29,17 +28,6 @@ public interface OrderRepository extends JpaRepository<Order, Long>, CustomOrder
     List<Order> findVisibleOrderHistoryByPhone(@Param("phone") String phone);
 
     Optional<Order> findFirstByCodeAndAccountIdAndDeletedFalse(String code, Long accountId);
-
-    @Query(
-        value = "SELECT * FROM orders o WHERE o.deleted = false "
-                + "AND o.status NOT IN ('AWAITING_PAYMENT', 'CANCELLED') "
-                + "AND o.phone IS NOT NULL AND TRIM(o.phone) <> '' "
-                + "AND (o.pancake_status_name IS NULL OR TRIM(o.pancake_status_name) = '' "
-                + "OR o.shipping_partner IS NULL OR TRIM(o.shipping_partner) = '') "
-                + "ORDER BY o.created DESC LIMIT :limit",
-        nativeQuery = true
-    )
-    List<Order> findOrdersNeedingPancakeEnrichment(@Param("limit") int limit);
 
     /**
      * Job003: poll khi name blank, name thuộc Debase hourly values, hoặc code thuộc hourly codes.
