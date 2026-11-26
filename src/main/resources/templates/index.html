@@ -9,7 +9,21 @@
     <div th:replace="header :: header"></div>
 
     <div class="main main--pageHome">
-      <div class="wrap">
+      <div class="wrap products-page">
+        <form class="products-toolbar products-toolbar--corner" th:action="@{/}" method="get">
+          <label class="products-sort" for="sortBy">
+            <span class="products-sort-label" th:text="#{home.sort.label}">Sort by</span>
+            <select id="sortBy" name="sortBy" class="products-sort-select" onchange="this.form.submit()">
+              <option th:each="option : ${sortOptions}"
+                      th:value="${option.name()}"
+                      th:text="#{${option.messageKey}}"
+                      th:selected="${option == currentSort}"></option>
+            </select>
+          </label>
+          <noscript>
+            <button type="submit" class="btn btn-outline-secondary btn-sm" th:text="#{home.sort.apply}">Apply</button>
+          </noscript>
+        </form>
         <div class="groupProducts" th:if="${newInProducts.size() > 0}">
           <div class="title">
             <h2 class="title-tlt text-shadow-bold text-responsive">NEW IN</h2>
@@ -45,7 +59,7 @@
           </div>
         </div>
         
-        <div class="groupProducts" th:if="${products.size() > 0}">
+        <div class="groupProducts" id="all-products" th:if="${products.size() > 0}">
           <div class="title">
             <h2 class="title-tlt text-shadow-bold text-responsive">ALL PRODUCTS</h2>
           </div>

@@ -75,11 +75,21 @@
                 }
                 .bag-number {
                     position: absolute;
-                    bottom: 0;
-                    left: 0;
-                    width: 100%;
+                    top: 0;
+                    right: 0;
+                    transform: translate(45%, -45%);
+                    min-width: 16px;
+                    height: 16px;
+                    padding: 0 4px;
+                    border-radius: 8px;
+                    background: #E83636;
+                    color: #fff;
+                    font-size: 10px;
+                    font-weight: 700;
+                    line-height: 16px;
                     text-align: center;
-                    font-size: 8px;
+                    z-index: 2;
+                    pointer-events: none;
                 }
             }
         }

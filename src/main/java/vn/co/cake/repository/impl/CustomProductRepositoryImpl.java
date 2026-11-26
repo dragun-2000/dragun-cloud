@@ -1,6 +1,9 @@
 package vn.co.cake.repository.impl;
 
 import com.querydsl.core.BooleanBuilder;
+import com.querydsl.core.types.OrderSpecifier;
+import com.querydsl.core.types.dsl.Expressions;
+import com.querydsl.core.types.dsl.NumberExpression;
 import com.querydsl.jpa.impl.JPAQuery;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.domain.Page;
@@ -9,11 +12,13 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 import vn.co.cake.entity.Product;
 import vn.co.cake.entity.QProduct;
+import vn.co.cake.enums.ProductSortOption;
 import vn.co.cake.repository.BaseRepository;
 import vn.co.cake.repository.CustomProductRepository;
 import vn.co.cake.request.ProductSearchRequest;
 
 import javax.persistence.EntityManager;
+import java.math.BigDecimal;
 import java.util.List;
 
 @Repository
@@ -60,9 +65,32 @@ public class CustomProductRepositoryImpl extends BaseRepository implements Custo
                 .where(where)
                 .limit(pageable.getPageSize())
                 .offset(pageable.getOffset())
-                .orderBy(qProduct.updated.desc())
+                .orderBy(orderSpecifiers(ProductSortOption.fromParam(searchRequest.getSortBy())))
                 .fetch();
 
         return new PageImpl<>(products, pageable, query.fetchCount());
+    }
+
+    static OrderSpecifier<?>[] orderSpecifiers(ProductSortOption option) {
+        QProduct qProduct = QProduct.product;
+        // Customers compare what they pay, so price sorts use the price after the product discount (%).
+        NumberExpression<BigDecimal> sellingPrice = Expressions.numberTemplate(BigDecimal.class,
+                "{0} * (100 - coalesce({1}, 0))", qProduct.price, qProduct.discount);
+        OrderSpecifier<?> newest = qProduct.updated.desc();
+        OrderSpecifier<?> stable = qProduct.id.desc();
+
+        switch (option) {
+            case PRICE_ASC:
+                return new OrderSpecifier<?>[] {sellingPrice.asc(), newest, stable};
+            case PRICE_DESC:
+                return new OrderSpecifier<?>[] {sellingPrice.desc(), newest, stable};
+            case DISCOUNT_DESC:
+                return new OrderSpecifier<?>[] {qProduct.discount.coalesce(BigDecimal.ZERO).desc(), newest, stable};
+            case NAME_ASC:
+                return new OrderSpecifier<?>[] {qProduct.name.asc(), newest, stable};
+            case NEWEST:
+            default:
+                return new OrderSpecifier<?>[] {newest, stable};
+        }
     }
 }

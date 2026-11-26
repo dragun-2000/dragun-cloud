@@ -13,4 +13,5 @@ public class ProductSearchRequest implements Serializable {
     private String color;
     private String sizeProduct;
     private String category;
+    private String sortBy;
 }

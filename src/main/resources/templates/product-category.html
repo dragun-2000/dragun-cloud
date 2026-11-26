@@ -6,7 +6,24 @@
     <div th:replace="header :: header"></div>
     
     <div class="main main--pageProducts">
-    <div class="wrap">
+    <div class="wrap products-page">
+      <form class="products-toolbar products-toolbar--corner" method="get"
+            th:if="${sortOptions != null}"
+            th:action="${searchName != null} ? @{/products/search} : @{/products/group/{category}(category=${category})}">
+        <input type="hidden" name="name" th:if="${searchName != null}" th:value="${searchName}">
+        <label class="products-sort" for="sortBy">
+          <span class="products-sort-label" th:text="#{home.sort.label}">Sort by</span>
+          <select id="sortBy" name="sortBy" class="products-sort-select" onchange="this.form.submit()">
+            <option th:each="option : ${sortOptions}"
+                    th:value="${option.name()}"
+                    th:text="#{${option.messageKey}}"
+                    th:selected="${option == currentSort}"></option>
+          </select>
+        </label>
+        <noscript>
+          <button type="submit" class="btn btn-outline-secondary btn-sm" th:text="#{home.sort.apply}">Apply</button>
+        </noscript>
+      </form>
       <div class="banner-products" th:if="${category} == THEORE">
         <img src="/images/data/thumb-banner02.jpg" alt="">
       </div>
@@ -17,7 +34,7 @@
               th:text="${saleAsBlackFriday} ? #{header.blackFriday} : ${category}"
               th:classappend="${saleAsBlackFriday or category == 'BLACK FRIDAY'} ? 'is-black-friday' : ''">
           </h2>
-      </div>
+        </div>
         <div class="products-list">
           <ul class="list-style-none">
             <li th:each="product: ${products}">

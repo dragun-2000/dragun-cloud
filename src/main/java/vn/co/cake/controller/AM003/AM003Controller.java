@@ -47,10 +47,12 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 
 import static vn.co.cake.common.BaseConst.REDIRECT;
@@ -66,6 +68,14 @@ public class AM003Controller extends BaseController {
     private final VariationRepository variationRepository;
     private final VoucherRepository voucherRepository;
     private final VariationService variationService;
+
+    /** Setter for the URL of {@code file}, {@code file1} … {@code file9}, by position. */
+    private static final List<BiConsumer<ProductCreateRequest, String>> IMAGE_URL_SETTERS = Arrays.asList(
+            ProductCreateRequest::setImageUrl, ProductCreateRequest::setImage1Url,
+            ProductCreateRequest::setImage2Url, ProductCreateRequest::setImage3Url,
+            ProductCreateRequest::setImage4Url, ProductCreateRequest::setImage5Url,
+            ProductCreateRequest::setImage6Url, ProductCreateRequest::setImage7Url,
+            ProductCreateRequest::setImage8Url, ProductCreateRequest::setImage9Url);
 
     public AM003Controller(AccountService accountService,
                            ProductService productService,
@@ -248,46 +258,7 @@ public class AM003Controller extends BaseController {
                 request.setRelatedProduct4(relatedProduct4);
             }
 
-            if (file != null && !file.isEmpty()) {
-                String imageUrl = s3Service.uploadImageToS3(file);
-                request.setImageUrl(imageUrl);
-            }
-            if (file1 != null && !file1.isEmpty()) {
-                String imageUrl = s3Service.uploadImageToS3(file1);
-                request.setImage1Url(imageUrl);
-            }
-            if (file2 != null && !file2.isEmpty()) {
-                String imageUrl = s3Service.uploadImageToS3(file2);
-                request.setImage2Url(imageUrl);
-            }
-            if (file3 != null && !file3.isEmpty()) {
-                String imageUrl = s3Service.uploadImageToS3(file3);
-                request.setImage3Url(imageUrl);
-            }
-            if (file4 != null && !file4.isEmpty()) {
-                String imageUrl = s3Service.uploadImageToS3(file4);
-                request.setImage4Url(imageUrl);
-            }
-            if (file5 != null && !file5.isEmpty()) {
-                String imageUrl = s3Service.uploadImageToS3(file5);
-                request.setImage5Url(imageUrl);
-            }
-            if (file6 != null && !file6.isEmpty()) {
-                String imageUrl = s3Service.uploadImageToS3(file6);
-                request.setImage6Url(imageUrl);
-            }
-            if (file7 != null && !file7.isEmpty()) {
-                String imageUrl = s3Service.uploadImageToS3(file7);
-                request.setImage7Url(imageUrl);
-            }
-            if (file8 != null && !file8.isEmpty()) {
-                String imageUrl = s3Service.uploadImageToS3(file8);
-                request.setImage8Url(imageUrl);
-            }
-            if (file9 != null && !file9.isEmpty()) {
-                String imageUrl = s3Service.uploadImageToS3(file9);
-                request.setImage9Url(imageUrl);
-            }
+            uploadProductImages(request, file, file1, file2, file3, file4, file5, file6, file7, file8, file9);
 
             productService.create(request);
         } catch (IOException | CommonServletException e) {
@@ -418,46 +389,7 @@ public class AM003Controller extends BaseController {
                 request.setRelatedProduct4(relatedProduct4);
             }
 
-            if (file != null && !file.isEmpty()) {
-                String imageUrl = s3Service.uploadImageToS3(file);
-                request.setImageUrl(imageUrl);
-            }
-            if (file1 != null && !file1.isEmpty()) {
-                String imageUrl = s3Service.uploadImageToS3(file1);
-                request.setImage1Url(imageUrl);
-            }
-            if (file2 != null && !file2.isEmpty()) {
-                String imageUrl = s3Service.uploadImageToS3(file2);
-                request.setImage2Url(imageUrl);
-            }
-            if (file3 != null && !file3.isEmpty()) {
-                String imageUrl = s3Service.uploadImageToS3(file3);
-                request.setImage3Url(imageUrl);
-            }
-            if (file4 != null && !file4.isEmpty()) {
-                String imageUrl = s3Service.uploadImageToS3(file4);
-                request.setImage4Url(imageUrl);
-            }
-            if (file5 != null && !file5.isEmpty()) {
-                String imageUrl = s3Service.uploadImageToS3(file5);
-                request.setImage5Url(imageUrl);
-            }
-            if (file6 != null && !file6.isEmpty()) {
-                String imageUrl = s3Service.uploadImageToS3(file6);
-                request.setImage6Url(imageUrl);
-            }
-            if (file7 != null && !file7.isEmpty()) {
-                String imageUrl = s3Service.uploadImageToS3(file7);
-                request.setImage7Url(imageUrl);
-            }
-            if (file8 != null && !file8.isEmpty()) {
-                String imageUrl = s3Service.uploadImageToS3(file8);
-                request.setImage8Url(imageUrl);
-            }
-            if (file9 != null && !file9.isEmpty()) {
-                String imageUrl = s3Service.uploadImageToS3(file9);
-                request.setImage9Url(imageUrl);
-            }
+            uploadProductImages(request, file, file1, file2, file3, file4, file5, file6, file7, file8, file9);
 
             productService.update(request);
         } catch (CommonServletException | IOException e) {
@@ -554,6 +486,20 @@ public class AM003Controller extends BaseController {
         }
     }
     
+    /**
+     * Uploads each non-empty file in order and stores its URL in the matching image field.
+     * An upload failure propagates at once, so later files are not uploaded.
+     */
+    private void uploadProductImages(ProductCreateRequest request, MultipartFile... files) throws IOException {
+        for (int i = 0; i < files.length; i++) {
+            MultipartFile file = files[i];
+            if (file != null && !file.isEmpty()) {
+                String imageUrl = s3Service.uploadImageToS3(file);
+                IMAGE_URL_SETTERS.get(i).accept(request, imageUrl);
+            }
+        }
+    }
+
     private String validateProduct(String price, String discount, Long stockQuantity) {
         String message = StringUtils.EMPTY;
         if (!BigDecimalUtil.priceValid(price)) {

@@ -59,6 +59,71 @@
         }
     }
 }
+// One sort control, top-right of every product list. The home anchor clears the sticky header.
+#all-products {
+    scroll-margin-top: 100px;
+}
+.products-page {
+    position: relative;
+}
+.products-toolbar--corner {
+    position: absolute;
+    top: 48px;
+    right: 0;
+    z-index: 3;
+    padding-top: 0;
+    background: #fff;
+    @media (max-width: $viewport-sm) {
+        position: static;
+        width: 100%;
+        margin-top: 16px;
+    }
+}
+.products-toolbar {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    padding-top: 16px;
+    .products-sort {
+        display: flex;
+        align-items: center;
+        margin: 0;
+        font-size: 13px;
+        @media (max-width: $viewport-sm) {
+            width: 100%;
+        }
+    }
+    .products-sort-label {
+        margin-right: 10px;
+        color: #9e9e9e;
+        white-space: nowrap;
+    }
+    .products-sort-select {
+        appearance: none;
+        height: 36px;
+        min-width: 190px;
+        padding: 0 28px 0 12px;
+        border: 1px solid #D1D1D1;
+        border-radius: 0;
+        background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%23121212' stroke-width='1.2'/%3E%3C/svg%3E") no-repeat right 10px center;
+        color: #121212;
+        font-size: 13px;
+        cursor: pointer;
+        &:hover,
+        &:focus {
+            border-color: #121212;
+            outline: none;
+        }
+        @media (max-width: $viewport-sm) {
+            flex: 1;
+            min-width: 0;
+            min-height: 40px;
+        }
+    }
+    .btn {
+        margin-left: 10px;
+    }
+}
 .more-view {
     text-align: center;
     padding-top: 20px;

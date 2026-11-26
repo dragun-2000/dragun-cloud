@@ -26,6 +26,7 @@ import vn.co.cake.entity.Variation;
 import vn.co.cake.entity.Voucher;
 import vn.co.cake.enums.Categories;
 import vn.co.cake.enums.Colors;
+import vn.co.cake.enums.ProductSortOption;
 import vn.co.cake.exception.CommonServletException;
 import vn.co.cake.repository.VariationRepository;
 import vn.co.cake.repository.VoucherRepository;
@@ -43,7 +44,6 @@ import javax.servlet.http.HttpSession;
 import javax.websocket.server.PathParam;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -102,23 +102,27 @@ public class HomeController extends BaseController {
         PageUtil pageUtil = getPageSize(session);
         searchForm = getSessionProductForm(session);
         
+        ProductSortOption currentSort = ProductSortOption.fromCustomerParam(searchForm.getSortBy());
+        searchForm.setSortBy(currentSort.name());
+        model.addAttribute("sortOptions", ProductSortOption.CUSTOMER_OPTIONS);
+        model.addAttribute("currentSort", currentSort);
+
         Page<Product> products = productService.getAllByCondition(searchForm, pageUtil, false);
         List<ProductResponse> responses = products.stream()
-                                                .sorted(Comparator.comparing(Product::getUpdated).reversed())
                                                 .map(ProductResponse::new)
                                                 .collect(Collectors.toList());
         model.addAttribute("products", responses);
 
         String categoryRoot = searchForm.getCategory();
-        
+
+        // The same customer sort orders both home sections.
         searchForm.setCategory(Categories.NEW_IN.getText());
         Page<Product> newInProductPage = productService.getAllByCondition(searchForm, pageUtil, false);
         List<ProductResponse> newInProducts = newInProductPage.stream()
-                                                .sorted(Comparator.comparing(Product::getUpdated).reversed())
                                                 .map(ProductResponse::new)
                                                 .collect(Collectors.toList());
         model.addAttribute("newInProducts", newInProducts);
-        
+
         searchForm.setCategory(categoryRoot);
         long totalRecord = responses.size();
         setPaginationAttribute(pageUtil, totalRecord, RequestPathConst.AM003, model, settingCondition(searchForm));
@@ -141,6 +145,7 @@ public class HomeController extends BaseController {
     @GetMapping("/products/group/{category}")
     public String listProductByCategory(
                                 @PathVariable(required = false) String category,
+                                @RequestParam(required = false) String sortBy,
 							    @PageableDefault(
                                             size = 12,
                                             sort = {SORT_DEFAULT},
@@ -160,6 +165,10 @@ public class HomeController extends BaseController {
         
         ProductSearchRequest searchForm = new ProductSearchRequest();
         searchForm.setCategory(category);
+        ProductSortOption currentSort = ProductSortOption.fromCustomerParam(sortBy);
+        searchForm.setSortBy(currentSort.name());
+        model.addAttribute("sortOptions", ProductSortOption.CUSTOMER_OPTIONS);
+        model.addAttribute("currentSort", currentSort);
         setCurrentSearchRequestAndPageableSession(session, searchForm, pageable);
         PageUtil pageUtil = getPageSize(session);
         Page<Product> products = productService.getAllByCondition(searchForm, pageUtil, false);
@@ -179,6 +188,7 @@ public class HomeController extends BaseController {
 
     @GetMapping("/products/search")
     public String listProductByProductName(@RequestParam String name,
+                                            @RequestParam(required = false) String sortBy,
                                             @PageableDefault(
                                                     size = 12,
                                                     sort = {SORT_DEFAULT},
@@ -197,6 +207,11 @@ public class HomeController extends BaseController {
 
         ProductSearchRequest searchForm = new ProductSearchRequest();
         searchForm.setName(name);
+        ProductSortOption currentSort = ProductSortOption.fromCustomerParam(sortBy);
+        searchForm.setSortBy(currentSort.name());
+        model.addAttribute("sortOptions", ProductSortOption.CUSTOMER_OPTIONS);
+        model.addAttribute("currentSort", currentSort);
+        model.addAttribute("searchName", name);
         setCurrentSearchRequestAndPageableSession(session, searchForm, pageable);
         PageUtil pageUtil = getPageSize(session);
         Page<Product> products = productService.getAllByCondition(searchForm, pageUtil, false);
@@ -336,6 +351,9 @@ public class HomeController extends BaseController {
 	private Map<String, Object> settingCondition(ProductSearchRequest searchForm) {
         Map<String, Object> conditionMaps = new HashMap<>();
         conditionMaps.put("category", searchForm.getCategory());
+        if (StringUtils.isNotEmpty(searchForm.getSortBy())) {
+            conditionMaps.put("sortBy", searchForm.getSortBy());
+        }
         return conditionMaps;
     }
 

@@ -167,7 +167,7 @@
               <li class="header-cart-desktop">
                 <a class="btn btn-cart" th:href="@{/cart-detail}" th:attr="aria-label=#{header.myBag}">
                   <img class="svg" src="/images/common/icon-cart.svg" alt="">
-                  <span id="bag-count" class="bag-number" th:text="${totalCartItems == null ? 0 : totalCartItems}">0</span>
+                  <span id="bag-count" class="bag-number" th:text="${totalCartItems == null ? 0 : totalCartItems}" th:classappend="${totalCartItems == null or totalCartItems == 0} ? 'is-empty'">0</span>
                 </a>
               </li>
               <li>
@@ -281,7 +281,7 @@
           <div class="cart">
             <a class="btn btn-cart" th:href="@{/cart-detail}">
               <img class="svg" src="/images/common/icon-cart.svg" alt="">
-              <span id="bag-count-mobile" class="bag-number" th:text="${totalCartItems == null ? 0 : totalCartItems}">0</span>
+              <span id="bag-count-mobile" class="bag-number" th:text="${totalCartItems == null ? 0 : totalCartItems}" th:classappend="${totalCartItems == null or totalCartItems == 0} ? 'is-empty'">0</span>
             </a>
           </div>
         </div>
@@ -326,22 +326,33 @@
       .account-area > ul > li.header-cart-desktop > a.btn-cart svg {
         max-height: 100%;
       }
-      .account-area > ul > li.header-cart-desktop .bag-number {
-        background: #E83636;
-        border-radius: 24px;
-        padding: 0 2px;
-        min-width: 20px;
-        color: #fff;
-        font-size: 8px;
-        font-weight: 700;
+      .account-area > ul > li.header-cart-desktop > a.btn-cart .bag-number,
+      .header .headerTop-sp .cart .btn .bag-number {
         position: absolute;
-        top: -2px;
-        right: -8px;
+        top: 0;
+        right: 0;
+        transform: translate(45%, -45%);
+        min-width: 16px;
+        height: 16px;
+        padding: 0 4px;
+        border-radius: 8px;
+        background: #E83636;
+        color: #fff;
+        font-size: 10px;
+        font-weight: 700;
+        line-height: 16px;
         text-align: center;
-        max-width: none;
         display: block;
         overflow: visible;
+        max-width: none;
         white-space: nowrap;
+        z-index: 2;
+        pointer-events: none;
+        box-sizing: border-box;
+      }
+      .account-area > ul > li.header-cart-desktop > a.btn-cart .bag-number.is-empty,
+      .header .headerTop-sp .cart .btn .bag-number.is-empty {
+        display: none;
       }
       .account-area > ul > li .btn-lang-toggle {
         flex-shrink: 0;

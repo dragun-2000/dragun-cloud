@@ -7,14 +7,13 @@ function updateHeaderBagCount(count) {
 	if (isNaN(total) || total < 0) {
 		total = 0;
 	}
-	var desktop = document.getElementById('bag-count');
-	if (desktop) {
-		desktop.textContent = total;
-	}
-	var mobile = document.getElementById('bag-count-mobile');
-	if (mobile) {
-		mobile.textContent = total;
-	}
+	[document.getElementById('bag-count'), document.getElementById('bag-count-mobile')].forEach(function (badge) {
+		if (!badge) {
+			return;
+		}
+		badge.textContent = total;
+		badge.classList.toggle('is-empty', total === 0);
+	});
 	if (total === 0) {
 		try {
 			sessionStorage.setItem('orderItems', JSON.stringify([]));

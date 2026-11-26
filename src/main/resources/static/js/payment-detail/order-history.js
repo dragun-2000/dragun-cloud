@@ -137,10 +137,27 @@ $(function () {
             return;
         }
 
-        if (!window.confirm('Bạn chắc chắn muốn hủy đơn ' + orderCode + '?')) {
-            return;
-        }
+        showCancelConfirm(orderCode, function () {
+            submitOrderCancel($btn, $card, orderCode);
+        });
+    });
 
+    function showCancelConfirm(orderCode, onConfirm) {
+        $('#order-cancel-confirm-code').text(orderCode || '');
+        $('#order-cancel-confirm-ok').off('click.orderCancel').on('click.orderCancel', function () {
+            $('#orderCancelConfirmModal').modal('hide');
+            onConfirm();
+        });
+        $('#orderCancelConfirmModal').modal('show');
+    }
+
+    function showCancelNotice(title, message) {
+        $('#orderCancelNoticeTitle').text(title || 'Thông báo');
+        $('#order-cancel-notice-text').text(message || '');
+        $('#orderCancelNoticeModal').modal('show');
+    }
+
+    function submitOrderCancel($btn, $card, orderCode) {
         $btn.data('busy', true).prop('disabled', true);
         $.ajax({
             type: 'POST',
@@ -150,7 +167,7 @@ $(function () {
                 var result = response && response.result;
                 if (result === 'CANCELLED' || result === 'ALREADY_CANCELLED') {
                     markOrderCancelledOnCard($card, response.statusName);
-                    window.alert(response.message || 'Đã hủy đơn hàng.');
+                    showCancelNotice('Đã hủy đơn', response.message || 'Đã hủy đơn hàng.');
                     return;
                 }
                 if (result === 'CONTACT_ADMIN') {
@@ -163,18 +180,18 @@ $(function () {
                     showContactCancelModal(orderCode, response.facebookUrl, response.instagramUrl);
                     return;
                 }
-                window.alert((response && response.message) || 'Không thể hủy đơn. Vui lòng thử lại.');
+                showCancelNotice('Không thể hủy đơn', (response && response.message) || 'Không thể hủy đơn. Vui lòng thử lại.');
             },
             error: function (xhr) {
                 var msg = (xhr.responseJSON && (xhr.responseJSON.message || xhr.responseJSON.result))
                     || 'Không thể hủy đơn. Vui lòng thử lại.';
-                window.alert(msg);
+                showCancelNotice('Không thể hủy đơn', msg);
             },
             complete: function () {
                 $btn.data('busy', false).prop('disabled', false);
             }
         });
-    });
+    }
 
     initVietQrPendingPayment();
 });

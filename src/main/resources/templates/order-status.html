@@ -117,26 +117,59 @@
   </div>
 </div>
 
-<!-- Popup chờ / thành công thanh toán VietQR -->
-<div class="modal fade" id="orderCancelContactModal" tabindex="-1" role="dialog" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered" role="document">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title">Liên hệ để hủy đơn</h5>
-        <button type="button" class="close" data-dismiss="modal" aria-label="Đóng">
-          <span aria-hidden="true">&times;</span>
-        </button>
+<div class="modal fade" id="orderCancelConfirmModal" tabindex="-1" role="dialog" aria-labelledby="orderCancelConfirmTitle" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered order-cancel-modal__dialog" role="document">
+    <div class="modal-content order-cancel-modal">
+      <div class="order-cancel-modal__header">
+        <h5 class="order-cancel-modal__title" id="orderCancelConfirmTitle">Xác nhận hủy đơn</h5>
+        <button type="button" class="order-cancel-modal__close" data-dismiss="modal" aria-label="Đóng">&times;</button>
       </div>
-      <div class="modal-body text-center">
-        <p class="mb-3">Đơn đã được xác nhận. Vui lòng liên hệ admin qua Facebook hoặc Instagram để hủy đơn.</p>
-        <p class="mb-2"><strong>Mã đơn:</strong> <span id="order-cancel-contact-code"></span></p>
-        <div class="d-flex justify-content-center flex-wrap" style="gap: 12px;">
-          <a id="order-cancel-facebook" href="https://www.facebook.com/debase.95" target="_blank" rel="noopener noreferrer" class="btn btn-primary">Facebook</a>
-          <a id="order-cancel-instagram" href="https://www.instagram.com/debase.95" target="_blank" rel="noopener noreferrer" class="btn btn-outline-primary">Instagram</a>
+      <div class="order-cancel-modal__body">
+        <p class="order-cancel-modal__text">Bạn chắc chắn muốn hủy đơn <strong id="order-cancel-confirm-code"></strong>?</p>
+      </div>
+      <div class="order-cancel-modal__footer order-cancel-modal__footer--actions">
+        <button type="button" class="order-cancel-modal__link order-cancel-modal__link--button" data-dismiss="modal">Không hủy</button>
+        <button type="button" class="order-cancel-modal__link order-cancel-modal__link--button order-cancel-modal__link--solid" id="order-cancel-confirm-ok">Hủy đơn</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="orderCancelNoticeModal" tabindex="-1" role="dialog" aria-labelledby="orderCancelNoticeTitle" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered order-cancel-modal__dialog" role="document">
+    <div class="modal-content order-cancel-modal">
+      <div class="order-cancel-modal__header">
+        <h5 class="order-cancel-modal__title" id="orderCancelNoticeTitle">Thông báo</h5>
+        <button type="button" class="order-cancel-modal__close" data-dismiss="modal" aria-label="Đóng">&times;</button>
+      </div>
+      <div class="order-cancel-modal__body">
+        <p class="order-cancel-modal__text" id="order-cancel-notice-text"></p>
+      </div>
+      <div class="order-cancel-modal__footer">
+        <button type="button" class="order-cancel-modal__dismiss" data-dismiss="modal">Đóng</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Popup chờ / thành công thanh toán VietQR -->
+<div class="modal fade" id="orderCancelContactModal" tabindex="-1" role="dialog" aria-labelledby="orderCancelContactTitle" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered order-cancel-modal__dialog" role="document">
+    <div class="modal-content order-cancel-modal">
+      <div class="order-cancel-modal__header">
+        <h5 class="order-cancel-modal__title" id="orderCancelContactTitle">Liên hệ để hủy đơn</h5>
+        <button type="button" class="order-cancel-modal__close" data-dismiss="modal" aria-label="Đóng">&times;</button>
+      </div>
+      <div class="order-cancel-modal__body">
+        <p class="order-cancel-modal__text">Đơn đã được xác nhận. Vui lòng liên hệ admin qua Facebook hoặc Instagram để hủy đơn.</p>
+        <p class="order-cancel-modal__code"><span>Mã đơn</span> <strong id="order-cancel-contact-code"></strong></p>
+        <div class="order-cancel-modal__actions">
+          <a id="order-cancel-facebook" href="https://www.facebook.com/debase.95" target="_blank" rel="noopener noreferrer" class="order-cancel-modal__link">Facebook</a>
+          <a id="order-cancel-instagram" href="https://www.instagram.com/debase.95" target="_blank" rel="noopener noreferrer" class="order-cancel-modal__link">Instagram</a>
         </div>
       </div>
-      <div class="modal-footer justify-content-center">
-        <button type="button" class="btn btn-secondary" data-dismiss="modal">Đóng</button>
+      <div class="order-cancel-modal__footer">
+        <button type="button" class="order-cancel-modal__dismiss" data-dismiss="modal">Đóng</button>
       </div>
     </div>
   </div>
