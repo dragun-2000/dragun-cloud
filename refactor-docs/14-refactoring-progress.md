@@ -22,7 +22,7 @@ Approved by owner 2026-11-24: **T-00 + Wave 1 (T-01 … T-07)**, then option A t
 | T-09 Remove unreferenced public service methods | **COMPLETED** | `CartService/CartServiceImpl.findOtherProductItem`, `PancakePosService.enrichOrdersFromPancake`, `VietQrCheckoutService.getCheckoutStatus` removed (0 callers); 2 imports in `CartService` became unused and were removed. VM-BYTE: only those methods (and the impl's lambda) are gone. Gate passed (326 run, 0 failures). Committed in the commit containing this line. |
 | T-10 Delete `PixelConversionServiceImpl` | **COMPLETED** | Unused `@Service` with placeholder token and sample data removed. 0 references. VM-CTX unverified. Gate passed (326 run, 0 failures). Committed in the commit containing this line. |
 | T-11 Remove empty `CustomCartRepository` fragment | **COMPLETED** | Empty fragment interface + empty impl removed; `CartRepository` now extends only `JpaRepository<Cart, Long>`. VM-CTX unverified. Gate passed (326 run, 0 failures). Committed in the commit containing this line. |
-| T-12 Remove write-only `authentication` field | PENDING | |
+| T-12 Remove write-only `authentication` field | **COMPLETED** | Field, its assignment and the now-unused `Authentication` import removed from `UserContextRepository`. VM-BYTE differs only by the field and the `getAuthentication`/`putfield` sequence. Gate passed (326 run, 0 failures). Committed in the commit containing this line. |
 | T-13 Rename `storesSecurityContextInRedis` | PENDING | |
 | T-14 Delete orphan templates | PENDING | |
 
@@ -232,6 +232,21 @@ Approved by owner 2026-11-24: **T-00 + Wave 1 (T-01 … T-07)**, then option A t
 - **Side effects:** `BaseRepository` has no state or constructor logic. Removing the fragment means Spring Data no longer composes it into the `CartRepository` proxy, and one `@Repository` bean (`customCartRepositoryImpl`) is gone; it contributed no methods.
 - **VM-CTX:** UNVERIFIED (no DB).
 - Stale `.class` files deleted from `target/classes` before the gate.
+
+## T-12 — Remove the write-only `authentication` field in `UserContextRepository` (2026-11-26)
+
+- **Change:** deleted `private Authentication authentication;`, the statement `authentication = securityContext.getAuthentication();` in `loadContext`, and the `org.springframework.security.core.Authentication` import that only the field used.
+- **Why it's safe:**
+  - The field was never read. As a shared mutable field in a singleton bean, it was also written concurrently by every request (audit B-02).
+  - `SecurityContext.getAuthentication()` is a plain getter on Spring's `SecurityContextImpl`.
+  - The deleted statement could only have mattered by throwing an NPE if `securityContext` were null. `ContextService.getSecurityContext` never returns null:
+    - its input comes from `HttpSessionSecurityContextRepository.loadContext`, which always returns a context (it generates a new one if none exists);
+    - if deserialization produced null, `getSecurityContext` itself dereferences it at `ContextService:85` before returning.
+  - So no path changes, exceptions included.
+- **VM-BYTE (verbose, `LineNumberTable` filtered) — the only differences:**
+  - field `authentication` removed (`fields: 2` → `1`);
+  - `loadContext`: removed `aload_0; aload_3; invokeinterface SecurityContext.getAuthentication; putfield authentication` (offsets 18–25). The rest (`aload_3; areturn`, and the `IOException` handler with `printStackTrace` / `aconst_null; areturn`) is unchanged; offsets and the exception-table range shift by 10;
+  - constant-pool entries for the field and the method ref are gone; the rest are renumbered (annotation index `#40` → `#36`, same `@Component`).
 
 ## T-00 — BLOCKED (2026-11-24)
 
