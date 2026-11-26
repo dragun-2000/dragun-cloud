@@ -1,6 +1,6 @@
 # 14 — Refactoring Progress
 
-Approved by owner 2026-11-24: **T-00 + Wave 1 (T-01 … T-07)**, then option A to unblock T-00. Regression baseline: **297 run, 0 failures**.
+Approved by owner 2026-11-24: **T-00 + Wave 1 (T-01 … T-07)**, then option A to unblock T-00. Regression baseline: **297 run, 0 failures**; from 2026-11-26, after the owner merged `dev/compression-image` into this branch (`589b5c2`, 26 new tests), **323 run, 0 failures**. VM-BYTE "before" snapshots for T-02d onward are taken from `589b5c2` or later.
 
 | Task | Status | Notes |
 |---|---|---|
@@ -9,7 +9,8 @@ Approved by owner 2026-11-24: **T-00 + Wave 1 (T-01 … T-07)**, then option A t
 | T-01 Remove unused imports | **COMPLETED** | 14 import lines in 10 files. VM-BYTE identical (11 class files). Gate passed. Committed in the commit containing this line. |
 | T-02a Wildcard → explicit imports, `entity/**` | **COMPLETED** | 15 files: `javax.persistence.*` replaced by 101 explicit imports. Verbose VM-BYTE identical apart from line numbers. Gate passed. Committed in the commit containing this line. |
 | T-02b Wildcard → explicit imports, `service/**` | **COMPLETED** | 6 files, 11 wildcards (9 packages) → 74 explicit imports. Verbose VM-BYTE identical apart from line numbers; no unused imports. Gate passed. Committed in the commit containing this line. |
-| T-02c–d Wildcard → explicit imports (`controller`, other) | PENDING | 14 wildcard lines in 13 files remain |
+| T-02c Wildcard → explicit imports, `controller/**` | **COMPLETED** | 10 files, 11 wildcards → 74 explicit imports. Verbose VM-BYTE identical apart from line numbers (11 class files). Code committed by the owner in `ab72804` ("refactor import *"); this status line and `00` updated in a follow-up docs commit. Suite after the `dev/compression-image` merge (`589b5c2`): 323 run, 0 failures. |
+| T-02d Wildcard → explicit imports, `utils`, `ai/**` | PENDING | 3 wildcard lines in 3 files remain |
 | T-03 Delete commented-out code (partial) | PENDING | |
 | T-04 Delete `AM005Controller` | PENDING | |
 | T-05 Delete `CSVHelper` | PENDING | |

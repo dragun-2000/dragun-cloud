@@ -4,12 +4,12 @@
 
 | Item | Value |
 |---|---|
-| Last updated | 2026-11-24 |
+| Last updated | 2026-11-26 |
 | Current phase | **Phase 6 — in progress** (approved: T-00 + Wave 1 + option A, 2026-11-24). See `14-refactoring-progress.md`. |
 | Completed phases | Phase 1, Phase 2, Phase 3 (docs 06–09), Phase 4 (docs 10–11 + Tier A tests), Phase 5 (docs 12–13) |
 | Current approved scope | Documentation (`refactor-docs/**`) + **Tier A characterization tests** (new files under `src/test/java/**` only; approved by owner 2026-11-24). **No production source, existing-test, config or dependency changes are approved.** |
-| Current task | None. Completed: BF-01 (`f132489`), T-00 (`515dc24`), T-01 (`3555a3f`), T-02a (`67b9e58`), T-02b (`service/**` wildcard imports; next commit). |
-| Next permitted action | T-02c (wildcard imports, `controller/**`), after owner go-ahead; then T-02d…T-07 one at a time. |
+| Current task | None. Completed: BF-01 (`f132489`), T-00 (`515dc24`), T-01 (`3555a3f`), T-02a (`67b9e58`), T-02b (`4c08f4f`), T-02c (code in `ab72804`; status docs in the next commit). Branch then merged `dev/compression-image` (`589b5c2`, owner, 2026-11-26). |
+| Next permitted action | T-02d (wildcard imports, `utils`, `ai/**`), then T-03…T-07 one at a time. |
 | Git housekeeping (2026-11-24, owner-approved) | `.claude/worktrees` unstaged; `.claude/worktrees/` added to **local** `.git/info/exclude` (not `.gitignore`); 4 agent worktrees removed and 4 `worktree-agent-*` branches deleted (no unique commits; all 17 test files verified byte-identical in this checkout first). Note: new files keep getting auto-staged by something outside the agent (likely the IDE). |
 
 ## Git baseline
@@ -36,7 +36,7 @@ Details: `10-baseline-results.md`.
 
 **Current regression baseline (after Tier A, 2026-11-24):** same command → **297 run, 296 pass, 1 fail (BF-01), 0 errors** — confirmed on two consecutive runs. `10-baseline-results.md` §6.
 
-**Updated baseline (after BF-01 fix `f132489`):** **297 run, 0 failures.** In this agent session the commands need `PATH=/d/freeland/apache-maven-3.9.9/bin:$PATH`, `MAVEN_OPTS=-Djavax.net.ssl.trustStoreType=Windows-ROOT`, `JAVA_HOME=C:\Program Files\Java\jdk-11.0.5` exported. New terminals have them from the user environment.
+**Updated baseline (after BF-01 fix `f132489`):** **297 run, 0 failures.** **After merge `589b5c2` (2026-11-26): 323 run, 0 failures, 0 errors** (`mvn -q -o test`, counts from `target/surefire-reports`). In this agent session the commands need `PATH=/d/freeland/apache-maven-3.9.9/bin:$PATH`, `MAVEN_OPTS=-Djavax.net.ssl.trustStoreType=Windows-ROOT`, `JAVA_HOME=C:\Program Files\Java\jdk-11.0.5` exported. New terminals have them from the user environment.
 
 ## Tasks
 
