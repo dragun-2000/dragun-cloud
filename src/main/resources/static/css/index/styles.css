@@ -652,7 +652,8 @@ textarea.form-control::-webkit-scrollbar-thumb {
   -webkit-box-align: center;
   -ms-flex-align: center;
   align-items: center;
-  padding-top: 16px;
+  padding-top: 0;
+  margin-bottom: 20px; /* Thêm dòng này */
 }
 .products-toolbar .products-sort {
   display: -webkit-box;
