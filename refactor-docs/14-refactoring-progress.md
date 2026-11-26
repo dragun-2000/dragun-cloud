@@ -12,7 +12,7 @@ Approved by owner 2026-11-24: **T-00 + Wave 1 (T-01 … T-07)**, then option A t
 | T-02c Wildcard → explicit imports, `controller/**` | **COMPLETED** | 10 files, 11 wildcards → 74 explicit imports. Verbose VM-BYTE identical apart from line numbers (11 class files). Code committed by the owner in `ab72804` ("refactor import *"); this status line and `00` updated in a follow-up docs commit. Suite after the `dev/compression-image` merge (`589b5c2`): 323 run, 0 failures. |
 | T-02d Wildcard → explicit imports, `utils`, `ai/**` | **COMPLETED** | 3 files, 3 wildcards → 15 explicit imports. Verbose VM-BYTE identical apart from line numbers (3 class files). No wildcard import left in `src/main/java`. Gate passed (323 run, 0 failures). Committed in the commit containing this line. |
 | T-03 Delete commented-out code (partial) | **COMPLETED** | 39 lines in 6 files (36 grep matches + 2 continuation lines + 1 blank). Kept: VietQR sandbox endpoint, AM003 discount validation/apply, admin forgot-password email push. Verbose VM-BYTE identical apart from line numbers (6 class files). Gate passed (323 run, 0 failures). Committed in the commit containing this line. |
-| T-04 Delete `AM005Controller` | PENDING | |
+| T-04 Delete `AM005Controller` | **COMPLETED** | Empty `@Controller` class and its package dir removed. 0 references. Gate passed (323 run, 0 failures). Committed in the commit containing this line. |
 | T-05 Delete `CSVHelper` | PENDING | |
 | T-06 Remove unused local in `UserLogoutSuccessHandler` | PENDING | |
 | T-07 Remove unreferenced repository methods | PENDING | |
@@ -132,6 +132,14 @@ Approved by owner 2026-11-24: **T-00 + Wave 1 (T-01 … T-07)**, then option A t
 
 - **VM-BYTE (verbose):** 6 class files identical except `LineNumberTable`. Stack-trace line numbers after the removed blocks shift up.
 - **Check:** the grep now finds only the 24 kept lines (3 blocks).
+
+## T-04 — Delete `AM005Controller` (2026-11-26)
+
+- **Removed:** `controller/AM005/AM005Controller.java` (`@Controller @Slf4j`, extends `BaseController`, no members, no mappings) and the now-empty `controller/AM005/` directory.
+- **VM-GREP:** `grep -rn AM005` over `src` (Java, HTML, JS, properties, YAML, XML) and `pom.xml` before deletion → only the class itself.
+- **Effect:** one fewer Spring bean; no endpoint lost. VM-CTX not run (no DB); nothing can depend on a bean with no members.
+- **Noted, not changed:** `templates/AM005/AM005.html` exists but no controller returns it (no `AM005` string anywhere else). Orphan template, out of this task's scope; a candidate for a later dead-template task.
+- The stale `AM005Controller.class` was deleted from `target/classes` before the gate so the suite ran without it.
 
 ## T-00 — BLOCKED (2026-11-24)
 
