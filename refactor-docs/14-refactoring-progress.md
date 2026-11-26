@@ -21,7 +21,7 @@ Approved by owner 2026-11-24: **T-00 + Wave 1 (T-01 … T-07)**, then option A t
 | T-08 Move `normalizeStoreUrl` into `StringUtil` | **COMPLETED** | 3 characterization tests added first (red, then green); method moved verbatim; both mail services call `StringUtil.normalizeStoreUrl`. Gate passed (326 run, 0 failures). Committed in the commit containing this line. |
 | T-09 Remove unreferenced public service methods | **COMPLETED** | `CartService/CartServiceImpl.findOtherProductItem`, `PancakePosService.enrichOrdersFromPancake`, `VietQrCheckoutService.getCheckoutStatus` removed (0 callers); 2 imports in `CartService` became unused and were removed. VM-BYTE: only those methods (and the impl's lambda) are gone. Gate passed (326 run, 0 failures). Committed in the commit containing this line. |
 | T-10 Delete `PixelConversionServiceImpl` | **COMPLETED** | Unused `@Service` with placeholder token and sample data removed. 0 references. VM-CTX unverified. Gate passed (326 run, 0 failures). Committed in the commit containing this line. |
-| T-11 Remove empty `CustomCartRepository` fragment | PENDING | |
+| T-11 Remove empty `CustomCartRepository` fragment | **COMPLETED** | Empty fragment interface + empty impl removed; `CartRepository` now extends only `JpaRepository<Cart, Long>`. VM-CTX unverified. Gate passed (326 run, 0 failures). Committed in the commit containing this line. |
 | T-12 Remove write-only `authentication` field | PENDING | |
 | T-13 Rename `storesSecurityContextInRedis` | PENDING | |
 | T-14 Delete orphan templates | PENDING | |
@@ -223,6 +223,15 @@ Approved by owner 2026-11-24: **T-00 + Wave 1 (T-01 … T-07)**, then option A t
 - **Effect:** one fewer bean; nothing injected it. The `facebook-java-business-sdk` dependency in `pom.xml` is now unused; removing it is a separate dependency change and was **not** done.
 - **VM-CTX:** UNVERIFIED (no DB). Nothing can fail to wire, since no class referenced the bean.
 - The stale `.class` was deleted from `target/classes` before the gate.
+
+## T-11 — Remove the empty `CustomCartRepository` fragment (2026-11-26)
+
+- **Removed:** `repository/CustomCartRepository.java` (empty interface) and `repository/impl/CustomCartRepositoryImpl.java` (`@Repository`, extends `BaseRepository`, only a constructor storing the `EntityManager`; no methods).
+- **Changed:** `repository/CartRepository`: `extends JpaRepository<Cart, Long>, CustomCartRepository` → `extends JpaRepository<Cart, Long>`. `javap -p` after: the interface has only `findFirstCartByAccountId(Long)` plus the inherited `JpaRepository` API, so every method callers use is unchanged.
+- **VM-GREP:** `CustomCartRepository` / `customCartRepository` over `src` before deletion → only these three files. After: 0.
+- **Side effects:** `BaseRepository` has no state or constructor logic. Removing the fragment means Spring Data no longer composes it into the `CartRepository` proxy, and one `@Repository` bean (`customCartRepositoryImpl`) is gone; it contributed no methods.
+- **VM-CTX:** UNVERIFIED (no DB).
+- Stale `.class` files deleted from `target/classes` before the gate.
 
 ## T-00 — BLOCKED (2026-11-24)
 
