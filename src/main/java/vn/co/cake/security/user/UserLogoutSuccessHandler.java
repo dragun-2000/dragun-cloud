@@ -1,7 +1,6 @@
 package vn.co.cake.security.user;
 
 import vn.co.cake.common.BaseConst;
-import vn.co.cake.common.RequestPathConst;
 import vn.co.cake.payment.PaymentConstants;
 import vn.co.cake.security.service.ContextService;
 import vn.co.cake.vnpay.VnpayConstants;
@@ -36,8 +35,6 @@ public class UserLogoutSuccessHandler implements org.springframework.security.we
         request.getSession().removeAttribute(VnpayConstants.SESSION_VNPAY_PILOT_ACCOUNT_ID);
 
         contextService.removeSecurityContextBySessionId(request);
-
-        String url = String.format("%s%s?logout", baseUrl, RequestPathConst.SA001);
 
         response.setStatus(HttpStatus.OK.value());
         response.sendRedirect(baseUrl);

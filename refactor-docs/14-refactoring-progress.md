@@ -14,7 +14,7 @@ Approved by owner 2026-11-24: **T-00 + Wave 1 (T-01 … T-07)**, then option A t
 | T-03 Delete commented-out code (partial) | **COMPLETED** | 39 lines in 6 files (36 grep matches + 2 continuation lines + 1 blank). Kept: VietQR sandbox endpoint, AM003 discount validation/apply, admin forgot-password email push. Verbose VM-BYTE identical apart from line numbers (6 class files). Gate passed (323 run, 0 failures). Committed in the commit containing this line. |
 | T-04 Delete `AM005Controller` | **COMPLETED** | Empty `@Controller` class and its package dir removed. 0 references. Gate passed (323 run, 0 failures). Committed in the commit containing this line. |
 | T-05 Delete `CSVHelper` | **COMPLETED** | Unreferenced plain class removed. 0 references. Gate passed (323 run, 0 failures). Committed in the commit containing this line. |
-| T-06 Remove unused local in `UserLogoutSuccessHandler` | PENDING | |
+| T-06 Remove unused local in `UserLogoutSuccessHandler` | **COMPLETED** | Dead `String url = String.format(...)` and the import it alone used removed. VM-BYTE differs only by the removed `String.format` sequence (plus constant-pool renumbering, max stack/locals, LocalVariableTable `url`). Gate passed (323 run, 0 failures). Committed in the commit containing this line. |
 | T-07 Remove unreferenced repository methods | PENDING | |
 
 ## T-01 — Remove unused imports (2026-11-24)
@@ -146,6 +146,23 @@ Approved by owner 2026-11-24: **T-00 + Wave 1 (T-01 … T-07)**, then option A t
 - **Removed:** `helper/CSVHelper.java`: a plain class (not a bean) with static `TYPE`, `HEADER` and `hasCSVFormat(MultipartFile)`. `helper/` still holds `EmailService` and `SmsService`.
 - **VM-GREP:** `grep -rnE 'CSVHelper|hasCSVFormat'` over `src` (main, test, templates, JS, properties) and `pom.xml` before deletion → only the class itself. No file name match in resources.
 - **Effect:** none at runtime; the class was never loaded. The stale `.class` was deleted from `target/classes` before the gate.
+
+## T-06 — Remove unused local `url` in `UserLogoutSuccessHandler` (2026-11-26)
+
+- **Change:** deleted `String url = String.format("%s%s?logout", baseUrl, RequestPathConst.SA001);` (line 40) and the blank line after it. `import vn.co.cake.common.RequestPathConst;` was used only there and became unused, so it was removed too (same file, keeps T-01's "no unused imports").
+- **Why it's safe:** `String.format` has no side effects; its arguments are a field read and a compile-time constant (`RequestPathConst.SA001 = "/SA/SA001"`, inlined by javac). `url` was never read.
+- **VM-BYTE (verbose, `LineNumberTable` filtered) — the only differences:**
+  - `onLogoutSuccess` code: removed
+    ```
+    47: ldc "%s%s?logout"; iconst_2; anewarray java/lang/Object; dup; iconst_0; aload_0;
+        getfield baseUrl; aastore; dup; iconst_1; ldc "/SA/SA001"; aastore;
+    65: invokestatic java/lang/String.format:(Ljava/lang/String;[Ljava/lang/Object;)Ljava/lang/String;
+    68: astore 4
+    ```
+    The remaining instructions (`response.setStatus(HttpStatus.OK.value())`, `response.sendRedirect(baseUrl)`, `return`) are unchanged in order and targets; their offsets move from 70–92 to 47–69.
+  - `stack=5, locals=5` → `stack=2, locals=4`; the LocalVariableTable entry `url` is gone.
+  - Constant pool: the entries `%s%s?logout`, `vn/co/cake/common/RequestPathConst`, `/SA/SA001`, `java/lang/String`, `String.format` and `url` are gone (104 → 91 entries); the rest are renumbered, which also renumbers the `@Value`/`@Component` annotation indexes (same annotation types and values).
+- **Behavior impact:** none observable (one fewer string allocation per logout).
 
 ## T-00 — BLOCKED (2026-11-24)
 
