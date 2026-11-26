@@ -20,7 +20,7 @@ Approved by owner 2026-11-24: **T-00 + Wave 1 (T-01 … T-07)**, then option A t
 | **Wave 2 approved** | — | Owner approved T-08 … T-14 on 2026-11-26 (all seven). |
 | T-08 Move `normalizeStoreUrl` into `StringUtil` | **COMPLETED** | 3 characterization tests added first (red, then green); method moved verbatim; both mail services call `StringUtil.normalizeStoreUrl`. Gate passed (326 run, 0 failures). Committed in the commit containing this line. |
 | T-09 Remove unreferenced public service methods | **COMPLETED** | `CartService/CartServiceImpl.findOtherProductItem`, `PancakePosService.enrichOrdersFromPancake`, `VietQrCheckoutService.getCheckoutStatus` removed (0 callers); 2 imports in `CartService` became unused and were removed. VM-BYTE: only those methods (and the impl's lambda) are gone. Gate passed (326 run, 0 failures). Committed in the commit containing this line. |
-| T-10 Delete `PixelConversionServiceImpl` | PENDING | |
+| T-10 Delete `PixelConversionServiceImpl` | **COMPLETED** | Unused `@Service` with placeholder token and sample data removed. 0 references. VM-CTX unverified. Gate passed (326 run, 0 failures). Committed in the commit containing this line. |
 | T-11 Remove empty `CustomCartRepository` fragment | PENDING | |
 | T-12 Remove write-only `authentication` field | PENDING | |
 | T-13 Rename `storesSecurityContextInRedis` | PENDING | |
@@ -215,6 +215,14 @@ Approved by owner 2026-11-24: **T-00 + Wave 1 (T-01 … T-07)**, then option A t
 - **Helpers kept:** `toOrderItem`, `enrichOrderFromPancakeList`, `resolveCheckoutStatus` and `findPendingOrNull` still have other callers, so no private method became dead.
 - **VM-BYTE (verbose, cp indexes normalized; script `scratchpad/member_diff.py`):** the only member differences are the removed methods plus, in `CartServiceImpl`, the synthetic `lambda$findOtherProductItem$1` and its `BootstrapMethods` entry. Every remaining member is identical; the other lambda keeps its name (`lambda$findFirstByAccountId$0`). Header method counts drop accordingly.
 - **Behavior:** no executed path changes. Payment/integration classes are touched only by deleting code nothing calls.
+
+## T-10 — Delete `PixelConversionServiceImpl` (2026-11-26)
+
+- **Removed:** `service/impl/PixelConversionServiceImpl.java`: a `@Service` (no interface) with a single `main(List<String>, List<String>)` method that sends a hard-coded sample Facebook Conversions API event with placeholder `<ACCESS_TOKEN>` / `<ADS_PIXEL_ID>` and `printStackTrace`.
+- **VM-GREP:** `grep -rli pixelconversion` over `src` and `pom.xml` before deletion → only the file itself (no injection point, no test, no config key). The other `facebook` hits in `src/main/resources` are icon fonts/CSS and social links, unrelated.
+- **Effect:** one fewer bean; nothing injected it. The `facebook-java-business-sdk` dependency in `pom.xml` is now unused; removing it is a separate dependency change and was **not** done.
+- **VM-CTX:** UNVERIFIED (no DB). Nothing can fail to wire, since no class referenced the bean.
+- The stale `.class` was deleted from `target/classes` before the gate.
 
 ## T-00 — BLOCKED (2026-11-24)
 
