@@ -23,7 +23,7 @@ Approved by owner 2026-11-24: **T-00 + Wave 1 (T-01 … T-07)**, then option A t
 | T-10 Delete `PixelConversionServiceImpl` | **COMPLETED** | Unused `@Service` with placeholder token and sample data removed. 0 references. VM-CTX unverified. Gate passed (326 run, 0 failures). Committed in the commit containing this line. |
 | T-11 Remove empty `CustomCartRepository` fragment | **COMPLETED** | Empty fragment interface + empty impl removed; `CartRepository` now extends only `JpaRepository<Cart, Long>`. VM-CTX unverified. Gate passed (326 run, 0 failures). Committed in the commit containing this line. |
 | T-12 Remove write-only `authentication` field | **COMPLETED** | Field, its assignment and the now-unused `Authentication` import removed from `UserContextRepository`. VM-BYTE differs only by the field and the `getAuthentication`/`putfield` sequence. Gate passed (326 run, 0 failures). Committed in the commit containing this line. |
-| T-13 Rename `storesSecurityContextInRedis` | PENDING | |
+| T-13 Rename `storesSecurityContextInRedis` | **COMPLETED** | Renamed to `storeSecurityContext` (1 declaration, 2 callers). VM-BYTE differs only in the method name. Gate passed (326 run, 0 failures). Committed in the commit containing this line. |
 | T-14 Delete orphan templates | PENDING | |
 
 ## T-01 — Remove unused imports (2026-11-24)
@@ -247,6 +247,13 @@ Approved by owner 2026-11-24: **T-00 + Wave 1 (T-01 … T-07)**, then option A t
   - field `authentication` removed (`fields: 2` → `1`);
   - `loadContext`: removed `aload_0; aload_3; invokeinterface SecurityContext.getAuthentication; putfield authentication` (offsets 18–25). The rest (`aload_3; areturn`, and the `IOException` handler with `printStackTrace` / `aconst_null; areturn`) is unchanged; offsets and the exception-table range shift by 10;
   - constant-pool entries for the field and the method ref are gone; the rest are renumbered (annotation index `#40` → `#36`, same `@Component`).
+
+## T-13 — Rename `ContextService.storesSecurityContextInRedis` → `storeSecurityContext` (2026-11-26)
+
+- **Why:** the name says Redis, but the context is stored in the in-memory `ContextRepository` (audit H-02). The Javadoc already says "(in-memory)".
+- **Change:** 3 lines. The declaration in `security/service/ContextService`, and the calls in `security/admin/AdminSuccessHandler` and `security/user/UserSuccessHandler`.
+- **VM-GREP:** before: exactly these 3 occurrences in `src` (no test, template, reflection or config use). After: 0 for the old name. The new name was unused before.
+- **VM-BYTE (verbose, `LineNumberTable` filtered):** `ContextService` differs only in the method name (declaration + its Utf8 entry). Each handler differs only in the `Methodref`/`NameAndType`/Utf8 entries naming the callee and the matching `invokevirtual` comment. Same constant-pool indexes, descriptor, flags and code.
 
 ## T-00 — BLOCKED (2026-11-24)
 

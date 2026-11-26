@@ -57,7 +57,7 @@ public class UserSuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
             response.setStatus(HttpStatus.UNAUTHORIZED.value());
             response.sendRedirect(baseUrl + RequestPathConst.SA001_LOGIN);
         } else {
-            contextService.storesSecurityContextInRedis(request);
+            contextService.storeSecurityContext(request);
 
             String url = baseUrl + RequestPathConst.HOME;
 
