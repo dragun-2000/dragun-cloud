@@ -13,8 +13,9 @@
       <div class="groupProducts">
         <div class="title">
           <h2 class="title-tlt text-shadow-bold text-responsive"
-              th:text="${category}"
-              th:style="${category} == 'BLACK FRIDAY' ? 'color:red;' : ''">
+              th:with="saleAsBlackFriday=${category == 'SALE' and saleMenu != null and saleMenu.name() == 'BLACK_FRIDAY'}"
+              th:text="${saleAsBlackFriday} ? #{header.blackFriday} : ${category}"
+              th:classappend="${saleAsBlackFriday or category == 'BLACK FRIDAY'} ? 'is-black-friday' : ''">
           </h2>
       </div>
         <div class="products-list">

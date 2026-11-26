@@ -70,3 +70,11 @@
         }
     }
 }
+
+// BLACK FRIDAY highlight for the SALE menu, switched on AM011
+.gNav > ul > li > a.is-black-friday,
+.gNav > ul > li:hover > a.is-black-friday,
+.hamber-menu .navigation li a.is-black-friday,
+.groupProducts .title .title-tlt.is-black-friday {
+    color: #e60012;
+}

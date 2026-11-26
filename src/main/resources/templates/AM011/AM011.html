@@ -56,7 +56,7 @@
       <div class="main-content-container container-fluid">
         <div class="page-header text-center no-gutters py-4">
           <h3 class="page-title font-weight-bold">Cấu hình thanh toán</h3>
-          <p class="text-muted mb-0">Bật/tắt VietQR và VNPAY trên trang đặt hàng</p>
+          <p class="text-muted mb-0">Bật/tắt VietQR, VNPAY và cách hiển thị menu khuyến mãi</p>
         </div>
 
         <div class="info-fr-1400 w-800 mt-3" sec:authorize="hasRole('ROLE_ADMIN')">
@@ -171,6 +171,38 @@
 
               <button type="button" id="btn-save-vnpay-settings" class="btn custom-btn-info">Lưu cấu hình VNPAY</button>
               <span id="vnpay-save-status" class="ml-3 small"></span>
+            </div>
+          </div>
+
+          <div class="card card-small mb-4">
+            <div class="card-header border-bottom">
+              <h6 class="m-0 font-weight-bold">Hiển thị menu khuyến mãi</h6>
+            </div>
+            <div class="card-body">
+              <p class="small text-muted">
+                Chỉ đổi chữ và màu của mục menu trên web người dùng. Link và danh sách sản phẩm giảm giá giữ nguyên.
+              </p>
+              <div class="form-group">
+                <div class="custom-control custom-radio">
+                  <input type="radio" class="custom-control-input" id="saleMenuStyle-sale" name="saleMenuStyle"
+                         value="SALE" th:checked="${saleMenuStyle == 'SALE'}"/>
+                  <label class="custom-control-label" for="saleMenuStyle-sale">SALE (màu đen)</label>
+                </div>
+                <div class="custom-control custom-radio">
+                  <input type="radio" class="custom-control-input" id="saleMenuStyle-black-friday" name="saleMenuStyle"
+                         value="BLACK_FRIDAY" th:checked="${saleMenuStyle == 'BLACK_FRIDAY'}"/>
+                  <label class="custom-control-label" for="saleMenuStyle-black-friday">BLACK FRIDAY (màu đỏ)</label>
+                </div>
+              </div>
+              <p class="mb-3">Xem trước: <strong id="sale-menu-preview">SALE</strong></p>
+
+              <p class="small text-muted mb-3" th:if="${saleMenuLastUpdated != null}">
+                Cập nhật lần cuối: <span th:text="${#dates.format(saleMenuLastUpdated, 'yyyy-MM-dd HH:mm')}"></span>
+                <span th:if="${saleMenuLastUpdater != null}" th:text="' bởi ' + ${saleMenuLastUpdater}"></span>
+              </p>
+
+              <button type="button" id="btn-save-sale-menu" class="btn custom-btn-info">Lưu hiển thị menu</button>
+              <span id="sale-menu-save-status" class="ml-3 small"></span>
             </div>
           </div>
         </div>

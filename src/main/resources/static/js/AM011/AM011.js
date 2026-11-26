@@ -188,4 +188,46 @@ $(function () {
             }
         });
     });
+
+    function renderSaleMenuPreview() {
+        var style = $('input[name="saleMenuStyle"]:checked').val();
+        $('#sale-menu-preview')
+            .text(style === 'BLACK_FRIDAY' ? 'BLACK FRIDAY' : 'SALE')
+            .css('color', style === 'BLACK_FRIDAY' ? '#e60012' : '#000');
+    }
+
+    $('input[name="saleMenuStyle"]').on('change', renderSaleMenuPreview);
+    renderSaleMenuPreview();
+
+    $('#btn-save-sale-menu').on('click', function () {
+        var $status = $('#sale-menu-save-status');
+        $status.removeClass('text-success text-danger').text('Đang lưu...');
+
+        $.ajax({
+            url: '/AM/AM011/sale-menu/save',
+            type: 'POST',
+            contentType: 'application/json; charset=UTF-8',
+            dataType: 'text',
+            headers: csrfHeaders(),
+            data: JSON.stringify({
+                saleMenuStyle: $('input[name="saleMenuStyle"]:checked').val()
+            }),
+            success: function (msg) {
+                if (isHtmlResponse(msg)) {
+                    $status.addClass('text-danger').text('Phiên hết hạn hoặc lỗi bảo mật. Vui lòng tải lại trang.');
+                    return;
+                }
+                $status.addClass('text-success').text(msg || 'Đã lưu');
+            },
+            error: function (xhr) {
+                var msg = xhr.responseText || 'Lỗi lưu cấu hình';
+                if (isHtmlResponse(msg)) {
+                    msg = xhr.status === 403
+                        ? 'Không có quyền hoặc CSRF không hợp lệ. Vui lòng tải lại trang.'
+                        : 'Lỗi máy chủ. Vui lòng thử lại.';
+                }
+                $status.addClass('text-danger').text(msg);
+            }
+        });
+    });
 });

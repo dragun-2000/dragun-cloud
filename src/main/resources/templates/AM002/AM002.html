@@ -138,7 +138,7 @@
                     </a>
                     </td>
                     <td class="text-center" th:text="${order.fullName}"></td>
-                    <td class="text-center" th:text="${#dates.format(order.created, 'yyyy-MM-dd HH:mm:ss')}"></td>
+                    <td class="text-center" th:text="${order.createdDisplay}"></td>
                     <td class="text-center" th:text="${order.shippingAddress}"></td>
                     <td class="text-center" th:text="${order.statusDisplay}"></td>
                     <td class="text-center" th:text="${order.paymentMethod}"></td>

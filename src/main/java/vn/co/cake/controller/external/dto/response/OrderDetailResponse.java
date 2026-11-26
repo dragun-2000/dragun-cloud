@@ -6,6 +6,8 @@ import lombok.Data;
 
 import org.apache.commons.lang3.StringUtils;
 
+import vn.co.cake.common.DateConst;
+
 import vn.co.cake.entity.Account;
 
 import vn.co.cake.entity.Order;
@@ -75,6 +77,9 @@ public class OrderDetailResponse {
     private List<OrderItemDetailResponse> orderItems;
 
     private Date created;
+
+    /** Ngày đặt hàng theo giờ Việt Nam (yyyy-MM-dd HH:mm:ss), để hiển thị trên AM002/AM006. */
+    private String createdDisplay;
 
 
 
@@ -150,7 +155,9 @@ public class OrderDetailResponse {
 
         this.messageError = order.getMessageError();
 
-        this.created = DateUtil.plusHours(order.getCreated(), 7);
+        this.created = order.getCreated();
+
+        this.createdDisplay = DateUtil.dateToString(order.getCreated(), DateConst.YYYY_MM_DD_HH_MM_SS, DateConst.VN);
 
     }
 
