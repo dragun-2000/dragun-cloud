@@ -24,7 +24,7 @@ Approved by owner 2026-11-24: **T-00 + Wave 1 (T-01 … T-07)**, then option A t
 | T-11 Remove empty `CustomCartRepository` fragment | **COMPLETED** | Empty fragment interface + empty impl removed; `CartRepository` now extends only `JpaRepository<Cart, Long>`. VM-CTX unverified. Gate passed (326 run, 0 failures). Committed in the commit containing this line. |
 | T-12 Remove write-only `authentication` field | **COMPLETED** | Field, its assignment and the now-unused `Authentication` import removed from `UserContextRepository`. VM-BYTE differs only by the field and the `getAuthentication`/`putfield` sequence. Gate passed (326 run, 0 failures). Committed in the commit containing this line. |
 | T-13 Rename `storesSecurityContextInRedis` | **COMPLETED** | Renamed to `storeSecurityContext` (1 declaration, 2 callers). VM-BYTE differs only in the method name. Gate passed (326 run, 0 failures). Committed in the commit containing this line. |
-| T-14 Delete orphan templates | PENDING | |
+| T-14 Delete orphan templates | **COMPLETED** | `templates/SA001/SA001.html` (audit C-10) and `templates/AM005/AM005.html` (found in T-04) removed with their directories. 0 references. Gate passed (326 run, 0 failures). Committed in the commit containing this line. |
 
 ## T-01 — Remove unused imports (2026-11-24)
 
@@ -254,6 +254,18 @@ Approved by owner 2026-11-24: **T-00 + Wave 1 (T-01 … T-07)**, then option A t
 - **Change:** 3 lines. The declaration in `security/service/ContextService`, and the calls in `security/admin/AdminSuccessHandler` and `security/user/UserSuccessHandler`.
 - **VM-GREP:** before: exactly these 3 occurrences in `src` (no test, template, reflection or config use). After: 0 for the old name. The new name was unused before.
 - **VM-BYTE (verbose, `LineNumberTable` filtered):** `ContextService` differs only in the method name (declaration + its Utf8 entry). Each handler differs only in the `Methodref`/`NameAndType`/Utf8 entries naming the callee and the matching `invokevirtual` comment. Same constant-pool indexes, descriptor, flags and code.
+
+## T-14 — Delete orphan templates (2026-11-26)
+
+- **Removed:**
+  - `templates/SA001/SA001.html`: an old staff login page (`layout:decorate="~{template/baseManage.html}"`, Japanese heading). The real login view is `ScreenPathConst.SA001_SCREEN = "login"`.
+  - `templates/AM005/AM005.html`: a placeholder page (`<title>Title</title>`); its controller was removed in T-04.
+  - Both directories are now empty and gone. The owner approved adding `AM005.html` to this task on 2026-11-26.
+- **VM-GREP (before deletion):**
+  - `SA001/SA001` and `AM005` over `src`: no view-name return, `ModelAndView`, `setViewName`, `th:replace` / `th:insert` / `th:include`, JS or properties reference. `ScreenPathConst` has no entry pointing at either file.
+  - No dynamic `x + "/" + x` view-name construction in `src/main/java` (URL building only).
+  - `/SA/SA001/...` request paths are unrelated (controller mappings, not view names).
+- **Effect:** none. Thymeleaf only loads a template when a view name or fragment resolves to it. Stale copies were deleted from `target/classes/templates` before the gate.
 
 ## T-00 — BLOCKED (2026-11-24)
 
