@@ -30,7 +30,6 @@ public class JwtUtil {
 
     public static DecodedJWT decodedJWT(String token) {
         try {
-            //String payload = jwt.getPayload();
             return JWT.decode(token);
         } catch (JWTDecodeException e){
             //Invalid token

@@ -228,7 +228,6 @@ public class AccountServiceImpl implements AccountService {
         }
 
         account.setFullName(accountRequest.getFullName());
-//        account.setMailAddress(accountRequest.getMailAddress());
         account.setPhone(accountRequest.getPhone());
 
         if (accountRequest.getHeight() != null && (accountRequest.getHeight() < 120 || accountRequest.getHeight() > 250)) {
@@ -399,7 +398,6 @@ public class AccountServiceImpl implements AccountService {
                 .key(account.getId())
                 .build();
 
-//        mailService.push(Collections.singletonList(account.getMailAddress()), null, genericMailForm, MailType.CHANGE_PASSWORD);
     }
 
     @Override

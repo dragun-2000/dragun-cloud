@@ -11,7 +11,7 @@ Approved by owner 2026-11-24: **T-00 + Wave 1 (T-01 … T-07)**, then option A t
 | T-02b Wildcard → explicit imports, `service/**` | **COMPLETED** | 6 files, 11 wildcards (9 packages) → 74 explicit imports. Verbose VM-BYTE identical apart from line numbers; no unused imports. Gate passed. Committed in the commit containing this line. |
 | T-02c Wildcard → explicit imports, `controller/**` | **COMPLETED** | 10 files, 11 wildcards → 74 explicit imports. Verbose VM-BYTE identical apart from line numbers (11 class files). Code committed by the owner in `ab72804` ("refactor import *"); this status line and `00` updated in a follow-up docs commit. Suite after the `dev/compression-image` merge (`589b5c2`): 323 run, 0 failures. |
 | T-02d Wildcard → explicit imports, `utils`, `ai/**` | **COMPLETED** | 3 files, 3 wildcards → 15 explicit imports. Verbose VM-BYTE identical apart from line numbers (3 class files). No wildcard import left in `src/main/java`. Gate passed (323 run, 0 failures). Committed in the commit containing this line. |
-| T-03 Delete commented-out code (partial) | PENDING | |
+| T-03 Delete commented-out code (partial) | **COMPLETED** | 39 lines in 6 files (36 grep matches + 2 continuation lines + 1 blank). Kept: VietQR sandbox endpoint, AM003 discount validation/apply, admin forgot-password email push. Verbose VM-BYTE identical apart from line numbers (6 class files). Gate passed (323 run, 0 failures). Committed in the commit containing this line. |
 | T-04 Delete `AM005Controller` | PENDING | |
 | T-05 Delete `CSVHelper` | PENDING | |
 | T-06 Remove unused local in `UserLogoutSuccessHandler` | PENDING | |
@@ -108,6 +108,30 @@ Approved by owner 2026-11-24: **T-00 + Wave 1 (T-01 … T-07)**, then option A t
 - **Diff:** 3 deletions, 15 insertions (import lines only).
 - **VM-BYTE (verbose):** all 3 classes are identical except `LineNumberTable`. Stack-trace line numbers in these classes shift by +3…+5.
 - **Checks:** `grep '^import (static )?….\*;'` over `src/main/java` → 0. Every import in the 3 files is used (per-name grep of the body; `unused_imports.py` was no longer in the scratchpad, so the check was done inline).
+
+## T-03 — Delete commented-out code (partial) (2026-11-26)
+
+`grep '^\s*//.*[;{}]\s*$'` over `src/main/java` on `d1752ab`: 60 lines in 8 files, matching audit C-03. Line numbers below are from `d1752ab`; the merge `589b5c2` moved some of them from the audit's numbers.
+
+**Deleted (39 lines):**
+
+| File | Lines | What |
+|---|---|---|
+| `controller/external/PancakeController` | 32 | `log.info` of the webhook payload |
+| `security/utils/jwt/JwtUtil` | 33 | `String payload = jwt.getPayload();` |
+| `service/external/OrderExtendService` | 53–56 | mail form build + `emailService.sendEmail(...)` (2 of the 4 lines don't match the grep; same comment block) |
+| `service/external/PancakePosService` | 139–140, 142 | `webhookHistoryRepository.save(...)` and `log.error(...)`, plus the blank line before the `catch`. The catch block was already empty in effect. Audit's `PancakePosService:124` is this line after the merge. |
+| `service/impl/AccountServiceImpl` | 231 | `account.setMailAddress(...)` in `updateAccount` |
+| `service/impl/AccountServiceImpl` | 402 | `mailService.push(... MailType.CHANGE_PASSWORD)` in `changePasswordAdmin` (not the U-33 reset email) |
+| `service/impl/ProductServiceImpl` | 57–84 | Pancake `createProduct` + variation mapping in `createProduct` |
+
+**Kept (owner decision pending, plan §6 / audit C-03):**
+- `payment/api/PaymentCheckoutController` 125–146: VietQR sandbox-simulate endpoint (C-11).
+- `controller/AM003/AM003Controller` 524–526, 539: discount validation and `updateProductDiscountPrice` (U-38).
+- `service/impl/AccountServiceImpl` 286 (285 after this task): admin forgot-password email push in `verifyMailForgetPassword` (U-33).
+
+- **VM-BYTE (verbose):** 6 class files identical except `LineNumberTable`. Stack-trace line numbers after the removed blocks shift up.
+- **Check:** the grep now finds only the 24 kept lines (3 blocks).
 
 ## T-00 — BLOCKED (2026-11-24)
 

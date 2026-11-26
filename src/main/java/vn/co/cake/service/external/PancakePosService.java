@@ -136,10 +136,7 @@ public class PancakePosService {
             Product product = productRepository.findFirstByProductPancakeId(variation.getPancakeProductId());
             product.setStockQuantity(totalStock);
             productRepository.save(product);
-
-//            webhookHistoryRepository.save(webhookHistory);
         } catch (Exception e) {
-//            log.error("Case not matching data = {}", e.getMessage());
         }
     }
 
