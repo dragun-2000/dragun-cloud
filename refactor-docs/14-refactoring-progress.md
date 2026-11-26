@@ -10,7 +10,7 @@ Approved by owner 2026-11-24: **T-00 + Wave 1 (T-01 … T-07)**, then option A t
 | T-02a Wildcard → explicit imports, `entity/**` | **COMPLETED** | 15 files: `javax.persistence.*` replaced by 101 explicit imports. Verbose VM-BYTE identical apart from line numbers. Gate passed. Committed in the commit containing this line. |
 | T-02b Wildcard → explicit imports, `service/**` | **COMPLETED** | 6 files, 11 wildcards (9 packages) → 74 explicit imports. Verbose VM-BYTE identical apart from line numbers; no unused imports. Gate passed. Committed in the commit containing this line. |
 | T-02c Wildcard → explicit imports, `controller/**` | **COMPLETED** | 10 files, 11 wildcards → 74 explicit imports. Verbose VM-BYTE identical apart from line numbers (11 class files). Code committed by the owner in `ab72804` ("refactor import *"); this status line and `00` updated in a follow-up docs commit. Suite after the `dev/compression-image` merge (`589b5c2`): 323 run, 0 failures. |
-| T-02d Wildcard → explicit imports, `utils`, `ai/**` | PENDING | 3 wildcard lines in 3 files remain |
+| T-02d Wildcard → explicit imports, `utils`, `ai/**` | **COMPLETED** | 3 files, 3 wildcards → 15 explicit imports. Verbose VM-BYTE identical apart from line numbers (3 class files). No wildcard import left in `src/main/java`. Gate passed (323 run, 0 failures). Committed in the commit containing this line. |
 | T-03 Delete commented-out code (partial) | PENDING | |
 | T-04 Delete `AM005Controller` | PENDING | |
 | T-05 Delete `CSVHelper` | PENDING | |
@@ -94,6 +94,20 @@ Approved by owner 2026-11-24: **T-00 + Wave 1 (T-01 … T-07)**, then option A t
 - **Diff:** 11 deletions, 74 insertions (import lines only).
 - **VM-BYTE (verbose):** 11 class files (10 classes + 1 nested) are identical except `LineNumberTable`, so stack-trace line numbers shift. The annotation types on handler methods are unchanged (`RuntimeVisibleAnnotations` compared).
 - **Checks:** no wildcard left in `controller/**`; no unused imports.
+
+## T-02d — Wildcard → explicit imports in `utils`, `ai/**` (2026-11-26)
+
+| File | Wildcard replaced | Explicit imports |
+|---|---|---|
+| `ai/controller/SizeAdviceController` | `org.springframework.web.bind.annotation.*` | 4 (`PostMapping`, `RequestBody`, `RequestMapping`, `RestController`) |
+| `ai/service/openai/OpenAIServiceImpl` | `org.springframework.http.*` | 5 (`HttpEntity`, `HttpHeaders`, `HttpStatus`, `MediaType`, `ResponseEntity`) |
+| `utils/DateUtil` | `java.util.*` | 6 (`Calendar`, `Date`, `GregorianCalendar`, `Locale`, `Objects`, `TimeZone`) |
+
+- **Before state:** compiled from `b682363` (after the `589b5c2` merge).
+- **Type sources and shadowing checks:** same lists and rules as T-02b/T-02c (`spring-web-5.3.19.jar`, JDK modules). No conflicts, no same-package exclusions. `DateUtil` imports `java.sql.Timestamp` explicitly, which doesn't clash; `Date` still binds to `java.util.Date`.
+- **Diff:** 3 deletions, 15 insertions (import lines only).
+- **VM-BYTE (verbose):** all 3 classes are identical except `LineNumberTable`. Stack-trace line numbers in these classes shift by +3…+5.
+- **Checks:** `grep '^import (static )?….\*;'` over `src/main/java` → 0. Every import in the 3 files is used (per-name grep of the body; `unused_imports.py` was no longer in the scratchpad, so the check was done inline).
 
 ## T-00 — BLOCKED (2026-11-24)
 
