@@ -13,7 +13,7 @@ Approved by owner 2026-11-24: **T-00 + Wave 1 (T-01 … T-07)**, then option A t
 | T-02d Wildcard → explicit imports, `utils`, `ai/**` | **COMPLETED** | 3 files, 3 wildcards → 15 explicit imports. Verbose VM-BYTE identical apart from line numbers (3 class files). No wildcard import left in `src/main/java`. Gate passed (323 run, 0 failures). Committed in the commit containing this line. |
 | T-03 Delete commented-out code (partial) | **COMPLETED** | 39 lines in 6 files (36 grep matches + 2 continuation lines + 1 blank). Kept: VietQR sandbox endpoint, AM003 discount validation/apply, admin forgot-password email push. Verbose VM-BYTE identical apart from line numbers (6 class files). Gate passed (323 run, 0 failures). Committed in the commit containing this line. |
 | T-04 Delete `AM005Controller` | **COMPLETED** | Empty `@Controller` class and its package dir removed. 0 references. Gate passed (323 run, 0 failures). Committed in the commit containing this line. |
-| T-05 Delete `CSVHelper` | PENDING | |
+| T-05 Delete `CSVHelper` | **COMPLETED** | Unreferenced plain class removed. 0 references. Gate passed (323 run, 0 failures). Committed in the commit containing this line. |
 | T-06 Remove unused local in `UserLogoutSuccessHandler` | PENDING | |
 | T-07 Remove unreferenced repository methods | PENDING | |
 
@@ -140,6 +140,12 @@ Approved by owner 2026-11-24: **T-00 + Wave 1 (T-01 … T-07)**, then option A t
 - **Effect:** one fewer Spring bean; no endpoint lost. VM-CTX not run (no DB); nothing can depend on a bean with no members.
 - **Noted, not changed:** `templates/AM005/AM005.html` exists but no controller returns it (no `AM005` string anywhere else). Orphan template, out of this task's scope; a candidate for a later dead-template task.
 - The stale `AM005Controller.class` was deleted from `target/classes` before the gate so the suite ran without it.
+
+## T-05 — Delete `helper/CSVHelper` (2026-11-26)
+
+- **Removed:** `helper/CSVHelper.java`: a plain class (not a bean) with static `TYPE`, `HEADER` and `hasCSVFormat(MultipartFile)`. `helper/` still holds `EmailService` and `SmsService`.
+- **VM-GREP:** `grep -rnE 'CSVHelper|hasCSVFormat'` over `src` (main, test, templates, JS, properties) and `pom.xml` before deletion → only the class itself. No file name match in resources.
+- **Effect:** none at runtime; the class was never loaded. The stale `.class` was deleted from `target/classes` before the gate.
 
 ## T-00 — BLOCKED (2026-11-24)
 
