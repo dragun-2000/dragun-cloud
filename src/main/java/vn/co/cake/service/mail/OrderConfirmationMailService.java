@@ -28,6 +28,7 @@ import vn.co.cake.vnpay.VnpayConstants;
 import vn.co.cake.repository.OrderRepository;
 import vn.co.cake.utils.BigDecimalUtil;
 import vn.co.cake.utils.DateUtil;
+import vn.co.cake.utils.StringUtil;
 
 @Slf4j
 @Service
@@ -38,7 +39,6 @@ public class OrderConfirmationMailService {
     private final OrderRepository orderRepository;
     private final EmailService emailService;
     private final TemplateEngine mailTemplateEngine;
-    private static final String DEFAULT_STORE_URL = "https://debase.vn";
 
     private final String storeBaseUrl;
     private final boolean enabled;
@@ -51,7 +51,7 @@ public class OrderConfirmationMailService {
         this.orderRepository = orderRepository;
         this.emailService = emailService;
         this.mailTemplateEngine = mailTemplateEngine;
-        this.storeBaseUrl = normalizeStoreUrl(storeBaseUrl);
+        this.storeBaseUrl = StringUtil.normalizeStoreUrl(storeBaseUrl);
         this.enabled = enabled;
     }
 
@@ -158,17 +158,6 @@ public class OrderConfirmationMailService {
                 .orderHistoryUrl(storeBaseUrl + "/order-history")
                 .items(lines)
                 .build();
-    }
-
-    private static String normalizeStoreUrl(String url) {
-        String base = StringUtils.isNotBlank(url) ? url.trim() : DEFAULT_STORE_URL;
-        while (base.endsWith("/")) {
-            base = base.substring(0, base.length() - 1);
-        }
-        if (!base.startsWith("http://") && !base.startsWith("https://")) {
-            base = "https://" + base;
-        }
-        return base;
     }
 
     private static PaymentSummary resolvePaymentSummary(String paymentMethod, BigDecimal prepaid, BigDecimal grandTotal) {

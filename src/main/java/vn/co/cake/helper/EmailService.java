@@ -28,13 +28,13 @@ import org.springframework.web.client.RestTemplate;
 import vn.co.cake.dto.GenericMailForm;
 import vn.co.cake.dto.PasswordResetMailModel;
 import vn.co.cake.enums.MailType;
+import vn.co.cake.utils.StringUtil;
 
 @Slf4j
 @Service
 public class EmailService {
 
     private static final String FROM_EMAIL = "reply@debase.vn"; // phải là email đã xác minh trong Brevo
-    private static final String DEFAULT_STORE_URL = "https://debase.vn";
 
     /**
      * PHẢI dùng API key (tab "API keys & MCP" trong Brevo), KHÔNG dùng SMTP key (tab SMTP).
@@ -97,7 +97,7 @@ public class EmailService {
 
         if (mailType == MailType.SA_FORGET_PASSWORD) {
             try {
-                String storeUrl = normalizeStoreUrl(genericMailForm.getUrl());
+                String storeUrl = StringUtil.normalizeStoreUrl(genericMailForm.getUrl());
                 PasswordResetMailModel model = PasswordResetMailModel.builder()
                         .accountName(StringUtils.defaultIfBlank(genericMailForm.getAccountName(), "Quý khách"))
                         .phone(StringUtils.defaultIfBlank(genericMailForm.getPhone(), "—"))
@@ -123,17 +123,6 @@ public class EmailService {
         }
         return String.format("%s/SA/SA002/verify_user?accountId=%s&hash=%s",
                 base, genericMailForm.getKey(), genericMailForm.getHash());
-    }
-
-    private static String normalizeStoreUrl(String url) {
-        String base = StringUtils.isNotBlank(url) ? url.trim() : DEFAULT_STORE_URL;
-        while (base.endsWith("/")) {
-            base = base.substring(0, base.length() - 1);
-        }
-        if (!base.startsWith("http://") && !base.startsWith("https://")) {
-            base = "https://" + base;
-        }
-        return base;
     }
 
     /**

@@ -96,4 +96,28 @@ class StringUtilTest {
         assertEquals("00002", StringUtil.formatWithLeadingZeros(new BigDecimal("1.5")));
         assertEquals("00002", StringUtil.formatWithLeadingZeros(new BigDecimal("2.5")));
     }
+
+    @Test
+    void normalizeStoreUrlDefaultsBlankInputToDebase() {
+        assertEquals("https://debase.vn", StringUtil.normalizeStoreUrl(null));
+        assertEquals("https://debase.vn", StringUtil.normalizeStoreUrl(""));
+        assertEquals("https://debase.vn", StringUtil.normalizeStoreUrl("   "));
+    }
+
+    @Test
+    void normalizeStoreUrlTrimsAndStripsTrailingSlashes() {
+        assertEquals("https://shop.vn", StringUtil.normalizeStoreUrl("  https://shop.vn///  "));
+        assertEquals("http://shop.vn/path", StringUtil.normalizeStoreUrl("http://shop.vn/path/"));
+        assertEquals("https://shop.vn", StringUtil.normalizeStoreUrl("https://shop.vn"));
+    }
+
+    @Test
+    void normalizeStoreUrlAddsHttpsWhenSchemeMissing() {
+        assertEquals("https://shop.vn", StringUtil.normalizeStoreUrl("shop.vn/"));
+        // current behavior: the scheme check is case-sensitive and only knows http/https
+        assertEquals("https://HTTPS://shop.vn", StringUtil.normalizeStoreUrl("HTTPS://shop.vn"));
+        assertEquals("https://ftp://shop.vn", StringUtil.normalizeStoreUrl("ftp://shop.vn"));
+        // current behavior: a lone slash becomes an empty host
+        assertEquals("https://", StringUtil.normalizeStoreUrl("/"));
+    }
 }

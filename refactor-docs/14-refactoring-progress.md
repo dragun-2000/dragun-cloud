@@ -16,6 +16,15 @@ Approved by owner 2026-11-24: **T-00 + Wave 1 (T-01 … T-07)**, then option A t
 | T-05 Delete `CSVHelper` | **COMPLETED** | Unreferenced plain class removed. 0 references. Gate passed (323 run, 0 failures). Committed in the commit containing this line. |
 | T-06 Remove unused local in `UserLogoutSuccessHandler` | **COMPLETED** | Dead `String url = String.format(...)` and the import it alone used removed. VM-BYTE differs only by the removed `String.format` sequence (plus constant-pool renumbering, max stack/locals, LocalVariableTable `url`). Gate passed (323 run, 0 failures). Committed in the commit containing this line. |
 | T-07 Remove unreferenced repository methods | **COMPLETED** | 11 repository methods + the matching `CustomAccountRepositoryImpl` method removed; 3 imports that became unused removed. 0 callers. VM-BYTE: only the removed methods (and their constant-pool entries) are gone. Gate passed (323 run, 0 failures). Committed in the commit containing this line. |
+| T-07 commit | note | The owner committed T-07 as `e0745ee` ("refactor T07"); that commit also contains an unrelated behavior change in `ProductServiceImpl` (`"color"` field name accepted next to `"Màu"`) and `docs/plan-pancake-price-promotion-sync.md`. |
+| **Wave 2 approved** | — | Owner approved T-08 … T-14 on 2026-11-26 (all seven). |
+| T-08 Move `normalizeStoreUrl` into `StringUtil` | **COMPLETED** | 3 characterization tests added first (red, then green); method moved verbatim; both mail services call `StringUtil.normalizeStoreUrl`. Gate passed (326 run, 0 failures). Committed in the commit containing this line. |
+| T-09 Remove unreferenced public service methods | PENDING | |
+| T-10 Delete `PixelConversionServiceImpl` | PENDING | |
+| T-11 Remove empty `CustomCartRepository` fragment | PENDING | |
+| T-12 Remove write-only `authentication` field | PENDING | |
+| T-13 Rename `storesSecurityContextInRedis` | PENDING | |
+| T-14 Delete orphan templates | PENDING | |
 
 ## T-01 — Remove unused imports (2026-11-24)
 
@@ -184,6 +193,14 @@ Approved by owner 2026-11-24: **T-00 + Wave 1 (T-01 … T-07)**, then option A t
 - **VM-BYTE (verbose, constant-pool indexes normalized):** for each of the 10 class files, the only member differences are the removed methods (with their `MethodParameters`, `Signature` and annotations), and the only constant-pool differences are entries used solely by them (names, descriptors, signatures, query strings, `Modifying`, `JPAQuery.select`). No member was added or changed; class annotations and interfaces are unchanged.
 - **Unused imports:** clean in all 10 files (per-name grep).
 - **VM-CTX:** UNVERIFIED at runtime (no DB). Removing methods only reduces the queries Spring Data derives/validates at startup.
+
+## T-08 — Move `normalizeStoreUrl` into `StringUtil` (2026-11-26)
+
+- **Before:** `helper/EmailService` and `service/mail/OrderConfirmationMailService` each had a byte-identical `private static normalizeStoreUrl(String)` and `DEFAULT_STORE_URL = "https://debase.vn"` (audit D-01, re-checked with `diff` on `e0745ee`).
+- **Tests first:** 3 tests added to `utils/StringUtilTest` (blank/null default, trim + trailing slashes, missing/odd scheme incl. the case-sensitive `HTTPS://` and the lone `/` quirks). They failed to compile before the move (`cannot find symbol`). The 10 expected values were also checked by reflection against **both** original private methods on the unchanged build: 10/10 match each.
+- **Change:** `public static String normalizeStoreUrl(String)` added to `StringUtil` verbatim, with `DEFAULT_STORE_URL` as a `private static final` there (only the method uses it). Both services lost their copies and call `StringUtil.normalizeStoreUrl(...)` (one call site each); `vn.co.cake.utils.StringUtil` import added. No other line changed.
+- **Behavior:** identical code path; only the method's owning class changes.
+- **Suite:** 323 → 326 tests (the 3 new ones), 0 failures.
 
 ## T-00 — BLOCKED (2026-11-24)
 

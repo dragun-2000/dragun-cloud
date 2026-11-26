@@ -23,6 +23,7 @@ import static vn.co.cake.common.StringConst.PASSWORD_REGEX;
  */
 @Slf4j
 public class StringUtil {
+    private static final String DEFAULT_STORE_URL = "https://debase.vn";
     private static final List<String> IP_HEADERS = Arrays.asList("X-Forwarded-For", "Proxy-Client-IP", "WL-Proxy-Client-IP", "HTTP_CLIENT_IP", "HTTP_X_FORWARDED_FOR");
 
     public static List<String> splitStringByPattern(String sourceString, String pattern){
@@ -79,5 +80,16 @@ public class StringUtil {
     public static String formatWithLeadingZeros(BigDecimal number) {
         DecimalFormat decimalFormat = new DecimalFormat("00000"); // 5 ký tự, ví dụ: 00001, 00002, ...
         return decimalFormat.format(number);
+    }
+
+    public static String normalizeStoreUrl(String url) {
+        String base = StringUtils.isNotBlank(url) ? url.trim() : DEFAULT_STORE_URL;
+        while (base.endsWith("/")) {
+            base = base.substring(0, base.length() - 1);
+        }
+        if (!base.startsWith("http://") && !base.startsWith("https://")) {
+            base = "https://" + base;
+        }
+        return base;
     }
 }
