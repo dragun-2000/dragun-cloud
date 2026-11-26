@@ -174,26 +174,6 @@ public class CartServiceImpl implements CartService {
     }
 
     @Override
-    public List<OrderItem> findOtherProductItem(Long accountId, Long productId) {
-        List<OrderItem> orderItems = new ArrayList<>();
-        Account account = accountRepository.findFirstByIdAndDeletedIsFalse(accountId);
-        if (Objects.isNull(account)) return orderItems;
-
-        Cart cart = cartRepository.findFirstCartByAccountId(accountId);
-        if (Objects.isNull(cart) || CollectionUtils.isEmpty(cart.getCartItems())) return orderItems;
-
-        cart.getCartItems().forEach(cartItem -> {
-            if (cartItem.getVariation().getId() != productId) {
-                Product product = productRepository.findFirstByProductPancakeIdAndDeletedIsFalse(cartItem.getVariation().getPancakeProductId());
-                OrderItem orderItem = this.toOrderItem(cartItem, product);
-                orderItems.add(orderItem);
-            }
-        });
-
-        return orderItems;
-    }
-
-    @Override
     @Transactional
     public void deletedCartByAccount(Long accountId) {
         Cart cart = cartRepository.findFirstCartByAccountId(accountId);

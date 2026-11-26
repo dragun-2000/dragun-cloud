@@ -355,23 +355,6 @@ public class PancakePosService {
         return "Xem response body + file log/pancake-curl-*.txt";
     }
     
-    @Transactional
-    public void enrichOrdersFromPancake(List<Order> orders) {
-        if (CollectionUtils.isEmpty(orders)) {
-            return;
-        }
-        for (Order order : orders) {
-            if (order == null || StringUtils.isBlank(order.getPhone())) {
-                continue;
-            }
-            if (StringUtils.isNotBlank(order.getPancakeStatusName())
-                    && StringUtils.isNotBlank(order.getShippingPartner())) {
-                continue;
-            }
-            enrichOrderFromPancakeList(order);
-        }
-    }
-
     /**
      * Job định kỳ: gom đơn theo SĐT, gọi Pancake tối thiểu rồi lưu status / tracking vào DB.
      * Mỗi đơn ghi DB trong transaction riêng; GET lỗi không đẩy pancake_synced_at.

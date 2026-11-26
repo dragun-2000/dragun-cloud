@@ -19,7 +19,7 @@ Approved by owner 2026-11-24: **T-00 + Wave 1 (T-01 … T-07)**, then option A t
 | T-07 commit | note | The owner committed T-07 as `e0745ee` ("refactor T07"); that commit also contains an unrelated behavior change in `ProductServiceImpl` (`"color"` field name accepted next to `"Màu"`) and `docs/plan-pancake-price-promotion-sync.md`. |
 | **Wave 2 approved** | — | Owner approved T-08 … T-14 on 2026-11-26 (all seven). |
 | T-08 Move `normalizeStoreUrl` into `StringUtil` | **COMPLETED** | 3 characterization tests added first (red, then green); method moved verbatim; both mail services call `StringUtil.normalizeStoreUrl`. Gate passed (326 run, 0 failures). Committed in the commit containing this line. |
-| T-09 Remove unreferenced public service methods | PENDING | |
+| T-09 Remove unreferenced public service methods | **COMPLETED** | `CartService/CartServiceImpl.findOtherProductItem`, `PancakePosService.enrichOrdersFromPancake`, `VietQrCheckoutService.getCheckoutStatus` removed (0 callers); 2 imports in `CartService` became unused and were removed. VM-BYTE: only those methods (and the impl's lambda) are gone. Gate passed (326 run, 0 failures). Committed in the commit containing this line. |
 | T-10 Delete `PixelConversionServiceImpl` | PENDING | |
 | T-11 Remove empty `CustomCartRepository` fragment | PENDING | |
 | T-12 Remove write-only `authentication` field | PENDING | |
@@ -201,6 +201,20 @@ Approved by owner 2026-11-24: **T-00 + Wave 1 (T-01 … T-07)**, then option A t
 - **Change:** `public static String normalizeStoreUrl(String)` added to `StringUtil` verbatim, with `DEFAULT_STORE_URL` as a `private static final` there (only the method uses it). Both services lost their copies and call `StringUtil.normalizeStoreUrl(...)` (one call site each); `vn.co.cake.utils.StringUtil` import added. No other line changed.
 - **Behavior:** identical code path; only the method's owning class changes.
 - **Suite:** 323 → 326 tests (the 3 new ones), 0 failures.
+
+## T-09 — Remove unreferenced public service methods (2026-11-26)
+
+| File | Removed |
+|---|---|
+| `service/CartService` | `findOtherProductItem(Long, Long)` declaration (+ now-unused `dto.OrderItem`, `java.util.List` imports) |
+| `service/impl/CartServiceImpl` | its implementation, which also held the boxed `!=` comparison bug noted in audit C-05 |
+| `service/external/PancakePosService` | `@Transactional enrichOrdersFromPancake(List<Order>)` |
+| `payment/service/VietQrCheckoutService` | `@Transactional getCheckoutStatus(String)` |
+
+- **VM-GREP:** `grep -rnw` of each name over `src` (Java, templates, JS, resources) before deletion: declarations only. No reflection, `@Scheduled`, `@EventListener` or endpoint uses them. `CartServiceImpl` is the only `CartService` implementation. After deletion: 0 hits.
+- **Helpers kept:** `toOrderItem`, `enrichOrderFromPancakeList`, `resolveCheckoutStatus` and `findPendingOrNull` still have other callers, so no private method became dead.
+- **VM-BYTE (verbose, cp indexes normalized; script `scratchpad/member_diff.py`):** the only member differences are the removed methods plus, in `CartServiceImpl`, the synthetic `lambda$findOtherProductItem$1` and its `BootstrapMethods` entry. Every remaining member is identical; the other lambda keeps its name (`lambda$findFirstByAccountId$0`). Header method counts drop accordingly.
+- **Behavior:** no executed path changes. Payment/integration classes are touched only by deleting code nothing calls.
 
 ## T-00 — BLOCKED (2026-11-24)
 

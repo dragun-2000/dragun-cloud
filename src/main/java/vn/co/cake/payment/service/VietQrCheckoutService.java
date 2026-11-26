@@ -137,11 +137,6 @@ public class VietQrCheckoutService {
         return response;
     }
 
-    @Transactional
-    public String getCheckoutStatus(String vietqrOrderId) {
-        return resolveCheckoutStatus(findPendingOrNull(vietqrOrderId));
-    }
-
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public PaymentCheckoutStatusResponse getCheckoutDetails(String vietqrOrderId, Long accountId)
             throws CommonServletException {
